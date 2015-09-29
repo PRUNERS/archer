@@ -10,10 +10,9 @@ set(CMAKE_CXX_FLAGS "-frtti")
 
 file(MAKE_DIRECTORY ${LLVM_TOOLS_BINARY_DIR}/archer)
 add_executable(archer-bl archer-bl.cpp)
-file(COPY clang-archer DESTINATION ${LLVM_TOOLS_BINARY_DIR}/archer)
-file(COPY clang-archer++ DESTINATION ${LLVM_TOOLS_BINARY_DIR}/archer)
-file(COPY ar DESTINATION ${LLVM_TOOLS_BINARY_DIR}/archer)
-file(COPY ranlib DESTINATION ${LLVM_TOOLS_BINARY_DIR}/archer)
+file(COPY clang-archer clang-archer++ ar ranlib
+          DESTINATION ${LLVM_TOOLS_BINARY_DIR}/archer)
+install(DIRECTORY ${LLVM_TOOLS_BINARY_DIR}/archer DESTINATION bin
+                  FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 install(TARGETS archer-bl
         RUNTIME DESTINATION bin/archer)
-install(FILES clang-archer clang-archer++ ar ranlib DESTINATION bin/archer)
