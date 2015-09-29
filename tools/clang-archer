@@ -164,7 +164,7 @@ def argumentsParser():
     parser.add_argument('-OPT', nargs='?', default='opt', help='Change the program used to optmize the programs')
     parser.add_argument('-LINK', nargs='?', default='llvm-link', help='Change the program used to link the byte code files')
     parser.add_argument('-DIS', nargs='?', default='llvm-dis', help='Change the program used to disassemble the byte code files')
-    parser.add_argument('-LIB', nargs='?', default='libArcher.so', help='Set the path where to find Archer libraries')
+    parser.add_argument('-LIB', nargs='?', default='LLVMArcher.so', help='Set the path where to find Archer libraries')
     parser.add_argument('-PLUGIN_LIB', nargs='?', default='ArcherPlugin.so', help='Set the path where to find Archer Plugin libraries')
     parser.add_argument('-OPENMP_INCLUDE', nargs='?', default=os.path.dirname(os.path.realpath(__file__)).rsplit("/", 1)[0] + '/include', help='Set the path where to find OpenMP headers')
     # parser.add_argument('-MPI_INCLUDE', nargs='?', default='', help='Set the path where to find MPI headers')
@@ -221,7 +221,7 @@ def archerBuild(args):
     executeCommand(optCommand, args)
 
     optCommand = [ args.OPT ]
-    optCommand += [ '-load', args.LIB, ARCHER_DDA_FLAG, ARCHER_DIR + "/" + args.o + LL_EXT, "-o", ARCHER_DIR + "/" + args.o + "-optmized" + LL_EXT ]
+    optCommand += [ '-polly-detect-unprofitable', '-load', args.LIB, ARCHER_DDA_FLAG, ARCHER_DIR + "/" + args.o + LL_EXT, "-o", ARCHER_DIR + "/" + args.o + "-optmized" + LL_EXT ]
     executeCommand(optCommand, args)
     # Polly Pass
 
@@ -282,7 +282,7 @@ def archerLink(args):
     executeCommand(linkCommand, args)
 
     optCommand = [ args.OPT ]
-    optCommand += [ "-load", args.LIB, "-archer-instcontext", ARCHER_DIR + "/" + args.o + LL_EXT, "-o", ARCHER_DIR + "/" + args.o + BC_EXT ]
+    optCommand += [ "-load", args.LIB, "-archer-instruction-context", ARCHER_DIR + "/" + args.o + LL_EXT, "-o", ARCHER_DIR + "/" + args.o + BC_EXT ]
     executeCommand(optCommand, args)
     # Link byte code and run InstructionContext Pass
 

@@ -74,8 +74,8 @@ using namespace archer;
 #define DEBUG_TYPE "archer-dda"
 
 void ArcherDDA::createDir(std::string dir) {
-  if(llvm::sys::fs::create_directories(Twine(dir)), true) {
-    llvm::errs() << "Unable to create \"" << dir << "\" directory.\n";
+  if(llvm::sys::fs::create_directories(Twine(dir), true)) {
+    llvm::errs() << "ArcherDDA: Unable to create \"" << dir << "\" directory.\n";
     exit(-1);
   }
 }
@@ -119,7 +119,7 @@ bool ArcherDDA::getLOCInfo(polly::Scop &Scop, isl_bool isNotDependency) {
         StringRef File = Loc->getFilename();
         StringRef Dir = Loc->getDirectory();
 
-	llvm::dbgs() << "Line: " << Line << " - File: " << File << " - Dir: " << Dir << " - Value: " << isNotDependency << "\n";
+	// llvm::dbgs() << "Line: " << Line << " - File: " << File << " - Dir: " << Dir << " - Value: " << isNotDependency << "\n";
 
 	// std::string ModuleName = S->getRegion().getEntry()->getParent()->getParent()->getModuleIdentifier();
 	// std::pair<StringRef, StringRef> filename = StringRef(ModuleName).rsplit('.');
@@ -207,6 +207,7 @@ bool ArcherDDA::runOnScop(Scop &Scop)
 }
 
 char ArcherDDA::ID = 0;
+static RegisterPass<ArcherDDA> X("archer-dda", "Archer Data Dependency Analysis for ThreadSanitizer blacklist generation.", false, false);
 
 namespace archer {
   Pass *createArcherDDAPass() { return new ArcherDDA(); }

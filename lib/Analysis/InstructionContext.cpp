@@ -60,8 +60,8 @@
 using namespace archer;
 
 void InstructionContext::createDir(std::string dir) {
-  if(llvm::sys::fs::create_directories(Twine(dir)), true) {
-    llvm::errs() << "Unable to create \"" << dir << "\" directory.\n";
+  if(llvm::sys::fs::create_directories(Twine(dir), true)) {
+    llvm::errs() << "InstructionContext: Unable to create \"" << dir << "\" directory.\n";
     exit(-1);
   }
 }
@@ -356,12 +356,13 @@ bool InstructionContext::runOnModule(Module &M)
 }
 
 char InstructionContext::ID = 0;
+static RegisterPass<InstructionContext> X("archer-instruction-context", "Archer Instruction Context, returns the list of instructions executed sequentially and the list of instruction executed inside an OpenMP parallel region.", false, false);
 
 namespace archer {
   Pass *createInstructionContextPass() { return new InstructionContext(); }
 }
 
-INITIALIZE_PASS_BEGIN(InstructionContext, "archer-instcontext",
+INITIALIZE_PASS_BEGIN(InstructionContext, "archer-instruction-context",
                       "Archer Instruction Context, returns the list of instructions executed sequentially and the list of instruction executed inside an OpenMP parallel region.", false, false);
-INITIALIZE_PASS_END(InstructionContext, "archer-dda",
+INITIALIZE_PASS_END(InstructionContext, "archer-instruction-context",
                     "Archer Instruction Context, returns the list of instructions executed sequentially and the list of instruction executed inside an OpenMP parallel region.", false, false)

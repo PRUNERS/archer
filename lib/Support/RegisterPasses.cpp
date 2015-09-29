@@ -32,12 +32,12 @@ using namespace llvm;
 
 namespace archer {
 void initializeArcherPasses(PassRegistry &Registry) {
-  initializeArcherDDAPass(Registry);
-  initializeInstructionContextPass(Registry);
+  // initializeArcherDDAPass(Registry);
+  // initializeInstructionContextPass(Registry);
 }
 
 void registerArcherPasses(llvm::legacy::PassManagerBase &PM) {
-  PM.add(archer::createArcherDDAPass());
-  PM.add(archer::createInstructionContextPass());
+  // PM.add(archer::createArcherDDAPass());
+  // PM.add(archer::createInstructionContextPass());
 }
 }

@@ -126,8 +126,8 @@ public:
     fc_content = "";
     dir = "blacklists";
 
-    if(llvm::sys::fs::create_directory(Twine(dir))) {
-      llvm::errs() << "Unable to create \"" << dir << "\" directory.\n";
+    if(llvm::sys::fs::create_directories(Twine(dir), true)) {
+      llvm::errs() << "LineMemoryUsage: Unable to create \"" << dir << "\" directory.\n";
       exit(-1);
     }
   }
