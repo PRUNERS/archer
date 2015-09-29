@@ -1,0 +1,191 @@
+pooo#+TITLE:     Archer
+#+AUTHOR:    Simone Atzeni
+#+EMAIL:     simone@cs.utah.edu
+#+DATE:      2014-10-22 Wed
+#+DESCRIPTION:
+#+KEYWORDS:
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:
+#+LINK_HOME:
+#+XSLT:
+
+* License
+Please see LICENSE for usage terms.
+* Introduction
+#+HTML: <img src="resources/images/archer_logo.png" hspace="5" vspace="5" height="45%" width="45%" alt="Archer Logo" title="Archer" align="right" />
+
+*Archer* is a data race detector for OpenMP programs.
+# <span style="font-weight: bold; font-variant: small-caps">archer</span>
+
+Archer combines static and dynamic techniques to identify data races
+in large OpenMP applications, leading to low runtime and memory
+overheads, while still offering high accuracy and precision. It builds
+on open-source tools infrastructure such as LLVM and ThreadSanitizer
+to provide portability.
+
+* Prerequisites
+To compile Archer you need an host GCC version >= 4.7.
+
+* Installation
+Archer has been developed under LLVM 3.5 with OpenMP support (for
+more information go to http://clang-omp.github.io).
+
+** Building
+First obtain Archer, e.g. from Github (https://github.com/soarlab/Archer):
+
+#+BEGIN_SRC sh :exports code
+  git clone git@github.com:soarlab/Archer.git Archer
+#+END_SRC
+
+Then, build Archer by running =install.sh=:
+
+#+BEGIN_SRC sh :exports code
+  ./install.sh --prefix=llvm_install_path [default: --prefix=/usr]
+#+END_SRC
+
+The installation script will create a folder called *LLVM* at the same
+level of the Archer directory and install LLVM to /llvm\under{}install\under{}path/.
+
+In case your GCC is not installed in a standard path you need to
+specify the GCC toolchain path for LLVM/Clang using the flag
+/--gcc-toolchain-path/:
+
+#+BEGIN_SRC sh :exports code
+  ./install.sh --prefix=llvm_install_path --gcc-toolchain-path=gcc_toolchain_path
+#+END_SRC
+
+Once the installation completes, you need to setup your environement
+to allow Archer to work correctly.
+
+Please set the following path variables:
+
+#+BEGIN_SRC
+export PATH=${LLVM_INSTALL}/bin:${LLVM_INSTALL}/local/archer/bin:\${PATH}"
+export LD_LIBRARY_PATH=${LLVM_INSTALL}/bin:${LLVM_INSTALL}/lib/intelomprt:${LLVM_INSTALL}/local/archer/lib:\${LD_LIBRARY_PATH}"
+#+END_SRC
+
+To make the environment permanent add the previous lines or
+equivalents to your shell start-up script such as "~/.bashrc".
+
+WARNING: 
+
+During the installation process you may see an error like the
+following:
+
+#+BEGIN_SRC
+CMake Error: install(EXPORT "LLVMExports" ...) includes target "opt" which requires target "Polly" that is not in the export set.
+CMake Error: install(EXPORT "LLVMExports" ...) includes target "bugpoint" which requires target "Polly" that is not in the export set.
+#+END_SRC
+
+It is an error related to the CMake configuration process of Polly. It
+does not affect your installation.  Future versions of Archer will
+upgrade Polly to the latest version avoiding this problem.
+
+* Usage
+
+** How to compile
+
+Archer provides a command to compile your programs with Clang/LLVM
+OpenMP and hide all the mechanics necessary to detect data races
+automatically in your OpenMP programs.
+
+This Archer command is called /clang-archer/, and this can be used as
+a drop-in replacement of your compiler command (e.g., clang, gcc,
+etc.).
+
+The following are some of the examples of how one can integrate
+/clang-archer/ into his/her build system.
+
+*** Single source
+
+#+BEGIN_SRC
+clang-archer example.c -L/path/to/openmp/runtime -lOMPRT -o example
+#+END_SRC
+
+*** Makefile
+
+In your Makefile, set the following variables:
+
+#+BEGIN_SRC
+CC = clang-archer
+
+LDFLAGS = -L/path/to/openmp/runtime -lOMPRT
+#+END_SRC
+
+*** Hybrid MPI-OpenMP programs
+
+In your Makefile, set the following variables:
+
+#+BEGIN_SRC
+CC = mpicc -cc=clang-archer
+
+...
+
+LDFLAGS = -L/path/to/openmp/runtime -lOMPRT
+#+END_SRC
+
+** Options
+
+Running the following command:
+
+#+BEGIN_SRC
+clang-archer --help
+#+END_SRC
+
+shows the options available with /clang-archer/.
+
+#+BEGIN_SRC
+usage: clang-archer [-h] [-v] [-d] [--log] [-db] [-CC [CC]] [-USE_MPI]
+                    [-MPICC [MPICC]] [-OPT [OPT]] [-LINK [LINK]] [-DIS [DIS]]
+                    [-LIB [LIB]] [-PLUGIN_LIB [PLUGIN_LIB]]
+                    [-OPENMP_INCLUDE [OPENMP_INCLUDE]] [-g]
+                    [-O0 | -O1 | -O2 | -O3 | -Os | -Oz] [-fopenmp] [-liomp5]
+                    [-c] [-o [O]]
+
+Compile your program with Archer support, a data race detector for OpenMP programs.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show program's version number and exit
+  -d, --debug           Print the compiling commands
+  --log                 Keep intermediate logs
+  -db, --disable-blacklisting
+                        Disable static analysis and apply ThreadSanitizer
+                        instrumentation to the entire program
+  -CC [CC]              Change the program used to compile and link the
+                        programs
+  -USE_MPI              Link against MPI libraries
+  -MPICC [MPICC]        Change the program used to compile and link the MPI
+                        programs
+  -OPT [OPT]            Change the program used to optmize the programs
+  -LINK [LINK]          Change the program used to link the byte code files
+  -DIS [DIS]            Change the program used to disassemble the byte code
+                        files
+  -LIB [LIB]            Set the path where to find Archer libraries
+  -PLUGIN_LIB [PLUGIN_LIB]
+                        Set the path where to find Archer Plugin libraries
+  -OPENMP_INCLUDE [OPENMP_INCLUDE]
+                        Set the path where to find OpenMP headers
+  -g                    If the debugging flag is not present in the
+                        compilation command it will be added by default
+  -O0                   The optimization flags will be forced to '-O0'
+                        optimization level for analysis purposes
+  -O1
+  -O2
+  -O3
+  -Os
+  -Oz
+  -fopenmp              OpenMP flag
+  -liomp5               OpenMP library
+  -c                    Only run preprocess, compile, and assemble steps
+  -o [O]                Output filename
+#+END_SRC
+
+* Logos
+#+HTML: <img src="resources/images/uofu_logo.png" hspace="5" vspace="5" height="35%" width="35%" alt="UofU Logo" title="University of Utah" align="left" />
+#+HTML: <img src="resources/images/llnl_logo.png" hspace="5" vspace="5" height="50%" width="50%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" align="right" />
