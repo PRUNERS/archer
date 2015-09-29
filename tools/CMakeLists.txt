@@ -8,11 +8,8 @@ LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
 set(CMAKE_CXX_FLAGS "-frtti")
 
-file(MAKE_DIRECTORY ${LLVM_TOOLS_BINARY_DIR}/archer)
 add_executable(archer-bl archer-bl.cpp)
 file(COPY clang-archer clang-archer++ ar ranlib
-          DESTINATION ${LLVM_TOOLS_BINARY_DIR}/archer)
-install(DIRECTORY ${LLVM_TOOLS_BINARY_DIR}/archer DESTINATION bin
-                  FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-install(TARGETS archer-bl
-        RUNTIME DESTINATION bin/archer)
+          DESTINATION ${LLVM_TOOLS_BINARY_DIR})
+install(PROGRAMS clang-archer clang-archer++ ar ranlib DESTINATION bin/archer)
+install(TARGETS archer-bl RUNTIME DESTINATION bin/archer)
