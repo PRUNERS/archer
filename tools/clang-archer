@@ -90,6 +90,9 @@ NO_BLACKLISTING=False
 OPT_FLAGS = [ "O0", "O1", "O2", "O3", "Os", "Oz" ]
 OPT_FLAG="-O0"
 
+def sanitizeFileName(filename):
+    return filename.rsplit("/", 1)[-1]
+
 def cleanLogs():
     if os.path.exists(LOGS_LIST):
         file = open(LOGS_LIST, "r")
@@ -194,7 +197,7 @@ def archerBuild(args):
     # Create ByteCode
     # No OpenMP Support
     clangCommand = [ args.CC ]
-    clangCommand += [ "-Qunused-arguments", "-emit-llvm", "-O0", "-g", "-c", args.src, "-o", ARCHER_DIR + "/" + args.o + POLLY_BC_EXT, '-I' + args.OPENMP_INCLUDE ]
+    clangCommand += [ "-Qunused-arguments", "-emit-llvm", "-O0", "-g", "-c", args.src, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT, '-I' + args.OPENMP_INCLUDE ]
     clangCommand.extend(args.unknown)
 
     executeCommand(clangCommand, args)
@@ -202,7 +205,7 @@ def archerBuild(args):
 
     # OpenMP Support
     clangCommand = [ args.CC ]
-    clangCommand += [ "-Qunused-arguments", "-emit-llvm", "-O0", "-g", "-fopenmp", "-c", args.src, "-o", ARCHER_DIR + "/" + args.o + OMP_BC_EXT, '-I' + args.OPENMP_INCLUDE ]
+    clangCommand += [ "-Qunused-arguments", "-emit-llvm", "-O0", "-g", "-fopenmp", "-c", args.src, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + OMP_BC_EXT, '-I' + args.OPENMP_INCLUDE ]
     clangCommand.extend(args.unknown)
     executeCommand(clangCommand, args)
     # OpenMP Support
@@ -213,15 +216,15 @@ def archerBuild(args):
 
     # Polly Pass
     optCommand = [ args.OPT ]
-    optCommand += [ '-mem2reg', ARCHER_DIR + "/" + args.o + POLLY_BC_EXT, "-o", ARCHER_DIR + "/" + args.o + POLLY_BC_EXT + OPT_EXT ]
+    optCommand += [ '-mem2reg', ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT + OPT_EXT ]
     executeCommand(optCommand, args)
 
     optCommand = [ args.OPT ]
-    optCommand += [ '-S', '-polly-canonicalize', ARCHER_DIR + "/" + args.o + POLLY_BC_EXT + OPT_EXT, "-o", ARCHER_DIR + "/" + args.o + LL_EXT ]
+    optCommand += [ '-S', '-polly-canonicalize', ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT + OPT_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT ]
     executeCommand(optCommand, args)
 
     optCommand = [ args.OPT ]
-    optCommand += [ '-polly-detect-unprofitable', '-load', args.LIB, ARCHER_DDA_FLAG, ARCHER_DIR + "/" + args.o + LL_EXT, "-o", ARCHER_DIR + "/" + args.o + "-optmized" + LL_EXT ]
+    optCommand += [ '-polly-detect-unprofitable', '-load', args.LIB, ARCHER_DDA_FLAG, ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + "-optmized" + LL_EXT ]
     executeCommand(optCommand, args)
     # Polly Pass
 
@@ -264,7 +267,8 @@ def archerLink(args):
             lst = []
             spl = line.split(",",2)
             bc = spl[1].rsplit("/", 1)
-            bcLst.append(bc[0] + "/" + ARCHER_DIR + "/" + bc[1] + BC_EXT)
+            sp = spl[0].rsplit("/", 1)
+            bcLst.append(sp[0] + "/" + ARCHER_DIR + "/" + bc[1] + BC_EXT)
             lst.append(spl[0])
             lst.append(spl[1])
             lst.append(dotdict(json.loads(spl[2])))
@@ -273,16 +277,16 @@ def archerLink(args):
 
     # Link byte code and run InstructionContext Pass
     linkCommand = [ args.LINK ]
-    linkCommand += [ "-o", ARCHER_DIR + "/" + args.o + BC_EXT ]
+    linkCommand += [ "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT ]
     linkCommand.extend(bcLst)
     executeCommand(linkCommand, args)
 
     linkCommand = [ args.LINK ]
-    linkCommand += [ "-f", ARCHER_DIR + "/" + args.o + BC_EXT, "-o", ARCHER_DIR + "/" + args.o + LL_EXT ]
+    linkCommand += [ "-f", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT ]
     executeCommand(linkCommand, args)
 
     optCommand = [ args.OPT ]
-    optCommand += [ "-load", args.LIB, "-archer-instruction-context", ARCHER_DIR + "/" + args.o + LL_EXT, "-o", ARCHER_DIR + "/" + args.o + BC_EXT ]
+    optCommand += [ "-load", args.LIB, "-archer-instruction-context", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT ]
     executeCommand(optCommand, args)
     # Link byte code and run InstructionContext Pass
 
@@ -321,7 +325,7 @@ def archerLink(args):
                     cmd = lst[1].split()
                     executeCommand(cmd, args)
         except IOError as e:
-            print "clang-argcher: No such file or directory or no read permissions"
+            print "clang-archer: No such file or directory or no read permissions"
         try:
             with open(RANLIB_FILE, 'r') as file:
                 for line in file:
@@ -330,7 +334,7 @@ def archerLink(args):
                     cmd = lst[1].split()
                     executeCommand(cmd, args)
         except IOError as e:
-            print "clang-argcher: No such file or directory or no read permissions"
+            print "clang-archer: No such file or directory or no read permissions"
 
 
         # Link program
@@ -501,6 +505,10 @@ if __name__ == '__main__':
             archerLink(args)
         else:
             if not LINKING:
+                open('/tmp/ar_archer', 'w').close()
+                open('/tmp/ranlib_archer', 'w').close()
                 archerBuild(args)
             else:
+                os.remove("/tmp/ar_archer")
+                os.remove("/tmp/ranlib_archer")
                 archerLink(args)

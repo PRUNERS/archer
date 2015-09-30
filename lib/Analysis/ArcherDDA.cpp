@@ -111,6 +111,9 @@ bool ArcherDDA::getLOCInfo(polly::Scop &Scop, isl_bool isNotDependency) {
     ScopStmt *Stmt = &(*SI);
     
     BasicBlock *BB = Stmt->getBasicBlock();
+    if(!BB)
+      return false;
+
     for (BasicBlock::iterator BI = BB->begin(), BE = BB->end();
   	 BI != BE; ++BI) {
       

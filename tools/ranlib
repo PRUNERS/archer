@@ -49,22 +49,26 @@ import errno
 import os
 import sys
 import subprocess
+import hashlib
 
 # ppid = int(os.popen("ps -p %d -oppid=" % os.getppid()).read().strip())
 # parent = os.popen("ps -p %d -o cmd | grep -v CMD" % os.getppid()).read().strip()
 # parent = os.popen("ps -p %d -o comm=" % os.getppid()).read().strip()
-parent = os.popen("ps -p %d -o cmd | grep -v CMD" % os.getppid()).read().strip()
+# parent = os.popen("ps -p %d -o cmd | grep -v CMD" % os.getppid()).read().strip()
 
-if ('bash' in parent) or ('clang-archer' in parent):
-    # Normal execution of ar
+if(not os.path.isfile("/tmp/ranlib_archer")):
+    # Normal execution of ranlib
     sys.argv[0] = '/usr/bin/ranlib'
     p = subprocess.Popen(sys.argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output = p.communicate()[0]
     print output
 else:
     # Intercepted by clang-archer
+    command = os.getcwd() + "," + sys.argv[0] + ''.join(' ' + s for s in sys.argv[1:])
+    # h = hashlib.new('ripemd160')
+    # COMMAND_LOG = '/tmp/ranlib_' + h.hexdigest() + '.ach'
     COMMAND_LOG = '/tmp/ranlib.ach'
     
     with open(COMMAND_LOG, "a") as f:
-        f.write(os.getcwd() + "," + sys.argv[0] + ''.join(' ' + s for s in sys.argv[1:]) + "\n")
+        f.write(command + "\n")
         f.close()

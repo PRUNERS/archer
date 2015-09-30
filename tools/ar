@@ -46,6 +46,7 @@
 #
 
 import errno
+import hashlib
 import os
 import sys
 import subprocess
@@ -53,9 +54,9 @@ import subprocess
 # ppid = int(os.popen("ps -p %d -oppid=" % os.getppid()).read().strip())
 # parent = os.popen("ps -p %d -o cmd | grep -v CMD" % os.getppid()).read().strip()
 # parent = os.popen("ps -p %d -o comm=" % os.getppid()).read().strip()
-parent = os.popen("ps -p %d -o cmd | grep -v CMD" % os.getppid()).read().strip()
+# parent = os.popen("ps -p %d -o cmd | grep -v CMD" % os.getppid()).read().strip()
 
-if ('bash' in parent) or ('clang-archer' in parent):
+if (not os.path.isfile("/tmp/ar_archer")):
     # Normal execution of ar
     sys.argv[0] = '/usr/bin/ar'
     p = subprocess.Popen(sys.argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -63,8 +64,14 @@ if ('bash' in parent) or ('clang-archer' in parent):
     print output
 else:
     # Intercepted by clang-archer
+    command = os.getcwd() + "," + sys.argv[0] + ''.join(' ' + s for s in sys.argv[1:])
+    # h = hashlib.new('ripemd160')
+    # h.update(command)
+    # COMMAND_LOG = '/tmp/ar_' + h.hexdigest() + '.ach'
     COMMAND_LOG = '/tmp/ar.ach'
-    
+
     with open(COMMAND_LOG, "a") as f:
-        f.write(os.getcwd() + "," + sys.argv[0] + ''.join(' ' + s for s in sys.argv[1:]) + "\n")
+        f.write(command + "\n")
         f.close()
+
+    os.remove("/tmp/ar_archer")
