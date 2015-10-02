@@ -88,7 +88,7 @@ COMPILE_AND_LINK=False
 KEEP_LOGS=False
 NO_BLACKLISTING=False
 OPT_FLAGS = [ "O0", "O1", "O2", "O3", "Os", "Oz" ]
-OPT_FLAG="-O0"
+OPT_FLAG="-O2"
 
 def sanitizeFileName(filename):
     return filename.rsplit("/", 1)[-1]
@@ -159,19 +159,19 @@ def argumentsParser():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-v', '--version', action='version', version='Archer ' + VERSION + '\nCopyright (C) 2015')
     parser.add_argument('-d', '--debug', action='store_true', help='Print the compiling commands')
-    parser.add_argument('--log', action='store_true', help='Keep intermediate logs')
+    parser.add_argument('-l', '--log', action='store_true', help='Keep intermediate logs')
     parser.add_argument('-db', '--disable-blacklisting', action='store_true', help='Disable static analysis and apply ThreadSanitizer instrumentation to the entire program')
-    parser.add_argument('-CC', nargs='?', default='clang', help='Change the program used to compile and link the programs')
-    parser.add_argument('-USE_MPI', action='store_true', help='Link against MPI libraries')
-    parser.add_argument('-MPICC', nargs='?', default='mpicc', help='Change the program used to compile and link the MPI programs')
-    parser.add_argument('-OPT', nargs='?', default='opt', help='Change the program used to optmize the programs')
-    parser.add_argument('-LINK', nargs='?', default='llvm-link', help='Change the program used to link the byte code files')
-    parser.add_argument('-DIS', nargs='?', default='llvm-dis', help='Change the program used to disassemble the byte code files')
-    parser.add_argument('-LIB', nargs='?', default='LLVMArcher.so', help='Set the path where to find Archer libraries')
-    parser.add_argument('-PLUGIN_LIB', nargs='?', default='ArcherPlugin.so', help='Set the path where to find Archer Plugin libraries')
-    parser.add_argument('-OPENMP_INCLUDE', nargs='?', default=os.path.dirname(os.path.realpath(__file__)).rsplit("/", 1)[0] + '/include', help='Set the path where to find OpenMP headers')
-    # parser.add_argument('-MPI_INCLUDE', nargs='?', default='', help='Set the path where to find MPI headers')
-    # parser.add_argument('-MPI_LIB', nargs='?', default='', help='Set the path where to find MPI libraries')
+    parser.add_argument('-cc', nargs='?', default='clang', help='Change the program used to compile and link the programs')
+    parser.add_argument('--use-mpi', action='store_true', help='Link against MPI libraries')
+    parser.add_argument('-mpicc', nargs='?', default='mpicc', help='Change the program used to compile and link the MPI programs')
+    parser.add_argument('-opt', nargs='?', default='opt', help='Change the program used to optmize the programs')
+    parser.add_argument('-link', nargs='?', default='llvm-link', help='Change the program used to link the byte code files')
+    parser.add_argument('-dis', nargs='?', default='llvm-dis', help='Change the program used to disassemble the byte code files')
+    parser.add_argument('-lib', nargs='?', default='LLVMArcher.so', help='Set the path where to find Archer libraries')
+    parser.add_argument('--plugin-lib=', nargs='?', default='ArcherPlugin.so', help='Set the path where to find Archer Plugin libraries')
+    parser.add_argument('--openmp-include=', nargs='?', default=os.path.dirname(os.path.realpath(__file__)).rsplit("/", 1)[0] + '/include', help='Set the path where to find OpenMP headers')
+    # parser.add_argument('-mpi-include', nargs='?', default='', help='Set the path where to find MPI headers')
+    # parser.add_argument('-mpi-lib', nargs='?', default='', help='Set the path where to find MPI libraries')
     # parser.add_argument('-g', action='store_true')
     parser.add_argument('-g', action='store_true', help='If the debugging flag is not present in the compilation command it will be added by default')
     action = parser.add_mutually_exclusive_group()
@@ -343,7 +343,7 @@ def archerLink(args):
             clangCommand = [ args.MPICC, '-cc=' + args.CC ]
         else:
             clangCommand = [ args.CC ]
-        clangCommand += [ "-fopenmp", "-fsanitize=thread", "-o", args.o, args.obj ]
+        clangCommand += [ "-g", OPT_FLAG, "-fopenmp", "-fsanitize=thread", "-o", args.o, args.obj ]
         clangCommand.extend(args.unknown)
         # clangCommand += [ "-lomp" ]
         executeCommand(clangCommand, args)
@@ -368,7 +368,7 @@ def archerLink(args):
             clangCommand = [ args.MPICC, '-cc=' + args.CC ]
         else:
             clangCommand = [ args.CC ]
-        clangCommand += [ "-fopenmp", "-fsanitize=thread", "-o", args.o, args.obj ]
+        clangCommand += ["-g", OPT_FLAG, "-fopenmp", "-fsanitize=thread", "-o", args.o, args.obj ]
         clangCommand.extend(args.unknown)
         # clangCommand += [ "-lomp" ]
         executeCommand(clangCommand, args)
@@ -400,7 +400,7 @@ def archerLinkNB(args):
             clangCommand = [ args.MPICC, '-cc=' + args.CC ]
         else:
             clangCommand = [ args.CC ]
-        clangCommand += [ "-fopenmp", "-fsanitize=thread", "-o", args.o, args.obj ]
+        clangCommand += [ "-g", OPT_FLAG, "-fopenmp", "-fsanitize=thread", "-o", args.o, args.obj ]
         clangCommand.extend(args.unknown)
         # clangCommand += [ "-lomp" ]
         executeCommand(clangCommand, args)

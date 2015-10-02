@@ -97,6 +97,7 @@ bool ArcherDDA::getLOCInfo(polly::Scop &Scop, isl_bool isNotDependency) {
   polly::Scop *S;
   std::string content;
   std::string FileName;
+  StringRef File;
 
   if(isNotDependency == isl_bool_error)
     return false;
@@ -119,7 +120,7 @@ bool ArcherDDA::getLOCInfo(polly::Scop &Scop, isl_bool isNotDependency) {
       
       if (DILocation *Loc = BI->getDebugLoc()) {
         unsigned Line = Loc->getLine();
-        StringRef File = Loc->getFilename();
+        File = Loc->getFilename();
         StringRef Dir = Loc->getDirectory();
 
 	// llvm::dbgs() << "Line: " << Line << " - File: " << File << " - Dir: " << Dir << " - Value: " << isNotDependency << "\n";
@@ -150,12 +151,13 @@ bool ArcherDDA::getLOCInfo(polly::Scop &Scop, isl_bool isNotDependency) {
   // std::string ModuleName = S->getRegion().getEntry()->getParent()->getParent()->getModuleIdentifier();
   // std::pair<StringRef, StringRef> filename = StringRef(ModuleName).rsplit('.');
   // int pos = filename.first.str().find(".nomp.bc");
-  // std::string FileName;
+  // //std::string FileName;
   // if(pos != std::string::npos) {
   //   FileName = filename.first.str().substr(0,pos);
   // } else {
   //   FileName = filename.first.str();
   // }
+  FileName = File.str();
   if(FileName.substr(0,2).compare("./") == 0)
     FileName = FileName.substr(2);
   std::string filepath;
