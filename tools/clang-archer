@@ -161,6 +161,8 @@ def argumentsParser():
     parser.add_argument('-d', '--debug', action='store_true', help='Print the compiling commands')
     parser.add_argument('-l', '--log', action='store_true', help='Keep intermediate logs')
     parser.add_argument('-db', '--disable-blacklisting', action='store_true', help='Disable static analysis and apply ThreadSanitizer instrumentation to the entire program')
+    parser.add_argument('-dsb', '--disable-sequential-blacklisting', action='store_true', help='Disable blacklisting of sequential code')
+    parser.add_argument('-ddb', '--disable-dd-blacklisting', action='store_true', help='Disable blacklisting of loops with no data depdendency ')
     parser.add_argument('-cc', nargs='?', default='clang', help='Change the program used to compile and link the programs')
     parser.add_argument('--use-mpi', action='store_true', help='Link against MPI libraries')
     parser.add_argument('-mpicc', nargs='?', default='mpicc', help='Change the program used to compile and link the MPI programs')
@@ -215,17 +217,18 @@ def archerBuild(args):
     #os.chdir(ARCHER_DIR)
 
     # Polly Pass
-    optCommand = [ args.OPT ]
-    optCommand += [ '-mem2reg', ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT + OPT_EXT ]
-    executeCommand(optCommand, args)
+    if(!args.ddb):
+        optCommand = [ args.OPT ]
+        optCommand += [ '-mem2reg', ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT + OPT_EXT ]
+        executeCommand(optCommand, args)
 
-    optCommand = [ args.OPT ]
-    optCommand += [ '-S', '-polly-canonicalize', ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT + OPT_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT ]
-    executeCommand(optCommand, args)
+        optCommand = [ args.OPT ]
+        optCommand += [ '-S', '-polly-canonicalize', ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT + OPT_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT ]
+        executeCommand(optCommand, args)
 
-    optCommand = [ args.OPT ]
-    optCommand += [ '-polly-detect-unprofitable', '-load', args.LIB, ARCHER_DDA_FLAG, ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + "-optmized" + LL_EXT ]
-    executeCommand(optCommand, args)
+        optCommand = [ args.OPT ]
+        optCommand += [ '-polly-detect-unprofitable', '-load', args.LIB, ARCHER_DDA_FLAG, ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + "-optmized" + LL_EXT ]
+        executeCommand(optCommand, args)
     # Polly Pass
 
     # Clang Plugin to find OpenMP constructs information
@@ -285,9 +288,10 @@ def archerLink(args):
     linkCommand += [ "-f", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT ]
     executeCommand(linkCommand, args)
 
-    optCommand = [ args.OPT ]
-    optCommand += [ "-load", args.LIB, "-archer-instruction-context", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT ]
-    executeCommand(optCommand, args)
+    if(!args.dsb):
+        optCommand = [ args.OPT ]
+        optCommand += [ "-load", args.LIB, "-archer-instruction-context", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT ]
+        executeCommand(optCommand, args)
     # Link byte code and run InstructionContext Pass
 
     # Create blacklists and compile with fsanitize
