@@ -45,4 +45,4 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-clang-archer -CC=clang++ $@
+clang-archer -cc=clang++ $@
