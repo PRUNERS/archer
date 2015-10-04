@@ -217,7 +217,7 @@ def archerBuild(args):
     #os.chdir(ARCHER_DIR)
 
     # Polly Pass
-    if(!args.ddb):
+    if(not args.ddb):
         optCommand = [ args.OPT ]
         optCommand += [ '-mem2reg', ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT + OPT_EXT ]
         executeCommand(optCommand, args)
@@ -288,7 +288,7 @@ def archerLink(args):
     linkCommand += [ "-f", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT ]
     executeCommand(linkCommand, args)
 
-    if(!args.dsb):
+    if(not args.dsb):
         optCommand = [ args.OPT ]
         optCommand += [ "-load", args.LIB, "-archer-instruction-context", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT ]
         executeCommand(optCommand, args)
