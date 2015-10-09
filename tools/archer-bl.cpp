@@ -69,6 +69,7 @@ int main(int argc, char **argv)
   std::string line;
   std::vector<OMPStmt> omp_stmt;
   std::map<int, std::string> si_info;
+  std::set<int> toErase;
   std::map<int, std::string> ndd_info;
 
   if(argc < 3) {
@@ -126,7 +127,10 @@ int main(int argc, char **argv)
       if (!boost::starts_with(line, "#")) {
 	std::vector<std::string> tokens;
 	split(tokens, line, is_any_of(","));
-	ndd_info.insert(std::pair<int,std::string>(StringToNumber<unsigned>(tokens[0]), line));
+        std::map<int, std::string>::const_iterator it2 = si_info.find(StringToNumber<unsigned>(tokens[0]));
+        if(it2 == si_info.end()) {
+          ndd_info.insert(std::pair<int,std::string>(StringToNumber<unsigned>(tokens[0]), line));
+        }
       }
     }
   }
@@ -134,9 +138,10 @@ int main(int argc, char **argv)
   // Compare DDA info with OpenMP pragma info to find the correct pragma line number
   for(int i = 0; i < omp_stmt.size(); i++) {
     unsigned pragma_num = omp_stmt[i].pragma_loc;
+    unsigned end_num = omp_stmt[i].ub_loc;
     for (std::map<int, std::string>::iterator it = ndd_info.begin(); it != ndd_info.end(); ++it) {
-      if((it->first >= omp_stmt[i].lb_loc) && (it->first <= omp_stmt[i].ub_loc)) {
-	int pos = it->second.find(",");
+      if((it->first >= omp_stmt[i].lb_loc) && (it->first <= omp_stmt[i].ub_loc) && (omp_stmt[i].stmt_class.compare("OMPCriticalDirective") != 0)) {
+        int pos = it->second.find(",");
 	std::string pragma = "line:" + NumberToString<unsigned>(pragma_num) + "," + it->second.substr(pos + 1);
 	if(content.find(pragma) == std::string::npos)
 	  content += pragma + "\n";
@@ -148,11 +153,21 @@ int main(int argc, char **argv)
     }
     // if a line is already in the parallel list needs to be removed from the
     // sequential instruction list to avoid blacklist wrong lines (i.e. pragmas)
-    std::map<int, std::string>::const_iterator it2 = si_info.find(pragma_num);
-    if(it2 != si_info.end()) {
-      si_info.erase(pragma_num);
+    // std::map<int, std::string>::const_iterator iter = si_info.find(pragma_num);
+    // if(iter != si_info.end()) {
+    //   si_info.erase(pragma_num);
+    // }
+    // if a sequential line is within an OpenaMP pragma construct needs to be
+    // removed from the sequential instruction list to avoid blacklist wrong
+    // lines (i.e. pragmas)
+    for (std::map<int, std::string>::iterator it1 = si_info.begin(); it1 != si_info.end(); ++it1) {
+      if((it1->first >= pragma_num) && (it1->first <= end_num))
+        toErase.insert(it1->first);
     }
   }
+
+  for (std::set<int>::iterator it = toErase.begin(); it != toErase.end(); ++it)
+    si_info.erase(*it);
   
   for (std::map<int, std::string>::iterator it = si_info.begin(); it != si_info.end(); ++it) {
     if(content.find(it->second) == std::string::npos)
