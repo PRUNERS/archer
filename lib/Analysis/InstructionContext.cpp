@@ -176,7 +176,7 @@ bool InstructionContext::runOnModule(Module &M)
 	Instruction *Inst = &(*I);
 	
 	//If the function is an ".omp_outlined."
-	if(F->getName().find(".omp_outlined.") != std::string::npos) {
+	if(F->getName().find("omp_outlined") != std::string::npos) {
 	  // If the instruction is a Load/Store
 	  // add to the list of Parallel Instructions
 	  if (isa<LoadInst>(Inst) || isa<StoreInst>(Inst)) {
@@ -193,12 +193,13 @@ bool InstructionContext::runOnModule(Module &M)
 	  // If the instruction is a function call
 	  // And is not in the list of visited function
 	  // Insert Function in Queue of parallel functions
+          Function *f = NULL;
 	  if(isa<CallInst>(Inst)) {
-	    Function *f = cast<CallInst>(Inst)->getCalledFunction();
+	    f = cast<CallInst>(Inst)->getCalledFunction();
 
 	    if(f == NULL) {
 	      Value* c = cast<CallInst>(Inst)->getCalledValue();
-	      
+
 	      // special case that happens when some clang warnings are reported
 	      // we can find out the called function exactly
 	      if (ConstantExpr* ce = dyn_cast<ConstantExpr>(c)) {
@@ -208,14 +209,30 @@ bool InstructionContext::runOnModule(Module &M)
 		}
 	      }
 	    }
+          } else if(isa<InvokeInst>(Inst)) {
+            f = cast<InvokeInst>(Inst)->getCalledFunction();
 
-	    // Insert function call in queue of parallel functions
-	    if(f != NULL) {
-	      if(visited_functions.find(f) == visited_functions.end()) {
-	      	parallel_functions.push(f);
+	    if(f == NULL) {
+	      Value* c = cast<InvokeInst>(Inst)->getCalledValue();
+
+	      // special case that happens when some clang warnings are reported
+	      // we can find out the called function exactly
+	      if (ConstantExpr* ce = dyn_cast<ConstantExpr>(c)) {
+		if (ce->isCast()) {
+		  Value* castValue = ce->getOperand(0);
+		  f = dyn_cast<Function>(castValue);
+		}
 	      }
 	    }
-	  }
+          }
+
+          // Insert function call in queue of parallel functions
+          if(f != NULL) {
+            errs() << f->getName() << "\n";
+            if(visited_functions.find(f) == visited_functions.end()) {
+              parallel_functions.push(f);
+            }
+          }
 	} else {
 	  if (isa<LoadInst>(Inst) || isa<StoreInst>(Inst)) {
 	    // insert instruction in list of sequential instructions
