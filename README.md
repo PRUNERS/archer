@@ -98,7 +98,7 @@ Obtain Polly:
 
 Obtain Archer:
 
-    git clone git@github.com:simoatze/archer.git archer
+    git clone git@github.com:PRUNER/archer.git archer
     cd ..
 
 Obtain LLVM OpenMP Runtime with support for Archer:
