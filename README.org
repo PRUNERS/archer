@@ -39,7 +39,11 @@ Ninja visit https://martine.github.io/ninja/.
 Archer has been developed under LLVM 3.8 (for
 more information visit http://llvm.org).
 
-** Building
+** Automatic Building
+For an automatic building script visit the GitHub page
+https://github.com/PRUNER/llvm_archer.
+
+** Manual Building
 Archer comes as an LLVM tool, in order to compile it we must compile
 the entire LLVM/Clang infrastructure. Archer developers provide a
 patched LLVM/Clang version based on the main LLVM/Clang trunk.
@@ -245,6 +249,6 @@ optional arguments:
   -o [O]                Output filename
 #+END_SRC
 
-* Logos
+* Sponsor
 #+HTML: <img src="resources/images/uofu_logo.png" hspace="5" vspace="5" height="35%" width="35%" alt="UofU Logo" title="University of Utah" align="left" />
 #+HTML: <img src="resources/images/llnl_logo.png" hspace="5" vspace="5" height="50%" width="50%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" align="right" />

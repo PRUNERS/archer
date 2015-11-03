@@ -7,7 +7,8 @@
 <li><a href="#sec-3">3. Prerequisites</a></li>
 <li><a href="#sec-4">4. Installation</a>
 <ul>
-<li><a href="#sec-4-1">4.1. Building</a></li>
+<li><a href="#sec-4-1">4.1. Automatic Building</a></li>
+<li><a href="#sec-4-2">4.2. Manual Building</a></li>
 </ul>
 </li>
 <li><a href="#sec-5">5. Usage</a>
@@ -22,7 +23,7 @@
 <li><a href="#sec-5-2">5.2. Options</a></li>
 </ul>
 </li>
-<li><a href="#sec-6">6. Logos</a></li>
+<li><a href="#sec-6">6. Sponsor</a></li>
 </ul>
 </div>
 </div>
@@ -58,7 +59,12 @@ Ninja visit <https://martine.github.io/ninja/>.
 Archer has been developed under LLVM 3.8 (for
 more information visit <http://llvm.org>).
 
-## Building<a id="sec-4-1" name="sec-4-1"></a>
+## Automatic Building<a id="sec-4-1" name="sec-4-1"></a>
+
+For an automatic building script visit the GitHub page
+<https://github.com/PRUNER/llvm_archer>.
+
+## Manual Building<a id="sec-4-2" name="sec-4-2"></a>
 
 Archer comes as an LLVM tool, in order to compile it we must compile
 the entire LLVM/Clang infrastructure. Archer developers provide a
@@ -235,7 +241,7 @@ shows the options available with *clang-archer*.
       -c                    Only run preprocess, compile, and assemble steps
       -o [O]                Output filename
 
-# Logos<a id="sec-6" name="sec-6"></a>
+# Sponsor<a id="sec-6" name="sec-6"></a>
 
 <img src="resources/images/uofu_logo.png" hspace="5" vspace="5" height="35%" width="35%" alt="UofU Logo" title="University of Utah" align="left" />
 
