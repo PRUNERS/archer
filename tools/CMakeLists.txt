@@ -1,3 +1,4 @@
+set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.41 COMPONENTS filesystem unit_test_framework REQUIRED)
 message("Boost Include: ${Boost_INCLUDE_DIR}")
 message("Boost Libraries: ${Boost_LIBRARY_DIRS}")
