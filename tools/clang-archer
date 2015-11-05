@@ -227,7 +227,7 @@ def archerBuild(args):
         executeCommand(optCommand, args)
 
         optCommand = [ args.opt ]
-        optCommand += [ '-polly-detect-unprofitable', '-load', args.lib, ARCHER_DDA_FLAG, ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + "-optmized" + LL_EXT ]
+        optCommand += [ '-polly-process-unprofitable', '-load', args.lib, ARCHER_DDA_FLAG, ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + "-optmized" + LL_EXT ]
         executeCommand(optCommand, args)
     # Polly Pass
 
@@ -472,6 +472,9 @@ if __name__ == '__main__':
                 unknown.remove(arg)
                 break
         args.__dict__['unknown'] = unknown
+
+        filename = args.src
+        args.o = filename[::-1].split('.', 1)[1][::-1] + ".o"
 
     # Keep list of compiled file
     if args.src is not None:
