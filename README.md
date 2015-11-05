@@ -7,7 +7,8 @@
 <li><a href="#sec-3">3. Prerequisites</a></li>
 <li><a href="#sec-4">4. Installation</a>
 <ul>
-<li><a href="#sec-4-1">4.1. Building</a></li>
+<li><a href="#sec-4-1">4.1. Automatic Building</a></li>
+<li><a href="#sec-4-2">4.2. Manual Building</a></li>
 </ul>
 </li>
 <li><a href="#sec-5">5. Usage</a>
@@ -22,12 +23,11 @@
 <li><a href="#sec-5-2">5.2. Options</a></li>
 </ul>
 </li>
-<li><a href="#sec-6">6. Logos</a></li>
+<li><a href="#sec-6">6. Sponsor</a></li>
 </ul>
 </div>
 </div>
 
-pooo#+TITLE:     Archer
 
 # License<a id="sec-1" name="sec-1"></a>
 
@@ -48,54 +48,108 @@ to provide portability.
 
 # Prerequisites<a id="sec-3" name="sec-3"></a>
 
-To compile Archer you need an host GCC version >= 4.7.
+To compile Archer you need an host GCC version >= 4.7 and a CMake
+version >= 3.0.
+
+Ninja build system is preferred. For more information how to obtain
+Ninja visit <https://martine.github.io/ninja/>.
 
 # Installation<a id="sec-4" name="sec-4"></a>
 
-Archer has been developed under LLVM 3.5 with OpenMP support (for
-more information go to <http://clang-omp.github.io>).
+Archer has been developed under LLVM 3.8 (for
+more information visit <http://llvm.org>).
 
-## Building<a id="sec-4-1" name="sec-4-1"></a>
+## Automatic Building<a id="sec-4-1" name="sec-4-1"></a>
 
-First obtain Archer, e.g. from Github (<https://github.com/soarlab/Archer>):
+For an automatic building script visit the GitHub page
+<https://github.com/PRUNER/llvm_archer>.
 
-    git clone git@github.com:soarlab/Archer.git Archer
+## Manual Building<a id="sec-4-2" name="sec-4-2"></a>
 
-Then, build Archer by running `install.sh`:
+Archer comes as an LLVM tool, in order to compile it we must compile
+the entire LLVM/Clang infrastructure. Archer developers provide a
+patched LLVM/Clang version based on the main LLVM/Clang trunk.
 
-    ./install.sh --prefix=llvm_install_path [default: --prefix=/usr]
+In order to obtain and build LLVM/Clang with Archer execute the
+following commands in your command-line (instructions are based on
+bash shell, GCC-4.9.3 version and Ninja build system).
 
-The installation script will create a folder called **LLVM** at the same
-level of the Archer directory and install LLVM to *llvm_install_path*.
+    export ARCHER_BUILD=$PWD/ArcherBuild
+    mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
+
+Obtain the Archer patched LLVM version:
+
+    git clone git@github.com:simoatze/llvm.git llvm
+    cd llvm
+    git checkout archer
+
+Obtain the LLVM runtime:
+
+    cd projects
+    git clone git@github.com:simoatze/compilter-rt.git compiler-rt
+    cd ..
+
+Obtain the Archer patched Clang version:
+
+    cd tools
+    git clone git@github.com:simoatze/clang.git clang
+    cd clang
+    git checkout archer
+    cd ..
+
+Obtain Polly:
+
+    git clone git@github.com:simoatze/polly.git polly
+    cd ..
+
+Obtain Archer:
+
+    git clone git@github.com:PRUNER/archer.git archer
+    cd ..
+
+Obtain LLVM OpenMP Runtime with support for Archer:
+
+    cd $ARCHER_BUILD
+    git clone git@github.com:simoatze/openmp.git openmp-rt
+
+Now that we obtained the source code, the following command
+will build the patched LLVM/Clang version with Archer support:
+
+    export LLVM_INSTALL=$HOME/usr
+    cd $ARCHER_BUILD
+    mkdir build && cd build
+    CC=$(which gcc) CXX=$(which g++) cmake -G "Ninja" \
+    -D CMAKE_INSTALL_PREFIX:PATH=$LLVM_INSTALL \
+    -D LINK_POLLY_INTO_TOOLS:Bool=ON -D \
+    CLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp ../llvm
+    ninja -j4
+    ninja install
 
 In case your GCC is not installed in a standard path you need to
-specify the GCC toolchain path for LLVM/Clang using the flag
-*&#x2013;gcc-toolchain-path*:
-
-    ./install.sh --prefix=llvm_install_path --gcc-toolchain-path=gcc_toolchain_path
+specify the GCC toolchain path for LLVM/Clang using the variable
+*GCC<sub>INSTALL</sub><sub>PREFIX</sub>*.
 
 Once the installation completes, you need to setup your environement
 to allow Archer to work correctly.
 
 Please set the following path variables:
 
-    export PATH=${LLVM_INSTALL}/bin:${LLVM_INSTALL}/local/archer/bin:\${PATH}"
-    export LD_LIBRARY_PATH=${LLVM_INSTALL}/bin:${LLVM_INSTALL}/lib/intelomprt:${LLVM_INSTALL}/local/archer/lib:\${LD_LIBRARY_PATH}"
+    export PATH=${LLVM_INSTALL}/bin:${LLVM_INSTALL}/bin/archer:\${PATH}"
+    export LD_LIBRARY_PATH=${LLVM_INSTALL}/lib:\${LD_LIBRARY_PATH}"
 
 To make the environment permanent add the previous lines or
 equivalents to your shell start-up script such as "~/.bashrc".
 
-WARNING: 
+In order to build and install the OpenMP Runtime run the following
+commands:
 
-During the installation process you may see an error like the
-following:
-
-    CMake Error: install(EXPORT "LLVMExports" ...) includes target "opt" which requires target "Polly" that is not in the export set.
-    CMake Error: install(EXPORT "LLVMExports" ...) includes target "bugpoint" which requires target "Polly" that is not in the export set.
-
-It is an error related to the CMake configuration process of Polly. It
-does not affect your installation.  Future versions of Archer will
-upgrade Polly to the latest version avoiding this problem.
+    cd $ARCHER_BUILD/openmp-rt
+    mkdir build && cd build
+    CC=clang CXX=clang++ cmake -G 'Ninja' \
+    -D CMAKE_INSTALL_PREFIX:PATH=$LLVM_INSTALL \
+    -D LIBOMP_TSAN_SUPPORT=TRUE ..
+    ninja -j4
+    ninja install
 
 # Usage<a id="sec-5" name="sec-5"></a>
 
@@ -187,7 +241,7 @@ shows the options available with *clang-archer*.
       -c                    Only run preprocess, compile, and assemble steps
       -o [O]                Output filename
 
-# Logos<a id="sec-6" name="sec-6"></a>
+# Sponsor<a id="sec-6" name="sec-6"></a>
 
 <img src="resources/images/uofu_logo.png" hspace="5" vspace="5" height="35%" width="35%" alt="UofU Logo" title="University of Utah" align="left" />
 
