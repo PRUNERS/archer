@@ -60,7 +60,7 @@ bash shell, GCC-4.9.3 version and Ninja build system).
 Obtain the Archer patched LLVM version:
 
 #+BEGIN_SRC sh :exports code
-  git clone git@github.com:simoatze/llvm.git llvm
+  git clone git@github.com:PRUNER/llvm.git llvm
   cd llvm
   git checkout archer
 #+END_SRC
@@ -69,7 +69,7 @@ Obtain the LLVM runtime:
 
 #+BEGIN_SRC sh :exports code
   cd projects
-  git clone git@github.com:simoatze/compilter-rt.git compiler-rt
+  git clone git@github.com:PRUNER/compilter-rt.git compiler-rt
   cd ..
 #+END_SRC
 
@@ -77,7 +77,7 @@ Obtain the Archer patched Clang version:
 
 #+BEGIN_SRC sh :exports code
   cd tools
-  git clone git@github.com:simoatze/clang.git clang
+  git clone git@github.com:PRUNER/clang.git clang
   cd clang
   git checkout archer
   cd ..
@@ -86,7 +86,7 @@ Obtain the Archer patched Clang version:
 Obtain Polly:
 
 #+BEGIN_SRC sh :exports code
-  git clone git@github.com:simoatze/polly.git polly
+  git clone git@github.com:llvm-mirror/polly.git polly
   cd ..
 #+END_SRC
 
@@ -101,7 +101,9 @@ Obtain LLVM OpenMP Runtime with support for Archer:
 
 #+BEGIN_SRC sh :exports code
   cd $ARCHER_BUILD
-  git clone git@github.com:simoatze/openmp.git openmp-rt
+  git clone git@github.com:PRUNER/openmp.git openmp-rt
+  cd openmp-rt
+  git checkout annotations
 #+END_SRC
 
 Now that we obtained the source code, the following command
