@@ -144,6 +144,12 @@ install(DIRECTORY ${ARCHER_BINARY_DIR}/include/
 
 add_definitions( -D_GNU_SOURCE )
 
+if (LLVM_ENABLE_LIBCXXABI)
+  # if we use LLVM/libc++, we need to use the new compiler to build/link archer
+  set(CMAKE_C_COMPILER ${LLVM_BINARY_DIR}/bin/clang)
+  set(CMAKE_CXX_COMPILER ${LLVM_BINARY_DIR}/bin/clang++)
+endif (LLVM_ENABLE_LIBCXXABI)
+
 add_subdirectory(lib)
 add_subdirectory(plugin)
 add_subdirectory(tools)
