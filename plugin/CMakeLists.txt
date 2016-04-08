@@ -55,7 +55,7 @@ if( NOT MSVC ) # MSVC mangles symbols differently, and
   endif()
 endif()
 
-add_llvm_loadable_module(ArcherPlugin ArcherPlugin.cpp)
+add_llvm_loadable_module(ArcherPlugin ArcherPlugin.cpp DEPENDS clang-headers)
 
 if(LLVM_ENABLE_PLUGINS AND (WIN32 OR CYGWIN))
   target_link_libraries(ArcherPlugin ${cmake_2_8_12_PRIVATE}
