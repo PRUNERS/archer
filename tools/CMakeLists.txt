@@ -1,13 +1,13 @@
 set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.41 COMPONENTS REQUIRED)
-message("Boost Include: ${Boost_INCLUDE_DIR}")
-message("Boost Libraries: ${Boost_LIBRARY_DIRS}")
-message("Boost Libraries: ${Boost_LIBRARIES}")
+message(STATUS "Boost Include: ${Boost_INCLUDE_DIR}")
+message(STATUS "Boost Libraries: ${Boost_LIBRARY_DIRS}")
+message(STATUS "Boost Libraries: ${Boost_LIBRARIES}")
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
-set(CMAKE_CXX_FLAGS "-frtti")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frtti")
 
 add_executable(archer-bl archer-bl.cpp)
 file(COPY clang-archer clang-archer++ ar ranlib
