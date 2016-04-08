@@ -429,12 +429,12 @@ if __name__ == '__main__':
     buildFile = open(BUILD_LIST, "a")
 
     # Create include dir list
-    os.chdir("..")
-    for dir in os.walk(os.getcwd()):
-        for file in os.listdir(dir[0]):
-            if(str(file).endswith(".h")):
-                INCLUDE_LIST.append("-I" + dir[0])
-                break
+#    os.chdir("..")
+#    for dir in os.walk(os.getcwd()):
+#        for file in os.listdir(dir[0]):
+#            if(str(file).endswith(".h")):
+#                INCLUDE_LIST.append("-I" + dir[0])
+#                break
     os.chdir(WORKING_DIR)
     # Create include dir list
 
@@ -474,7 +474,8 @@ if __name__ == '__main__':
         args.__dict__['unknown'] = unknown
 
         filename = args.src
-        args.o = filename[::-1].split('.', 1)[1][::-1] + ".o"
+        if args.o == 'a.out':
+            args.o = filename[::-1].split('.', 1)[1][::-1] + ".o"
 
     # Keep list of compiled file
     if args.src is not None:

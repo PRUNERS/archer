@@ -1,3 +1,5 @@
+option(LLVM_ENABLE_ARCHER "Enable building ARCHER" ON) 
+if(LLVM_ENABLE_ARCHER)
 # Check if this is a in tree build.
 if (NOT DEFINED LLVM_MAIN_SRC_DIR)
   project(Archer)
@@ -144,11 +146,11 @@ install(DIRECTORY ${ARCHER_BINARY_DIR}/include/
 
 add_definitions( -D_GNU_SOURCE )
 
-if (LLVM_ENABLE_LIBCXXABI)
-  # if we use LLVM/libc++, we need to use the new compiler to build/link archer
-  set(CMAKE_C_COMPILER ${LLVM_BINARY_DIR}/bin/clang)
-  set(CMAKE_CXX_COMPILER ${LLVM_BINARY_DIR}/bin/clang++)
-endif (LLVM_ENABLE_LIBCXXABI)
+#if (LLVM_ENABLE_LIBCXXABI)
+#  # if we use LLVM/libc++, we need to use the new compiler to build/link archer
+#  set(CMAKE_C_COMPILER ${LLVM_BINARY_DIR}/bin/clang)
+#  set(CMAKE_CXX_COMPILER ${LLVM_BINARY_DIR}/bin/clang++)
+#endif (LLVM_ENABLE_LIBCXXABI)
 
 add_subdirectory(lib)
 add_subdirectory(plugin)
@@ -196,3 +198,4 @@ set_target_properties(archer-update-format PROPERTIES FOLDER "Archer")
 
 # Set the variable ARCHER_LINK_LIBS in the llvm/tools/ dir.
 set(ARCHER_LINK_LIBS ${ARCHER_LINK_LIBS} PARENT_SCOPE)
+endif(LLVM_ENABLE_ARCHER)
