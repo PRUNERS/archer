@@ -1,5 +1,3 @@
-option(LLVM_ENABLE_ARCHER "Enable building ARCHER" ON) 
-if(LLVM_ENABLE_ARCHER)
 # Check if this is a in tree build.
 if (NOT DEFINED LLVM_MAIN_SRC_DIR)
   project(Archer)
@@ -198,4 +196,3 @@ set_target_properties(archer-update-format PROPERTIES FOLDER "Archer")
 
 # Set the variable ARCHER_LINK_LIBS in the llvm/tools/ dir.
 set(ARCHER_LINK_LIBS ${ARCHER_LINK_LIBS} PARENT_SCOPE)
-endif(LLVM_ENABLE_ARCHER)
