@@ -54,16 +54,18 @@ import shutil
 import signal
 import subprocess
 import sys
+from os.path import expanduser
 
 VERSION = '0.1'
 
 # Working Dirs
+USER_HOME = expanduser("~")
 WORKING_DIR = os.getcwd()
-BUILD_LIST = '/tmp/buildList.ach'
-LOGS_LIST = '/tmp/logsList.ach'
-AR_FILE = '/tmp/ar.ach'
-RANLIB_FILE = '/tmp/ranlib.ach'
-LOGS_FLAG = '/tmp/clang-archer-log.ach'
+BUILD_LIST = USER_HOME+'/.archer-tmp/buildList.ach'
+LOGS_LIST = USER_HOME+'/.archer-tmp/logsList.ach'
+AR_FILE = USER_HOME+'/.archer-tmp/ar.ach'
+RANLIB_FILE = USER_HOME+'/.archer-tmp/ranlib.ach'
+LOGS_FLAG = USER_HOME+'/.archer-tmp/clang-archer-log.ach'
 buildFile = None
 ARCHER_DIR = '.archer'
 INCLUDE_LIST = []
@@ -93,13 +95,20 @@ OPT_FLAG="-O2"
 def sanitizeFileName(filename):
     return filename.rsplit("/", 1)[-1]
 
+def archerfyFileName(filename):
+    # this function inserts the temporal ARCHER_DIR just before the output file name
+    fileparts = filename.rsplit("/", 1)
+    if len(fileparts) < 2:
+        fileparts = ["."] + fileparts
+    return ("/"+ARCHER_DIR+"/").join(fileparts)
+
 def cleanLogs():
     if os.path.exists(LOGS_LIST):
         file = open(LOGS_LIST, "r")
         for line in file:
             shutil.rmtree(line.split('\n')[0], ignore_errors = True)
         file.close()
-    os.system("rm -rf /tmp/*.ach")
+    os.system("rm -rf "+USER_HOME+"/.archer-tmp/*.ach")
 
 def signal_handler(signal, frame):
     print('You pressed Ctrl+C!')
@@ -199,7 +208,7 @@ def archerBuild(args):
     # Create ByteCode
     # No OpenMP Support
     clangCommand = [ args.cc ]
-    clangCommand += [ "-Qunused-arguments", "-emit-llvm", "-O0", "-g", "-c", args.src, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT, '-I' + args.openmp_include ]
+    clangCommand += [ "-Qunused-arguments", "-emit-llvm", "-O0", "-g", "-c", args.src, "-o", archerfyFileName(args.o) + POLLY_BC_EXT, '-I' + args.openmp_include ]
     clangCommand.extend(args.unknown)
 
     executeCommand(clangCommand, args)
@@ -207,7 +216,7 @@ def archerBuild(args):
 
     # OpenMP Support
     clangCommand = [ args.cc ]
-    clangCommand += [ "-Qunused-arguments", "-emit-llvm", "-O0", "-g", "-fopenmp", "-c", args.src, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + OMP_BC_EXT, '-I' + args.openmp_include ]
+    clangCommand += [ "-Qunused-arguments", "-emit-llvm", "-O0", "-g", "-fopenmp", "-c", args.src, "-o", archerfyFileName(args.o) + OMP_BC_EXT, '-I' + args.openmp_include ]
     clangCommand.extend(args.unknown)
     executeCommand(clangCommand, args)
     # OpenMP Support
@@ -219,15 +228,15 @@ def archerBuild(args):
     # Polly Pass
     if(not args.disable_dd_blacklisting):
         optCommand = [ args.opt ]
-        optCommand += [ '-mem2reg', ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT + OPT_EXT ]
+        optCommand += [ '-mem2reg', archerfyFileName(args.o) + POLLY_BC_EXT, "-o", archerfyFileName(args.o) + POLLY_BC_EXT + OPT_EXT ]
         executeCommand(optCommand, args)
 
         optCommand = [ args.opt ]
-        optCommand += [ '-S', '-polly-canonicalize', ARCHER_DIR + "/" + sanitizeFileName(args.o) + POLLY_BC_EXT + OPT_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT ]
+        optCommand += [ '-S', '-polly-canonicalize', archerfyFileName(args.o) + POLLY_BC_EXT + OPT_EXT, "-o", archerfyFileName(args.o) + LL_EXT ]
         executeCommand(optCommand, args)
 
         optCommand = [ args.opt ]
-        optCommand += [ '-polly-process-unprofitable', '-load', args.lib, ARCHER_DDA_FLAG, ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + "-optmized" + LL_EXT ]
+        optCommand += [ '-polly-process-unprofitable', '-load', args.lib, ARCHER_DDA_FLAG, archerfyFileName(args.o) + LL_EXT, "-o", archerfyFileName(args.o) + "-optmized" + LL_EXT ]
         executeCommand(optCommand, args)
     # Polly Pass
 
@@ -271,7 +280,8 @@ def archerLink(args):
             spl = line.split(",",2)
             bc = spl[1].rsplit("/", 1)
             sp = spl[0].rsplit("/", 1)
-            bcLst.append(sp[0] + "/" + ARCHER_DIR + "/" + bc[1] + BC_EXT)
+#            bcLst.append(sp[0] + "/" + ARCHER_DIR + "/" + bc[1] + BC_EXT)
+            bcLst.append(archerfyFileName(spl[1]) + BC_EXT)
             lst.append(spl[0])
             lst.append(spl[1])
             lst.append(dotdict(json.loads(spl[2])))
@@ -280,17 +290,17 @@ def archerLink(args):
 
     # Link byte code and run InstructionContext Pass
     linkCommand = [ args.link ]
-    linkCommand += [ "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT ]
+    linkCommand += [ "-o", archerfyFileName(args.o) + BC_EXT ]
     linkCommand.extend(bcLst)
     executeCommand(linkCommand, args)
 
     linkCommand = [ args.link ]
-    linkCommand += [ "-f", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT ]
+    linkCommand += [ "-f", archerfyFileName(args.o) + BC_EXT, "-o", archerfyFileName(args.o) + LL_EXT ]
     executeCommand(linkCommand, args)
 
     if(not args.disable_sequential_blacklisting):
         optCommand = [ args.opt ]
-        optCommand += [ "-load", args.lib, "-archer-instruction-context", ARCHER_DIR + "/" + sanitizeFileName(args.o) + LL_EXT, "-o", ARCHER_DIR + "/" + sanitizeFileName(args.o) + BC_EXT ]
+        optCommand += [ "-load", args.lib, "-archer-instruction-context", archerfyFileName(args.o) + LL_EXT, "-o", archerfyFileName(args.o) + BC_EXT ]
         executeCommand(optCommand, args)
     # Link byte code and run InstructionContext Pass
 
@@ -420,6 +430,9 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, signal_handler)
 
+    mkdir_p(USER_HOME+'/.archer-tmp')
+
+
     if os.path.exists(LOGS_FLAG):
         with open(LOGS_FLAG, "r") as f:
             line = f.readline()
@@ -513,10 +526,10 @@ if __name__ == '__main__':
             archerLink(args)
         else:
             if not LINKING:
-                open('/tmp/ar_archer', 'w').close()
-                open('/tmp/ranlib_archer', 'w').close()
+                open(USER_HOME+'/.archer-tmp/ar_archer', 'w').close()
+                open(USER_HOME+'/.archer-tmp/ranlib_archer', 'w').close()
                 archerBuild(args)
             else:
-                os.remove("/tmp/ar_archer")
-                os.remove("/tmp/ranlib_archer")
+                os.remove(USER_HOME+'/.archer-tmp/ar_archer')
+                os.remove(USER_HOME+'/.archer-tmp/ranlib_archer')
                 archerLink(args)
