@@ -61,7 +61,7 @@ more information visit <http://llvm.org>).
 
 ## Automatic Building<a id="sec-4-1" name="sec-4-1"></a>
 
-For an automatic building script visit the GitHub page
+For an automatic building (recommended) script visit the GitHub page
 <https://github.com/PRUNER/llvm_archer>.
 
 ## Manual Building<a id="sec-4-2" name="sec-4-2"></a>
@@ -79,15 +79,10 @@ bash shell, GCC-4.9.3 version and Ninja build system).
 
 Obtain the Archer patched LLVM version:
 
-    git clone git@github.com:PRUNER/llvm.git llvm
-    cd llvm
+    git clone git@github.com:PRUNER/llvm.git llvm_src
+    cd llvm_src
     git checkout archer
-
-Obtain the LLVM runtime:
-
-    cd projects
-    git clone git@github.com:PRUNER/compilter-rt.git compiler-rt
-    cd ..
+    git checkout tags/1.0.0
 
 Obtain the Archer patched Clang version:
 
@@ -95,41 +90,88 @@ Obtain the Archer patched Clang version:
     git clone git@github.com:PRUNER/clang.git clang
     cd clang
     git checkout archer
+    git checkout tags/1.0.0
     cd ..
 
 Obtain Polly:
 
     git clone git@github.com:llvm-mirror/polly.git polly
+    cd polly
+    git checkout tags/1.0.0
     cd ..
 
 Obtain Archer:
 
     git clone git@github.com:PRUNER/archer.git archer
+    cd archer
+    git checkout tags/1.0.0
+    cd ../..
+
+Obtain the LLVM runtime:
+
+    cd projects
+    git clone git@github.com:PRUNER/compilter-rt.git compiler-rt
+    cd compiler-rt
+    git checkout tags/1.0.0
     cd ..
 
 Obtain LLVM OpenMP Runtime with support for Archer:
 
-    cd $ARCHER_BUILD
-    git clone git@github.com:PRUNER/openmp.git openmp-rt
-    cd openmp-rt
+    git clone git@github.com:PRUNER/openmp.git openmp
+    cd openmp
     git checkout annotations
+    git checkout tags/1.0.0
+
+Obtain LLVM libc++:
+
+    git clone git@github.com:llvm-mirror/libcxx.git
+
+Obtain LLVM libc++abi:
+
+    git clone git@github.com:llvm-mirror/libcxxabi.git
+
+Obtain LLVM libunwind:
+
+    git clone git@github.com:llvm-mirror/libunwind.git
 
 Now that we obtained the source code, the following command
-will build the patched LLVM/Clang version with Archer support:
+will build the patched LLVM/Clang version with Archer support.
 
-    export LLVM_INSTALL=$HOME/usr
+First we boostrap clang:
+
     cd $ARCHER_BUILD
-    mkdir build && cd build
-    CC=$(which gcc) CXX=$(which g++) cmake -G "Ninja" \
-    -D CMAKE_INSTALL_PREFIX:PATH=$LLVM_INSTALL \
-    -D LINK_POLLY_INTO_TOOLS:Bool=ON -D \
-    CLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp ../llvm
-    ninja -j4
+    mkdir -p llvm_bootstrap
+    cd llvm_bootstrap
+    CC=$(which gcc) CXX=$(which g++) cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_TOOL_ARCHER_BUILD=OFF -DLLVM_TARGETS_TO_BUILD=Native llvm_src
+    ninja -j8 -l8
+    cd ..
+    export LD_LIBRARY_PATH="${PWD}/llvm_boostrap/lib:${LD_LIBRARY_PATH}"
+    export PATH="${PWD}/llvm_bootstrap/bin:${PATH}"
+
+Then, we can actually build LLVM/Clang:
+
+    export BOOST_ROOT=/path/to/boost
+    export LLVM_INSTALL=$HOME/usr           # or any other install path
+    mkdir llvm_build && cd llvm_build
+    cmake -G Ninja \
+     -D CMAKE_C_COMPILER=clang \
+     -D CMAKE_CXX_COMPILER=clang++ \
+     -D CMAKE_INSTALL_PREFIX:PATH=${LLVM_INSTALL} \
+     -D LINK_POLLY_INTO_TOOLS:Bool=ON \
+     -D CLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp \
+     -D LIBOMP_TSAN_SUPPORT=TRUE \
+     -D CMAKE_BUILD_TYPE=Ninja \
+     -D LLVM_ENABLE_LIBCXX=ON \
+     -D LLVM_ENABLE_LIBCXXABI=ON \
+     -D LIBCXXABI_USE_LLVM_UNWINDER=ON \
+     -D CLANG_DEFAULT_CXX_STDLIB=libc++ \
+     -DBOOST_ROOT=${BOOST_ROOT} \
+     -DBOOST_LIBRARYDIR=${BOOST_ROOT}/lib \
+     -DBoost_NO_SYSTEM_PATHS=ON \
+     ../llvm_src
+    ninja -j8 -l8
     ninja install
 
-In case your GCC is not installed in a standard path you need to
-specify the GCC toolchain path for LLVM/Clang using the variable
-*GCC<sub>INSTALL</sub><sub>PREFIX</sub>*.
 
 Once the installation completes, you need to setup your environement
 to allow Archer to work correctly.
@@ -141,17 +183,6 @@ Please set the following path variables:
 
 To make the environment permanent add the previous lines or
 equivalents to your shell start-up script such as "~/.bashrc".
-
-In order to build and install the OpenMP Runtime run the following
-commands:
-
-    cd $ARCHER_BUILD/openmp-rt
-    mkdir build && cd build
-    CC=clang CXX=clang++ cmake -G 'Ninja' \
-    -D CMAKE_INSTALL_PREFIX:PATH=$LLVM_INSTALL \
-    -D LIBOMP_TSAN_SUPPORT=TRUE ..
-    ninja -j4
-    ninja install
 
 # Usage<a id="sec-5" name="sec-5"></a>
 
