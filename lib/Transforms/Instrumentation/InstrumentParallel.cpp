@@ -20,6 +20,7 @@
 #include "llvm/Analysis/CaptureTracking.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
@@ -28,6 +29,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Type.h"
 #include "llvm/ProfileData/InstrProf.h"
 #include "llvm/Support/CommandLine.h"
@@ -42,7 +44,6 @@
 #include "archer/LinkAllPasses.h"
 
 using namespace llvm;
-using namespace archer;
 
 #define DEBUG_TYPE "archer"
 
@@ -69,7 +70,7 @@ static void *initializeInstrumentParallelPassOnce(PassRegistry &Registry) {
 
 LLVM_DEFINE_ONCE_FLAG(InitializeInstrumentParallelPassFlag);
 
-void archer::initializeInstrumentParallelPass(PassRegistry &Registry) {
+void llvm::initializeInstrumentParallelPass(PassRegistry &Registry) {
   llvm::call_once(InitializeInstrumentParallelPassFlag,
                   initializeInstrumentParallelPassOnce, std::ref(Registry));
 }
@@ -82,7 +83,7 @@ void InstrumentParallel::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.addRequired<TargetLibraryInfoWrapperPass>();
 }
 
-Pass *archer::createInstrumentParallelPass() {
+Pass *llvm::createInstrumentParallelPass() {
   return new InstrumentParallel();
 }
 
@@ -91,13 +92,13 @@ bool InstrumentParallel::doInitialization(Module &M) {
 }
 
 bool InstrumentParallel::runOnFunction(Function &F) {
-  bool SanitizeFunction = F.hasFnAttribute(Attribute::SanitizeThread);
+  // bool SanitizeFunction = F.hasFnAttribute(Attribute::SanitizeThread);
   // const DataLayout &DL = F.getParent()->getDataLayout();
-  // F.addFnAttr(llvm::Attribute::SanitizeThread);
 
   StringRef functionName = F.getName();
-  if(SanitizeFunction)
-    printf("%s is a sanitize function\n", functionName.str().c_str());
+  
+  // if(SanitizeFunction)
+  //   printf("%s is a sanitize function\n", functionName.str().c_str());
 
   if((functionName.compare("main") == 0) ||
      (functionName.endswith("__swordomp__"))) {
@@ -155,6 +156,13 @@ bool InstrumentParallel::runOnFunction(Function &F) {
       args.push_back(Args);
       it++;                                                                                                                      }
 
+    // Removing SanitizeThread attribute so the sequential functions
+    // won't be instrumented
+    F.removeFnAttr(llvm::Attribute::SanitizeThread);
+    // bool SanitizeFunction = F.hasFnAttribute(Attribute::SanitizeThread);
+    // if(SanitizeFunction)
+    //   printf("Function %s won't be sanitized\n", functionName.str().c_str());
+
     Instruction *firstEntryBBI = &F.getEntryBlock().front();
     LoadInst *loadOmpStatus = new LoadInst(ompStatusGlobal, "", false, firstEntryBBI);
     loadOmpStatus->setAlignment(4);
@@ -180,3 +188,9 @@ bool InstrumentParallel::runOnFunction(Function &F) {
   // }
   return true;
 }
+
+static void registerInstrumentParallelPass(const PassManagerBuilder &, llvm::legacy::PassManagerBase &PM) {
+  PM.add(new InstrumentParallel());
+}
+
+static RegisterStandardPasses RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible, registerInstrumentParallelPass);

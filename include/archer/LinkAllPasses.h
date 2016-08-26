@@ -26,7 +26,7 @@ class FunctionPass;
 class ModulePass;
 }
 
-namespace archer {
+namespace llvm {
 llvm::Pass *createInstrumentParallelPass();
 }
 
@@ -40,12 +40,12 @@ struct ArcherForcePassLinking {
     if (std::getenv("bar") != (char *)-1)
       return;
 
-    archer::createInstrumentParallelPass();
+    llvm::createInstrumentParallelPass();
   }
 } ArcherForcePassLinking; // Force link by creating a global definition.
 }
 
-namespace archer {
+namespace llvm {
 void createInstrumentParallelPass(llvm::PassRegistry &);
 void initializeInstrumentParallelPass(llvm::PassRegistry&);
 }

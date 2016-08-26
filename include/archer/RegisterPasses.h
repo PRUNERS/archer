@@ -20,9 +20,7 @@ namespace llvm {
   namespace legacy {
     class PassManagerBase;
   }
-}
 
-namespace archer {
   void initializeArcherPasses(llvm::PassRegistry &Registry);
   void registerArcherPasses(llvm::legacy::PassManagerBase &PM);
 }

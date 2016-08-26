@@ -26,9 +26,7 @@
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Vectorize.h"
 
-using namespace llvm;
-
-namespace archer {
+namespace llvm {
 void initializeArcherPasses(llvm::PassRegistry &Registry) {
   initializeInstrumentParallelPass(Registry);
 }
