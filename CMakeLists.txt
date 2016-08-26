@@ -148,7 +148,7 @@ add_definitions( -D_GNU_SOURCE )
 
 add_subdirectory(lib)
 # add_subdirectory(plugin)
-# add_subdirectory(tools)
+add_subdirectory(tools)
 # add_subdirectory(test)
 # TODO: docs.
 
