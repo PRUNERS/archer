@@ -119,12 +119,8 @@ include_directories(
   BEFORE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/../clang/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/../polly/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/../polly/lib/External/isl/include
   ${CMAKE_CURRENT_BINARY_DIR}/include
   ${CMAKE_CURRENT_BINARY_DIR}/../clang/include
-  ${CMAKE_CURRENT_BINARY_DIR}/../polly/include
-  ${CMAKE_CURRENT_BINARY_DIR}/../polly/lib/External/isl/include
   )
 
 install(DIRECTORY include/
@@ -151,21 +147,16 @@ add_definitions( -D_GNU_SOURCE )
 #endif (LLVM_ENABLE_LIBCXXABI)
 
 add_subdirectory(lib)
-add_subdirectory(plugin)
-add_subdirectory(tools)
+# add_subdirectory(plugin)
+# add_subdirectory(tools)
 # add_subdirectory(test)
 # TODO: docs.
 
 
-# configure_file( ${ARCHER_BINARY_DIR}/../polly/include/polly/Config/config.h )
-
 # Add target to check formatting of archer files
 file( GLOB_RECURSE files *.h *.cpp)
 # file( GLOB_RECURSE jsonfiles lib/JSON/*.h lib/JSON/*.cpp)
-file( GLOB_RECURSE islfiles ../polly/lib/External/isl/*.h ../polly/lib/External/isl/*.c
-                    ../polly/lib/External/isl/include/isl/*.h ../polly/lib/External/isl/imath/*.h
-                    ../polly/lib/External/isl/imath/*.c)
-list( REMOVE_ITEM files ${islfiles})
+# list( REMOVE_ITEM files ${islfiles})
 
 set(check_format_depends)
 set(update_format_depends)

@@ -6,15 +6,13 @@ if (MSVC_IDE OR XCODE)
 endif ()
 
 add_archer_library(Archer
-  Analysis/ArcherDDA.cpp
-  Analysis/InstructionContext.cpp
-  Analysis/LoadsStoresList.cpp
+  Transforms/Instrumentation/InstrumentParallel.cpp
   Support/RegisterPasses.cpp
   Support/Util.cpp
   ${ARCHER_HEADER_FILES}
   )
 
-target_link_libraries(Archer PollyISL)
+target_link_libraries(Archer)
 
 if (BUILD_SHARED_LIBS)
   target_link_libraries(Archer
@@ -55,4 +53,3 @@ if (TARGET intrinsics_gen)
   # Check if we are building as part of an LLVM build
   add_dependencies(Archer intrinsics_gen)
 endif()
-

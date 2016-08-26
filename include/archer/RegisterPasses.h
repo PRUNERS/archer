@@ -17,13 +17,13 @@
 #include "llvm/IR/LegacyPassManager.h"
 
 namespace llvm {
-namespace legacy {
-class PassManagerBase;
-}
+  namespace legacy {
+    class PassManagerBase;
+  }
 }
 
 namespace archer {
-void initializeArcherPasses(llvm::PassRegistry &Registry);
-void registerArcherPasses(llvm::legacy::PassManagerBase &PM);
+  void initializeArcherPasses(llvm::PassRegistry &Registry);
+  void registerArcherPasses(llvm::legacy::PassManagerBase &PM);
 }
 #endif
