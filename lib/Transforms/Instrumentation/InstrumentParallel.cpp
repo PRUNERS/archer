@@ -171,12 +171,16 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     F.getEntryBlock().back().eraseFromParent();
     BasicBlock *swordThenBB = BasicBlock::Create(M->getContext(), "__swordomp__if.then", &F);
     BranchInst::Create(swordThenBB, newEntryBB, CondInst, &F.getEntryBlock());
-    
+
+    // For now we assing the debug loc of the first instruction of the
+    // cloned function
     if(new_function->getReturnType()->isVoidTy()) {
-      CallInst::Create(new_function, args, "", swordThenBB);
+      CallInst *parallelCall = CallInst::Create(new_function, args, "", swordThenBB);
+      parallelCall->setDebugLoc(firstEntryBBI->getDebugLoc());
       ReturnInst::Create(M->getContext(), nullptr, swordThenBB);
     } else {
       CallInst *parallelCall = CallInst::Create(new_function, args, functionName + "__swordomp__", swordThenBB);
+      parallelCall->setDebugLoc(firstEntryBBI->getDebugLoc());
       ReturnInst::Create(M->getContext(), parallelCall, swordThenBB);
     }
   }
