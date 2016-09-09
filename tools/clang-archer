@@ -45,4 +45,4 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-clang -Xclang -load -Xclang LLVMArcher.so -fopenmp -fsanitize=thread $@
+clang -Xclang -load -Xclang LLVMArcher.so -fopenmp $@
