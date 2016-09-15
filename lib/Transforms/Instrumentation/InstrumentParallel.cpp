@@ -413,7 +413,8 @@ bool InstrumentParallel::runOnFunction(Function &F) {
   //   printf("%s is a sanitize function\n", functionName.str().c_str());
 
   if((functionName.compare("main") == 0) ||
-     (functionName.endswith("__swordomp__"))) {
+     functionName.endswith("__swordomp__") ||
+     functionName.endswith("__clang_call_terminate")) {
     return true;
   }
 
