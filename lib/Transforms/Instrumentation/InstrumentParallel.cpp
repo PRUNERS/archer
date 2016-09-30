@@ -17,6 +17,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/CaptureTracking.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
@@ -96,12 +97,14 @@ private:
   int getMemoryAccessFuncIndex(Value *Addr, const DataLayout &DL);
   void setMetadata(Instruction *Inst, const char *name, const char *description);
   bool isNotInstrumentable(MDNode *mdNode);
+  Value *getPointerOperand(Value *I);
 
   Type *IntptrTy;
   IntegerType *OrdTy;
   // Callbacks to run-time library are computed in doInitialization.
   // Function *TsanFuncEntry;
   // Function *TsanFuncExit;
+  Function *SwordFuncTermination;
   // Accesses sizes are powers of two: 1, 2, 4, 8, 16.
   static const size_t kNumberOfAccessSizes = 5;
   Function *TsanRead[kNumberOfAccessSizes];
@@ -126,6 +129,7 @@ INITIALIZE_PASS_BEGIN(
     "InstrumentParallel: instrument parallel functions.",
     false, false)
 INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(AAResultsWrapperPass)
 INITIALIZE_PASS_END(
     InstrumentParallel, "archer-sbl",
     "InstrumentParallel: instrument parallel functions.",
@@ -137,6 +141,7 @@ const char *InstrumentParallel::getPassName() const {
 
 void InstrumentParallel::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.addRequired<TargetLibraryInfoWrapperPass>();
+  AU.addRequired<AAResultsWrapperPass>();
 }
 
 Pass *llvm::createInstrumentParallelPass() {
@@ -150,6 +155,8 @@ void InstrumentParallel::initializeCallbacks(Module &M) {
   //     "__tsan_func_entry", IRB.getVoidTy(), IRB.getInt8PtrTy(), nullptr));
   // TsanFuncExit = checkSanitizerInterfaceFunction(
   //     M.getOrInsertFunction("__tsan_func_exit", IRB.getVoidTy(), nullptr));
+  SwordFuncTermination = checkSanitizerInterfaceFunction(
+    M.getOrInsertFunction("__swordomp_internal_end_checker_threads", IRB.getVoidTy(), nullptr));
   OrdTy = IRB.getInt32Ty();
   for (size_t i = 0; i < kNumberOfAccessSizes; ++i) {
     const unsigned ByteSize = 1U << i;
@@ -298,8 +305,16 @@ bool InstrumentParallel::addrPointsToConstantData(Value *Addr) {
   return false;
 }
 
+Value *InstrumentParallel::getPointerOperand(Value *I) {
+  if (LoadInst *LI = dyn_cast<LoadInst>(I))
+    return LI->getPointerOperand();
+  if (StoreInst *SI = dyn_cast<StoreInst>(I))
+    return SI->getPointerOperand();
+  return nullptr;
+}
+
 bool InstrumentParallel::isNotInstrumentable(MDNode *mdNode) {
-  
+
   DISubprogram *subProg = dyn_cast_or_null<llvm::DISubprogram>(mdNode);
   if(subProg) {
     if(subProg->getName().startswith(".omp") ||
@@ -308,8 +323,8 @@ bool InstrumentParallel::isNotInstrumentable(MDNode *mdNode) {
     else
       return false;
   }
-    
-  DILexicalBlockFile *subBlockFile = dyn_cast_or_null<llvm::DILexicalBlockFile>(mdNode); 
+
+  DILexicalBlockFile *subBlockFile = dyn_cast_or_null<llvm::DILexicalBlockFile>(mdNode);
   if(subBlockFile)
     return isNotInstrumentable(subBlockFile->getScope());
 
@@ -335,6 +350,8 @@ bool InstrumentParallel::isNotInstrumentable(MDNode *mdNode) {
 void InstrumentParallel::chooseInstructionsToInstrument(
     SmallVectorImpl<Instruction *> &Local, SmallVectorImpl<Instruction *> &All,
     const DataLayout &DL) {
+  std::vector<Instruction*> LoadsAndStoresTotal;
+  std::vector<Instruction*> LoadsAndStoresToRemove;
   SmallSet<Value*, 8> WriteTargets;
   // Iterate from the end.
   for (Instruction *I : reverse(Local)) {
@@ -380,6 +397,53 @@ void InstrumentParallel::chooseInstructionsToInstrument(
     }
     All.push_back(I);
   }
+
+  for(SmallVectorImpl<Instruction *>::iterator it=All.begin() ; it < All.end(); it++) {
+    for(unsigned i = 0; i < (*it)->getNumOperands(); i++) {
+      if(((*it)->getOperand(i)->getName().compare(".omp.iv") == 0) ||
+         ((*it)->getOperand(i)->getName().compare(".omp.lb") == 0) ||
+         ((*it)->getOperand(i)->getName().compare(".omp.ub") == 0) ||
+         ((*it)->getOperand(i)->getName().compare(".omp.stride") == 0) ||
+         ((*it)->getOperand(i)->getName().compare(".omp.is_last") == 0)) {
+        All.erase(it);
+        break;
+      }
+    }
+  }
+
+  /*
+  // AliasAnalysis
+  AliasAnalysis &AA = getAnalysis<AAResultsWrapperPass>().getAAResults();
+  for (Instruction *I1 : LoadsAndStoresTotal) {
+    for (Instruction *I2 : LoadsAndStoresTotal) {
+      if(I1 != I2) {
+        if(!((AA.alias(MemoryLocation::get(I1), MemoryLocation::get(I2)) == MayAlias) ||
+             (AA.alias(MemoryLocation::get(I1), MemoryLocation::get(I2)) == MustAlias))) {
+          LoadsAndStoresToRemove.push_back(I1);
+          // dbgs() << "No alias: "<< *I1 << "\n";
+        }
+      }
+    }
+  }
+
+  bool Found;
+  for(Instruction *I1 : LoadsAndStoresTotal) {
+    // dbgs() << "Restart\n";
+    Found = false;
+    for(Instruction *I2 : LoadsAndStoresToRemove) {
+      if(I1 == I2) {
+        // dbgs() << "Break: " << *I1 << "\n";
+        Found = true;
+      }
+      if(Found)
+        break;
+    }
+    if(!Found) {
+      // dbgs() << "Inserting: " << *I1 << "\n";
+      All.push_back(I1);
+    }
+  }
+  */
   Local.clear();
 }
 
@@ -412,34 +476,105 @@ bool InstrumentParallel::runOnFunction(Function &F) {
   // if(SanitizeFunction)
   //   printf("%s is a sanitize function\n", functionName.str().c_str());
 
-  if((functionName.compare("main") == 0) ||
+  if(// (functionName.compare("main") == 0) ||
+     functionName.startswith("__swordomp") ||
+     functionName.endswith("_dtor") ||
      functionName.endswith("__swordomp__") ||
      functionName.endswith("__clang_call_terminate")) {
     return true;
   }
 
   Module *M = F.getParent();
+  ConstantInt *Zero8 = ConstantInt::get(Type::getInt8Ty(M->getContext()), 0);
+  ConstantInt *Zero32 = ConstantInt::get(Type::getInt32Ty(M->getContext()), 0);
+  ConstantInt *Zero64 = ConstantInt::get(Type::getInt64Ty(M->getContext()), 0);
   ConstantInt *One = ConstantInt::get(Type::getInt32Ty(M->getContext()), 1);
+
+  llvm::GlobalVariable *ompStatusGlobal = NULL;
+  if(functionName.compare("main") == 0) {
+    llvm::GlobalVariable *ompTid;
+    ompTid = M->getNamedGlobal("tid");
+    if(!ompTid) {
+      IntegerType *Int64Ty = IntegerType::getInt64Ty(M->getContext());
+      ompTid = new llvm::GlobalVariable(*M, Int64Ty, false,
+                                        llvm::GlobalValue::CommonLinkage, Zero64,
+                                        "tid", NULL,
+                                        GlobalVariable::GeneralDynamicTLSModel, 0, false);
+    }
+    llvm::GlobalVariable *ompStack;
+    ompStack = M->getNamedGlobal("stack");
+    if(!ompStack) {
+      IntegerType *Int64Ty = IntegerType::getInt64Ty(M->getContext());
+      ompStack = new llvm::GlobalVariable(*M, Int64Ty, false,
+                                        llvm::GlobalValue::CommonLinkage, Zero64,
+                                        "stack", NULL,
+                                        GlobalVariable::GeneralDynamicTLSModel, 0, false);
+    }
+    llvm::GlobalVariable *ompStacksize;
+    ompStacksize = M->getNamedGlobal("stacksize");
+    if(!ompStacksize) {
+      IntegerType *Int64Ty = IntegerType::getInt64Ty(M->getContext());
+      ompStacksize = new llvm::GlobalVariable(*M, Int64Ty, false,
+                                        llvm::GlobalValue::CommonLinkage, Zero64,
+                                        "stacksize", NULL,
+                                        GlobalVariable::GeneralDynamicTLSModel, 0, false);
+    }
+    ompStatusGlobal = M->getNamedGlobal("__swordomp_status__");
+    if(!ompStatusGlobal) {
+      IntegerType *Int32Ty = IntegerType::getInt32Ty(M->getContext());
+      ompStatusGlobal = new llvm::GlobalVariable(*M, Int32Ty, false,
+                                        llvm::GlobalValue::CommonLinkage, Zero32,
+                                        "__swordomp_status__", NULL,
+                                        GlobalVariable::GeneralDynamicTLSModel, 0, false);
+    }
+    llvm::GlobalVariable *ompCritical;
+    ompCritical = M->getNamedGlobal("__swordomp_is_critical__");
+    if(!ompCritical) {
+      IntegerType *Int8Ty = IntegerType::getInt8Ty(M->getContext());
+      ompCritical = new llvm::GlobalVariable(*M, Int8Ty, false,
+                                        llvm::GlobalValue::CommonLinkage, Zero8,
+                                        "__swordomp_is_critical__", NULL,
+                                        GlobalVariable::GeneralDynamicTLSModel, 0, false);
+    }
+    return true;
+  }
+
+  // if(functionName.compare("main") == 0) {
+  //   // Insert function call at the end of the main
+  //   // __swordomp_internal_end_checker_threads
+  //   SmallVector<Instruction*, 8> RetVec;
+  //   for (auto &BB : F) {
+  //     for (auto &Inst : BB) {
+  //       if (isa<ReturnInst>(Inst))
+  //         RetVec.push_back(&Inst);
+  //     }
+  //   }
+  //   for (auto RetInst : RetVec) {
+  //     IRBuilder<> IRBRet(RetInst);
+  //     IRBRet.CreateCall(SwordFuncTermination, {});
+  //   }
+  //   return true;
+  // }
 
   // Insert in TLS extern variable
   // extern __thread int __swordomp_status__;
-  llvm::GlobalVariable *ompStatusGlobal;
-  ompStatusGlobal = M->getNamedGlobal("__swordomp_status__");
-  if(!ompStatusGlobal) {
-    IntegerType *Int32Ty = IntegerType::getInt32Ty(M->getContext());
-    ompStatusGlobal = new llvm::GlobalVariable(*M, Int32Ty, false,
-                             llvm::GlobalValue::ExternalLinkage, 0,
-                             "__swordomp_status__", NULL,
-                             GlobalVariable::GeneralDynamicTLSModel, 0, true);
-    ompStatusGlobal->setAlignment(4);
-  }
+
+  // ompStatusGlobal = M->getNamedGlobal("__swordomp_status__");
+  // if(!ompStatusGlobal) {
+  //   IntegerType *Int32Ty = IntegerType::getInt32Ty(M->getContext());
+  //   ompStatusGlobal = new llvm::GlobalVariable(*M, Int32Ty, false,
+  //                                              llvm::GlobalValue::CommonLinkage, 0,
+  //                                              "__swordomp_status__", NULL,
+  //                                              GlobalVariable::GeneralDynamicTLSModel, 0, true);
+  // }
 
   if(functionName.startswith(".omp")) {
+    /*
     // Increment of __swordomp_status__
     Instruction *entryBBI = &F.getEntryBlock().front();
     LoadInst *loadInc = new LoadInst(ompStatusGlobal, "loadIncOmpStatus", false, entryBBI);
     loadInc->setAlignment(4);
-    setMetadata(loadInc, "swordrt.ompstatus", "SwordRT Instrumentation");
+    setMetadata(loadInc, "swordomp.ompstatus", "SwordRT Instrumentation");
     Instruction *inc = BinaryOperator::Create (BinaryOperator::Add,
                                                loadInc, One,
                                                "incOmpStatus",
@@ -465,6 +600,31 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     } else {
       report_fatal_error("Broken function found, compilation aborted!");
     }
+    */
+
+    IRBuilder<> IRB(M->getContext());
+    // Function *swordompInc = checkSanitizerInterfaceFunction(M->getOrInsertFunction(
+    //   "__swordomp_status_inc", IRB.getVoidTy(), IRB.getInt8PtrTy(), nullptr));
+    Function *swordompDec = checkSanitizerInterfaceFunction(M->getOrInsertFunction(
+      "__swordomp_status_dec", IRB.getVoidTy(), nullptr));
+    Instruction *entryBBI = &F.getEntryBlock().front();
+    // IRBuilder<> IRBS(entryBBI);
+    // IRBS.CreateCall(swordompInc, None);
+    llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getVoidTy(M->getContext()), false);
+    Function *swordompInc = (Function*) M->getOrInsertFunction("__swordomp_status_inc", funcType);
+    std::vector<Value*> emptyArgs;
+    CallInst *swordompIncCall = CallInst::Create(swordompInc, makeArrayRef(emptyArgs), "", entryBBI);
+    // swordompIncCall->setDebugLoc(firstEntryBBI->getDebugLoc());
+    Instruction *exitBBI = F.back().getTerminator();
+    if(exitBBI) {
+      IRBuilder<> IRBE(exitBBI);
+      IRBE.CreateCall(swordompDec, None);
+      // CallInst *swordompDecCall = CallInst::Create(swordompDec, "", exitBBI);
+      // swordompDecCall->setDebugLoc(firstEntryBBI->getDebugLoc());
+    } else {
+      report_fatal_error("Broken function found, compilation aborted!");
+    }
+
     IF = &F;
   } else {
     ValueToValueMapTy VMap;
@@ -487,19 +647,33 @@ bool InstrumentParallel::runOnFunction(Function &F) {
 
     // Instruction *firstEntryBBI = &F.getEntryBlock().front();
     Instruction *firstEntryBBI = NULL;
+    Instruction *firstEntryBBDI = NULL;
     // for (auto &BB : F) {
     for (auto &Inst : F.getEntryBlock()) {
       if(Inst.getDebugLoc()) {
-        firstEntryBBI = &Inst;
+        firstEntryBBDI = &Inst;
         break;
       }
     }
+    firstEntryBBI = &F.getEntryBlock().front();
     // }
-    if(!firstEntryBBI)
+    if(!firstEntryBBI || !firstEntryBBI)
       report_fatal_error("No instructions with debug information!");
-    LoadInst *loadOmpStatus = new LoadInst(ompStatusGlobal, "", false, firstEntryBBI);
-    loadOmpStatus->setAlignment(4);
+
+    llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getInt32Ty(M->getContext()), false);
+    Function *getSwordompStatus = (Function*) M->getOrInsertFunction("__swordomp_get_status", funcType);
+    std::vector<Value*> emptyArgs;
+    CallInst *getSwordompStatusCall = CallInst::Create(getSwordompStatus, makeArrayRef(emptyArgs), "", firstEntryBBI);
+    Value *ompStatus = new AllocaInst(Type::getInt32Ty(M->getContext()), "__swordomp_get_status_res", firstEntryBBI);
+    StoreInst *storeOmpStatus = new StoreInst(getSwordompStatusCall, ompStatus, firstEntryBBI);
+    storeOmpStatus->setAlignment(4);
+    LoadInst *loadOmpStatus = new LoadInst(ompStatus, "", false, firstEntryBBI);
     Instruction *CondInst = new ICmpInst(firstEntryBBI, ICmpInst::ICMP_EQ, loadOmpStatus, One, "__swordomp__cond");
+
+    // LoadInst *loadOmpStatus = new LoadInst(ompStatusGlobal, "", false, firstEntryBBI);
+    // loadOmpStatus->setAlignment(4);
+    // Instruction *CondInst = new ICmpInst(firstEntryBBI, ICmpInst::ICMP_EQ, loadOmpStatus, One, "__swordomp__cond");
+
     BasicBlock *newEntryBB = F.getEntryBlock().splitBasicBlock(firstEntryBBI, "__swordomp__entry");
     F.getEntryBlock().back().eraseFromParent();
     BasicBlock *swordThenBB = BasicBlock::Create(M->getContext(), "__swordomp__if.then", &F);
@@ -509,11 +683,11 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     // cloned function
     if(new_function->getReturnType()->isVoidTy()) {
       CallInst *parallelCall = CallInst::Create(new_function, args, "", swordThenBB);
-      parallelCall->setDebugLoc(firstEntryBBI->getDebugLoc());
+      parallelCall->setDebugLoc(firstEntryBBDI->getDebugLoc());
       ReturnInst::Create(M->getContext(), nullptr, swordThenBB);
     } else {
       CallInst *parallelCall = CallInst::Create(new_function, args, functionName + "__swordomp__", swordThenBB);
-      parallelCall->setDebugLoc(firstEntryBBI->getDebugLoc());
+      parallelCall->setDebugLoc(firstEntryBBDI->getDebugLoc());
       ReturnInst::Create(M->getContext(), parallelCall, swordThenBB);
     }
     IF = new_function;
