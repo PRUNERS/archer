@@ -50,6 +50,9 @@ using namespace llvm;
 
 #define DEBUG_TYPE "archer"
 
+#define TLS
+// #define NOTLS
+
 static cl::opt<bool>  ClInstrumentMemoryAccesses(
     "archer-instrument-memory-accesses", cl::init(true),
     cl::desc("Instrument memory accesses"), cl::Hidden);
@@ -476,21 +479,36 @@ bool InstrumentParallel::runOnFunction(Function &F) {
   // if(SanitizeFunction)
   //   printf("%s is a sanitize function\n", functionName.str().c_str());
 
-  if(// (functionName.compare("main") == 0) ||
+#ifdef TLS
+  if((functionName.compare("main") == 0) ||
      functionName.startswith("__swordomp") ||
      functionName.endswith("_dtor") ||
      functionName.endswith("__swordomp__") ||
      functionName.endswith("__clang_call_terminate")) {
     return true;
   }
+#else
+  if(functionName.startswith("__swordomp") ||
+     functionName.endswith("_dtor") ||
+     functionName.endswith("__swordomp__") ||
+     functionName.endswith("__clang_call_terminate")) {
+    return true;
+  }
+#endif
 
   Module *M = F.getParent();
+
+#ifndef TLS
   ConstantInt *Zero8 = ConstantInt::get(Type::getInt8Ty(M->getContext()), 0);
   ConstantInt *Zero32 = ConstantInt::get(Type::getInt32Ty(M->getContext()), 0);
   ConstantInt *Zero64 = ConstantInt::get(Type::getInt64Ty(M->getContext()), 0);
+#endif
+
   ConstantInt *One = ConstantInt::get(Type::getInt32Ty(M->getContext()), 1);
 
   llvm::GlobalVariable *ompStatusGlobal = NULL;
+
+#ifdef NOTLS
   if(functionName.compare("main") == 0) {
     llvm::GlobalVariable *ompTid;
     ompTid = M->getNamedGlobal("tid");
@@ -538,6 +556,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     }
     return true;
   }
+#endif
 
   // if(functionName.compare("main") == 0) {
   //   // Insert function call at the end of the main
@@ -556,20 +575,19 @@ bool InstrumentParallel::runOnFunction(Function &F) {
   //   return true;
   // }
 
-  // Insert in TLS extern variable
-  // extern __thread int __swordomp_status__;
-
-  // ompStatusGlobal = M->getNamedGlobal("__swordomp_status__");
-  // if(!ompStatusGlobal) {
-  //   IntegerType *Int32Ty = IntegerType::getInt32Ty(M->getContext());
-  //   ompStatusGlobal = new llvm::GlobalVariable(*M, Int32Ty, false,
-  //                                              llvm::GlobalValue::CommonLinkage, 0,
-  //                                              "__swordomp_status__", NULL,
-  //                                              GlobalVariable::GeneralDynamicTLSModel, 0, true);
-  // }
+#ifdef TLS
+  ompStatusGlobal = M->getNamedGlobal("__swordomp_status__");
+  if(!ompStatusGlobal) {
+    IntegerType *Int32Ty = IntegerType::getInt32Ty(M->getContext());
+    ompStatusGlobal = new llvm::GlobalVariable(*M, Int32Ty, false,
+                                               llvm::GlobalValue::ExternalLinkage, 0,
+                                               "__swordomp_status__", NULL,
+                                               GlobalVariable::GeneralDynamicTLSModel, 0, true);
+  }
+#endif
 
   if(functionName.startswith(".omp")) {
-    /*
+#ifdef TLS
     // Increment of __swordomp_status__
     Instruction *entryBBI = &F.getEntryBlock().front();
     LoadInst *loadInc = new LoadInst(ompStatusGlobal, "loadIncOmpStatus", false, entryBBI);
@@ -600,8 +618,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     } else {
       report_fatal_error("Broken function found, compilation aborted!");
     }
-    */
-
+#else
     IRBuilder<> IRB(M->getContext());
     // Function *swordompInc = checkSanitizerInterfaceFunction(M->getOrInsertFunction(
     //   "__swordomp_status_inc", IRB.getVoidTy(), IRB.getInt8PtrTy(), nullptr));
@@ -624,6 +641,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     } else {
       report_fatal_error("Broken function found, compilation aborted!");
     }
+#endif
 
     IF = &F;
   } else {
@@ -660,6 +678,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     if(!firstEntryBBI || !firstEntryBBI)
       report_fatal_error("No instructions with debug information!");
 
+#ifndef TLS
     llvm::FunctionType* funcType = llvm::FunctionType::get(llvm::Type::getInt32Ty(M->getContext()), false);
     Function *getSwordompStatus = (Function*) M->getOrInsertFunction("__swordomp_get_status", funcType);
     std::vector<Value*> emptyArgs;
@@ -669,10 +688,11 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     storeOmpStatus->setAlignment(4);
     LoadInst *loadOmpStatus = new LoadInst(ompStatus, "", false, firstEntryBBI);
     Instruction *CondInst = new ICmpInst(firstEntryBBI, ICmpInst::ICMP_EQ, loadOmpStatus, One, "__swordomp__cond");
-
-    // LoadInst *loadOmpStatus = new LoadInst(ompStatusGlobal, "", false, firstEntryBBI);
-    // loadOmpStatus->setAlignment(4);
-    // Instruction *CondInst = new ICmpInst(firstEntryBBI, ICmpInst::ICMP_EQ, loadOmpStatus, One, "__swordomp__cond");
+#else
+    LoadInst *loadOmpStatus = new LoadInst(ompStatusGlobal, "", false, firstEntryBBI);
+    loadOmpStatus->setAlignment(4);
+    Instruction *CondInst = new ICmpInst(firstEntryBBI, ICmpInst::ICMP_EQ, loadOmpStatus, One, "__swordomp__cond");
+#endif
 
     BasicBlock *newEntryBB = F.getEntryBlock().splitBasicBlock(firstEntryBBI, "__swordomp__entry");
     F.getEntryBlock().back().eraseFromParent();
