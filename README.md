@@ -110,7 +110,7 @@ Obtain Archer:
 Obtain the LLVM runtime:
 
     cd projects
-    git clone git@github.com:PRUNER/compilter-rt.git compiler-rt
+    git clone git@github.com:PRUNER/compiler-rt.git compiler-rt
     cd compiler-rt
     git checkout tags/1.0.0
     cd ..
