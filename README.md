@@ -142,7 +142,7 @@ First we boostrap clang:
     cd $ARCHER_BUILD
     mkdir -p llvm_bootstrap
     cd llvm_bootstrap
-    CC=$(which gcc) CXX=$(which g++) cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_TOOL_ARCHER_BUILD=OFF -DLLVM_TARGETS_TO_BUILD=Native llvm_src
+    CC=$(which gcc) CXX=$(which g++) cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_TOOL_ARCHER_BUILD=OFF -DLLVM_TARGETS_TO_BUILD=Native ../llvm_src
     ninja -j8 -l8
     cd ..
     export LD_LIBRARY_PATH="${PWD}/llvm_boostrap/lib:${LD_LIBRARY_PATH}"
