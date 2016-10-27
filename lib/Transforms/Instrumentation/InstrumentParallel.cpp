@@ -48,6 +48,8 @@
 
 using namespace llvm;
 
+extern "C" unsigned long long get_next_id();
+
 #define DEBUG_TYPE "archer"
 
 #define TLS
@@ -82,7 +84,7 @@ namespace {
 
 struct InstrumentParallel : public FunctionPass {
   InstrumentParallel() : FunctionPass(ID) {}
-  const char *getPassName() const override;
+  StringRef getPassName() const override;
   void getAnalysisUsage(AnalysisUsage &AU) const override;
   bool runOnFunction(Function &F) override;
   bool doInitialization(Module &M) override;
@@ -138,7 +140,7 @@ INITIALIZE_PASS_END(
     "InstrumentParallel: instrument parallel functions.",
     false, false)
 
-const char *InstrumentParallel::getPassName() const {
+StringRef InstrumentParallel::getPassName() const {
   return "InstrumentParallel";
 }
 
@@ -166,13 +168,17 @@ void InstrumentParallel::initializeCallbacks(Module &M) {
     const unsigned BitSize = ByteSize * 8;
     std::string ByteSizeStr = utostr(ByteSize);
     std::string BitSizeStr = utostr(BitSize);
+
+    int LongSize = M.getDataLayout().getPointerSizeInBits();
+    IntptrTy = Type::getIntNTy(M.getContext(), LongSize);
+
     SmallString<32> ReadName("__swordomp_read" + ByteSizeStr);
     TsanRead[i] = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-        ReadName, IRB.getVoidTy(), IRB.getInt8PtrTy(), nullptr));
+        ReadName, IRB.getVoidTy(), IRB.getInt8PtrTy(), IntptrTy, nullptr));
 
     SmallString<32> WriteName("__swordomp_write" + ByteSizeStr);
     TsanWrite[i] = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-        WriteName, IRB.getVoidTy(), IRB.getInt8PtrTy(), nullptr));
+        WriteName, IRB.getVoidTy(), IRB.getInt8PtrTy(), IntptrTy, nullptr));
 
     SmallString<64> UnalignedReadName("_swordomp_unaligned_read" + ByteSizeStr);
     TsanUnalignedRead[i] =
@@ -407,7 +413,8 @@ void InstrumentParallel::chooseInstructionsToInstrument(
          ((*it)->getOperand(i)->getName().compare(".omp.lb") == 0) ||
          ((*it)->getOperand(i)->getName().compare(".omp.ub") == 0) ||
          ((*it)->getOperand(i)->getName().compare(".omp.stride") == 0) ||
-         ((*it)->getOperand(i)->getName().compare(".omp.is_last") == 0)) {
+         ((*it)->getOperand(i)->getName().compare(".omp.is_last") == 0) ||
+         ((*it)->getOperand(i)->getName().compare(".global_tid") == 0)) {
         All.erase(it);
         break;
       }
@@ -832,7 +839,19 @@ bool InstrumentParallel::instrumentLoadOrStore(Instruction *I,
     OnAccessFunc = IsWrite ? TsanWrite[Idx] : TsanRead[Idx];
   else
     OnAccessFunc = IsWrite ? TsanUnalignedWrite[Idx] : TsanUnalignedRead[Idx];
-  IRB.CreateCall(OnAccessFunc, IRB.CreatePointerCast(Addr, IRB.getInt8PtrTy()));
+  // std::string instruction;
+  // llvm::raw_string_ostream rso(instruction);
+  // I->print(rso);
+  // std::string identifier = instruction + I->getModule()->getModuleIdentifier();
+  // uint64_t hash = llvm::hashing::detail::hash_33to64_bytes(identifier.c_str(), identifier.length(), llvm::hashing::detail::get_execution_seed());
+  Value *Arg1 = IRB.CreatePointerCast(Addr, IRB.getInt8PtrTy());
+  // Value *Arg2 = IRB.CreatePointerCast(IRB.getInt64(hash), IRB.getInt64Ty());
+  long long unsigned id = get_next_id();
+  // dbgs() << id << "\n";
+  Value *Arg2 = IRB.CreatePointerCast(IRB.getInt64(id), IRB.getInt64Ty());
+  IRB.CreateCall(OnAccessFunc, {Arg1, Arg2});
+  // IRB.CreateCall(FunctionType::get(Type::getVoidPtrTy(IRB.getContext()), true), OnAccessFunc, {Arg1, Arg2});
+  // IRB.CreateCall(OnAccessFunc, IRB.CreatePointerCast(Addr, IRB.getInt8PtrTy()));
   if (IsWrite) NumInstrumentedWrites++;
   else         NumInstrumentedReads++;
   return true;

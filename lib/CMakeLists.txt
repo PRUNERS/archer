@@ -7,10 +7,14 @@ endif ()
 
 add_archer_library(Archer
   Transforms/Instrumentation/InstrumentParallel.cpp
+  Support/MonotonicIdGen.cpp
   Support/RegisterPasses.cpp
   Support/Util.cpp
   ${ARCHER_HEADER_FILES}
   )
+
+string(REPLACE "-fno-rtti" "-frtti -fexceptions" CUSTOM_FLAGS ${CMAKE_CXX_FLAGS})
+set_source_files_properties(Support/MonotonicIdGen.cpp PROPERTIES COMPILE_FLAGS ${CUSTOM_FLAGS})
 
 target_link_libraries(Archer)
 
@@ -40,7 +44,7 @@ else ()
   add_archer_loadable_module(LLVMArcher
     Archer.cpp
   )
-  
+
   target_link_libraries(LLVMArcher Archer)
 
   set_target_properties(LLVMArcher
