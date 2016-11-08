@@ -80,6 +80,9 @@ STATISTIC(NumOmittedReadsFromConstantGlobals,
 STATISTIC(NumOmittedReadsFromVtable, "Number of vtable reads");
 STATISTIC(NumOmittedNonCaptured, "Number of accesses ignored due to capturing");
 
+static const char *const kSwordModuleCtorName = "swordrt.module_ctor";
+static const char *const kSwordInitName = "__swordrt_init";
+
 namespace {
 
 struct InstrumentParallel : public FunctionPass {
@@ -107,24 +110,25 @@ private:
   Type *IntptrTy;
   IntegerType *OrdTy;
   // Callbacks to run-time library are computed in doInitialization.
-  // Function *TsanFuncEntry;
-  // Function *TsanFuncExit;
+  Function *SwordFuncEntry;
+  Function *SwordFuncExit;
   Function *SwordFuncTermination;
   // Accesses sizes are powers of two: 1, 2, 4, 8, 16.
   static const size_t kNumberOfAccessSizes = 5;
-  Function *TsanRead[kNumberOfAccessSizes];
-  Function *TsanWrite[kNumberOfAccessSizes];
-  Function *TsanUnalignedRead[kNumberOfAccessSizes];
-  Function *TsanUnalignedWrite[kNumberOfAccessSizes];
-  Function *TsanAtomicLoad[kNumberOfAccessSizes];
-  Function *TsanAtomicStore[kNumberOfAccessSizes];
-  Function *TsanAtomicRMW[AtomicRMWInst::LAST_BINOP + 1][kNumberOfAccessSizes];
-  Function *TsanAtomicCAS[kNumberOfAccessSizes];
-  Function *TsanAtomicThreadFence;
-  Function *TsanAtomicSignalFence;
-  Function *TsanVptrUpdate;
-  Function *TsanVptrLoad;
+  Function *SwordRead[kNumberOfAccessSizes];
+  Function *SwordWrite[kNumberOfAccessSizes];
+  Function *SwordUnalignedRead[kNumberOfAccessSizes];
+  Function *SwordUnalignedWrite[kNumberOfAccessSizes];
+  Function *SwordAtomicLoad[kNumberOfAccessSizes];
+  Function *SwordAtomicStore[kNumberOfAccessSizes];
+  Function *SwordAtomicRMW[AtomicRMWInst::LAST_BINOP + 1][kNumberOfAccessSizes];
+  Function *SwordAtomicCAS[kNumberOfAccessSizes];
+  Function *SwordAtomicThreadFence;
+  Function *SwordAtomicSignalFence;
+  Function *SwordVptrUpdate;
+  Function *SwordVptrLoad;
   Function *MemmoveFn, *MemcpyFn, *MemsetFn;
+  Function *SwordCtorFunction;
 };
 }  // namespace
 
@@ -156,10 +160,10 @@ Pass *llvm::createInstrumentParallelPass() {
 void InstrumentParallel::initializeCallbacks(Module &M) {
   IRBuilder<> IRB(M.getContext());
   // Initialize the callbacks.
-  // TsanFuncEntry = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-  //     "__tsan_func_entry", IRB.getVoidTy(), IRB.getInt8PtrTy(), nullptr));
-  // TsanFuncExit = checkSanitizerInterfaceFunction(
-  //     M.getOrInsertFunction("__tsan_func_exit", IRB.getVoidTy(), nullptr));
+  SwordFuncEntry = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+      "__swordomp_func_entry", IRB.getVoidTy(), IRB.getInt64Ty(), IRB.getInt8PtrTy(), nullptr));
+  SwordFuncExit = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+      "__swordomp_func_exit", IRB.getVoidTy(), IRB.getInt64Ty(), nullptr));
   SwordFuncTermination = checkSanitizerInterfaceFunction(
     M.getOrInsertFunction("__swordomp_internal_end_checker_threads", IRB.getVoidTy(), nullptr));
   OrdTy = IRB.getInt32Ty();
@@ -173,36 +177,36 @@ void InstrumentParallel::initializeCallbacks(Module &M) {
     IntptrTy = Type::getIntNTy(M.getContext(), LongSize);
 
     SmallString<32> ReadName("__swordomp_read" + ByteSizeStr);
-    TsanRead[i] = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+    SwordRead[i] = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
         ReadName, IRB.getVoidTy(), IRB.getInt8PtrTy(), IntptrTy, nullptr));
 
     SmallString<32> WriteName("__swordomp_write" + ByteSizeStr);
-    TsanWrite[i] = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+    SwordWrite[i] = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
         WriteName, IRB.getVoidTy(), IRB.getInt8PtrTy(), IntptrTy, nullptr));
 
     SmallString<64> UnalignedReadName("_swordomp_unaligned_read" + ByteSizeStr);
-    TsanUnalignedRead[i] =
+    SwordUnalignedRead[i] =
         checkSanitizerInterfaceFunction(M.getOrInsertFunction(
             UnalignedReadName, IRB.getVoidTy(), IRB.getInt8PtrTy(), nullptr));
 
     SmallString<64> UnalignedWriteName("__swordomp_unaligned_write" + ByteSizeStr);
-    TsanUnalignedWrite[i] =
+    SwordUnalignedWrite[i] =
         checkSanitizerInterfaceFunction(M.getOrInsertFunction(
             UnalignedWriteName, IRB.getVoidTy(), IRB.getInt8PtrTy(), nullptr));
 
     Type *Ty = Type::getIntNTy(M.getContext(), BitSize);
     Type *PtrTy = Ty->getPointerTo();
     SmallString<32> AtomicLoadName("__swordomp_atomic" + BitSizeStr + "_load");
-    TsanAtomicLoad[i] = checkSanitizerInterfaceFunction(
+    SwordAtomicLoad[i] = checkSanitizerInterfaceFunction(
         M.getOrInsertFunction(AtomicLoadName, Ty, PtrTy, OrdTy, nullptr));
 
     SmallString<32> AtomicStoreName("__swordomp_atomic" + BitSizeStr + "_store");
-    TsanAtomicStore[i] = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+    SwordAtomicStore[i] = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
         AtomicStoreName, IRB.getVoidTy(), PtrTy, Ty, OrdTy, nullptr));
 
     for (int op = AtomicRMWInst::FIRST_BINOP;
         op <= AtomicRMWInst::LAST_BINOP; ++op) {
-      TsanAtomicRMW[op][i] = nullptr;
+      SwordAtomicRMW[op][i] = nullptr;
       const char *NamePart = nullptr;
       if (op == AtomicRMWInst::Xchg)
         NamePart = "_exchange";
@@ -221,23 +225,23 @@ void InstrumentParallel::initializeCallbacks(Module &M) {
       else
         continue;
       SmallString<32> RMWName("__swordomp_atomic" + itostr(BitSize) + NamePart);
-      TsanAtomicRMW[op][i] = checkSanitizerInterfaceFunction(
+      SwordAtomicRMW[op][i] = checkSanitizerInterfaceFunction(
           M.getOrInsertFunction(RMWName, Ty, PtrTy, Ty, OrdTy, nullptr));
     }
 
     SmallString<32> AtomicCASName("__swordomp_atomic" + BitSizeStr +
                                   "_compare_exchange_val");
-    TsanAtomicCAS[i] = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+    SwordAtomicCAS[i] = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
         AtomicCASName, Ty, PtrTy, Ty, Ty, OrdTy, OrdTy, nullptr));
   }
-  TsanVptrUpdate = checkSanitizerInterfaceFunction(
+  SwordVptrUpdate = checkSanitizerInterfaceFunction(
       M.getOrInsertFunction("__swordomp_vptr_update", IRB.getVoidTy(),
                             IRB.getInt8PtrTy(), IRB.getInt8PtrTy(), nullptr));
-  TsanVptrLoad = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+  SwordVptrLoad = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
       "__swordomp_vptr_read", IRB.getVoidTy(), IRB.getInt8PtrTy(), nullptr));
-  TsanAtomicThreadFence = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+  SwordAtomicThreadFence = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
       "__swordomp_atomic_thread_fence", IRB.getVoidTy(), OrdTy, nullptr));
-  TsanAtomicSignalFence = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+  SwordAtomicSignalFence = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
       "__swordomp_atomic_signal_fence", IRB.getVoidTy(), OrdTy, nullptr));
 
   // MemmoveFn = checkSanitizerInterfaceFunction(
@@ -252,6 +256,12 @@ void InstrumentParallel::initializeCallbacks(Module &M) {
 }
 
 bool InstrumentParallel::doInitialization(Module &M) {
+  std::tie(SwordCtorFunction, std::ignore) = createSanitizerCtorAndInitFunctions(
+      M, kSwordModuleCtorName, kSwordInitName, /*InitArgTypes=*/{},
+      /*InitArgs=*/{});
+
+  appendToGlobalCtors(M, SwordCtorFunction, 0);
+
   return true;
 }
 
@@ -478,6 +488,8 @@ void InstrumentParallel::setMetadata(Instruction *Inst, const char *name, const 
 }
 
 bool InstrumentParallel::runOnFunction(Function &F) {
+  if (&F == SwordCtorFunction)
+    return false;
   Function *IF;
 
   StringRef functionName = F.getName();
@@ -488,6 +500,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
 
 #ifdef TLS
   if((functionName.compare("main") == 0) ||
+     functionName.startswith("__strcspn") ||
      functionName.startswith("__swordomp") ||
      functionName.endswith("_dtor") ||
      functionName.endswith("__swordomp__") ||
@@ -778,20 +791,21 @@ bool InstrumentParallel::runOnFunction(Function &F) {
   //     Res |= instrumentMemIntrinsic(Inst);
   //   }
 
-  // For Archer we probably don't need any entry/exit point functions
-  // // Instrument function entry/exit points if there were instrumented accesses.
-  // if ((Res || HasCalls) && ClInstrumentFuncEntryExit) {
-  //   IRBuilder<> IRB(IF->getEntryBlock().getFirstNonPHI());
-  //   Value *ReturnAddress = IRB.CreateCall(
-  //       Intrinsic::getDeclaration(IF->getParent(), Intrinsic::returnaddress),
-  //       IRB.getInt32(0));
-  //   IRB.CreateCall(TsanFuncEntry, ReturnAddress);
-  //   for (auto RetInst : RetVec) {
-  //     IRBuilder<> IRBRet(RetInst);
-  //     IRBRet.CreateCall(TsanFuncExit, {});
-  //   }
-  //   Res = true;
-  // }
+  // Instrument function entry/exit points if there were instrumented accesses.
+  if ((Res || HasCalls) && ClInstrumentFuncEntryExit) {
+    IRBuilder<> IRB(IF->getEntryBlock().getFirstNonPHI());
+    long long unsigned id = get_next_id();
+    Value *Hash = IRB.CreatePointerCast(IRB.getInt64(id), IRB.getInt64Ty());
+    Value *ReturnAddress = IRB.CreateCall(
+        Intrinsic::getDeclaration(IF->getParent(), Intrinsic::returnaddress),
+        IRB.getInt32(0));
+    IRB.CreateCall(SwordFuncEntry, {Hash, ReturnAddress});
+    for (auto RetInst : RetVec) {
+      IRBuilder<> IRBRet(RetInst);
+      IRBRet.CreateCall(SwordFuncExit, {Hash});
+    }
+    Res = true;
+  }
   return Res;
 }
 
@@ -816,15 +830,15 @@ bool InstrumentParallel::instrumentLoadOrStore(Instruction *I,
           StoredValue, ConstantInt::get(IRB.getInt32Ty(), 0));
     if (StoredValue->getType()->isIntegerTy())
       StoredValue = IRB.CreateIntToPtr(StoredValue, IRB.getInt8PtrTy());
-    // Call TsanVptrUpdate.
-    IRB.CreateCall(TsanVptrUpdate,
+    // Call SwordVptrUpdate.
+    IRB.CreateCall(SwordVptrUpdate,
                    {IRB.CreatePointerCast(Addr, IRB.getInt8PtrTy()),
                     IRB.CreatePointerCast(StoredValue, IRB.getInt8PtrTy())});
     NumInstrumentedVtableWrites++;
     return true;
   }
   if (!IsWrite && isVtableAccess(I)) {
-    IRB.CreateCall(TsanVptrLoad,
+    IRB.CreateCall(SwordVptrLoad,
                    IRB.CreatePointerCast(Addr, IRB.getInt8PtrTy()));
     NumInstrumentedVtableReads++;
     return true;
@@ -836,9 +850,9 @@ bool InstrumentParallel::instrumentLoadOrStore(Instruction *I,
   const uint32_t TypeSize = DL.getTypeStoreSizeInBits(OrigTy);
   Value *OnAccessFunc = nullptr;
   if (Alignment == 0 || Alignment >= 8 || (Alignment % (TypeSize / 8)) == 0)
-    OnAccessFunc = IsWrite ? TsanWrite[Idx] : TsanRead[Idx];
+    OnAccessFunc = IsWrite ? SwordWrite[Idx] : SwordRead[Idx];
   else
-    OnAccessFunc = IsWrite ? TsanUnalignedWrite[Idx] : TsanUnalignedRead[Idx];
+    OnAccessFunc = IsWrite ? SwordUnalignedWrite[Idx] : SwordUnalignedRead[Idx];
   // std::string instruction;
   // llvm::raw_string_ostream rso(instruction);
   // I->print(rso);
@@ -930,11 +944,11 @@ bool InstrumentParallel::instrumentAtomic(Instruction *I, const DataLayout &DL) 
                      createOrdering(&IRB, LI->getOrdering())};
     Type *OrigTy = cast<PointerType>(Addr->getType())->getElementType();
     if (Ty == OrigTy) {
-      Instruction *C = CallInst::Create(TsanAtomicLoad[Idx], Args);
+      Instruction *C = CallInst::Create(SwordAtomicLoad[Idx], Args);
       ReplaceInstWithInst(I, C);
     } else {
       // We are loading a pointer, so we need to cast the return value.
-      Value *C = IRB.CreateCall(TsanAtomicLoad[Idx], Args);
+      Value *C = IRB.CreateCall(SwordAtomicLoad[Idx], Args);
       Instruction *Cast = CastInst::Create(Instruction::IntToPtr, C, OrigTy);
       ReplaceInstWithInst(I, Cast);
     }
@@ -950,14 +964,14 @@ bool InstrumentParallel::instrumentAtomic(Instruction *I, const DataLayout &DL) 
     Value *Args[] = {IRB.CreatePointerCast(Addr, PtrTy),
                      createIntOrPtrToIntCast(SI->getValueOperand(), Ty, IRB),
                      createOrdering(&IRB, SI->getOrdering())};
-    CallInst *C = CallInst::Create(TsanAtomicStore[Idx], Args);
+    CallInst *C = CallInst::Create(SwordAtomicStore[Idx], Args);
     ReplaceInstWithInst(I, C);
   } else if (AtomicRMWInst *RMWI = dyn_cast<AtomicRMWInst>(I)) {
     Value *Addr = RMWI->getPointerOperand();
     int Idx = getMemoryAccessFuncIndex(Addr, DL);
     if (Idx < 0)
       return false;
-    Function *F = TsanAtomicRMW[RMWI->getOperation()][Idx];
+    Function *F = SwordAtomicRMW[RMWI->getOperation()][Idx];
     if (!F)
       return false;
     const unsigned ByteSize = 1U << Idx;
@@ -987,7 +1001,7 @@ bool InstrumentParallel::instrumentAtomic(Instruction *I, const DataLayout &DL) 
                      NewOperand,
                      createOrdering(&IRB, CASI->getSuccessOrdering()),
                      createOrdering(&IRB, CASI->getFailureOrdering())};
-    CallInst *C = IRB.CreateCall(TsanAtomicCAS[Idx], Args);
+    CallInst *C = IRB.CreateCall(SwordAtomicCAS[Idx], Args);
     Value *Success = IRB.CreateICmpEQ(C, CmpOperand);
     Value *OldVal = C;
     Type *OrigOldValTy = CASI->getNewValOperand()->getType();
@@ -1005,7 +1019,7 @@ bool InstrumentParallel::instrumentAtomic(Instruction *I, const DataLayout &DL) 
   } else if (FenceInst *FI = dyn_cast<FenceInst>(I)) {
     Value *Args[] = {createOrdering(&IRB, FI->getOrdering())};
     Function *F = FI->getSynchScope() == SingleThread ?
-        TsanAtomicSignalFence : TsanAtomicThreadFence;
+        SwordAtomicSignalFence : SwordAtomicThreadFence;
     CallInst *C = CallInst::Create(F, Args);
     ReplaceInstWithInst(I, C);
   }
