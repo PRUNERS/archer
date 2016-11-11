@@ -1,6 +1,7 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/sync/named_mutex.hpp>
 
+using namespace std;
 using namespace boost::interprocess;
 
 extern "C" {
