@@ -1,5 +1,13 @@
 set(LLVM_NO_RTTI 1)
 
+set(Boost_NO_BOOST_CMAKE ON)
+find_package(Boost 1.41 COMPONENTS REQUIRED)
+message(STATUS "Boost Include: ${Boost_INCLUDE_DIR}")
+message(STATUS "Boost Libraries: ${Boost_LIBRARY_DIRS}")
+
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+
 set(ARCHER_HEADER_FILES)
 if (MSVC_IDE OR XCODE)
   file(GLOB_RECURSE ARCHER_HEADER_FILES "${ARCHER_SOURCE_DIR}/include/archer/*.h")
