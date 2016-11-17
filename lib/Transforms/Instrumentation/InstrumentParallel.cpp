@@ -48,8 +48,6 @@
 
 using namespace llvm;
 
-extern "C" unsigned long long get_next_id();
-
 #define DEBUG_TYPE "archer"
 
 namespace {
@@ -72,8 +70,6 @@ INITIALIZE_PASS_BEGIN(
     InstrumentParallel, "archer-sbl",
     "InstrumentParallel: instrument parallel functions.",
     false, false)
-INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(AAResultsWrapperPass)
 INITIALIZE_PASS_END(
     InstrumentParallel, "archer-sbl",
     "InstrumentParallel: instrument parallel functions.",
@@ -84,8 +80,6 @@ StringRef InstrumentParallel::getPassName() const {
 }
 
 void InstrumentParallel::getAnalysisUsage(AnalysisUsage &AU) const {
-  AU.addRequired<TargetLibraryInfoWrapperPass>();
-  AU.addRequired<AAResultsWrapperPass>();
 }
 
 Pass *llvm::createInstrumentParallelPass() {

@@ -15,7 +15,6 @@ endif ()
 
 add_archer_library(Archer
   Transforms/Instrumentation/InstrumentParallel.cpp
-  Support/MonotonicIdGen.cpp
   Support/RegisterPasses.cpp
   Support/Util.cpp
   ${ARCHER_HEADER_FILES}
