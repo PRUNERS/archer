@@ -106,7 +106,12 @@ bool InstrumentParallel::runOnFunction(Function &F) {
 
   if(functionName.compare("main") == 0) {
     ompStatusGlobal = M->getNamedGlobal("__swordomp_status__");
-    if(!ompStatusGlobal) {
+    if(ompStatusGlobal &&
+       (ompStatusGlobal->getLinkage() != llvm::GlobalValue::CommonLinkage)) {
+      ompStatusGlobal->setLinkage(llvm::GlobalValue::CommonLinkage);
+      ompStatusGlobal->setExternallyInitialized(false);
+      ompStatusGlobal->setInitializer(Zero);
+    } else if(!ompStatusGlobal) {
       IntegerType *Int32Ty = IntegerType::getInt32Ty(M->getContext());
       ompStatusGlobal =
         new llvm::GlobalVariable(*M, Int32Ty, false,
@@ -120,7 +125,8 @@ bool InstrumentParallel::runOnFunction(Function &F) {
 
   if(functionName.endswith("_dtor") ||
      functionName.endswith("__swordomp__") ||
-     functionName.endswith("__clang_call_terminate")) {
+     functionName.endswith("__clang_call_terminate") ||
+     (F.getLinkage() == llvm::GlobalValue::AvailableExternallyLinkage)) {
     return true;
   }
 
