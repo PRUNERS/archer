@@ -6,10 +6,14 @@ endif()
 
 include_directories(${ARCHER_HEADER_FILES})
 
-add_llvm_loadable_module(LLVMArcher
+set(ARCHER_SOURCE_FILES
   Archer.cpp
   Support/RegisterPasses.cpp
   Support/Util.cpp
   Transforms/Instrumentation/InstrumentParallel.cpp
+  )
+
+add_llvm_loadable_module(LLVMArcher
+  ${ARCHER_SOURCE_FILES}
   ${ARCHER_HEADER_FILES}
   )
