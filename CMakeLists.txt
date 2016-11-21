@@ -33,6 +33,13 @@ if(${ARCHER_STANDALONE_BUILD})
   include_directories(${LLVM_INCLUDE_DIRS})
 endif()
 
+# Setting directory names
+MESSAGE(${CMAKE_CURRENT_SOURCE_DIR})
+set(LIBARCHER_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(LIBARCHER_SRC_DIR ${LIBARCHER_BASE_DIR}/lib)
+set(LIBARCHER_TOOLS_DIR ${LIBARCHER_BASE_DIR}/tools)
+set(LIBARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
 set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.41 COMPONENTS REQUIRED)
 message(STATUS "Boost Include: ${Boost_INCLUDE_DIR}")
@@ -40,4 +47,5 @@ message(STATUS "Boost Libraries: ${Boost_LIBRARY_DIRS}")
 
 # Finally load appropriate config from subdirs
 add_subdirectory(lib)
-add_subdirectory(bin)
+add_subdirectory(test)
+add_subdirectory(tools)
