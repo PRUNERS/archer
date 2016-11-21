@@ -45,7 +45,8 @@ find_package(Boost 1.41 COMPONENTS REQUIRED)
 message(STATUS "Boost Include: ${Boost_INCLUDE_DIR}")
 message(STATUS "Boost Libraries: ${Boost_LIBRARY_DIRS}")
 
-# Finally load appropriate config from subdirs
 add_subdirectory(lib)
-add_subdirectory(test)
+if(EXISTS test)
+  add_subdirectory(test)
+endif()
 add_subdirectory(tools)
