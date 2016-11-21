@@ -116,6 +116,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
                                  GlobalVariable::GeneralDynamicTLSModel,
                                  0, false);
     }
+    F.removeFnAttr(llvm::Attribute::SanitizeThread);
     return true;
   }
 
