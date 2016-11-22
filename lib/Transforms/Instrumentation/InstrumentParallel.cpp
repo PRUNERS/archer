@@ -117,12 +117,40 @@ bool InstrumentParallel::runOnFunction(Function &F) {
                                  0, false);
     }
     F.removeFnAttr(llvm::Attribute::SanitizeThread);
+
+    // Add function for Tsan suppressions
+    // const char *__tsan_default_suppressions() {
+    //   return "called_from_lib:libomp.so\nthread:^__kmp_create_worker$\n";
+    // }
+    ArrayType* ArrayTy_0 = ArrayType::get(IntegerType::get(M->getContext(), 8), 57);
+    GlobalVariable* suppression_str =
+      new GlobalVariable(*M,
+                         ArrayTy_0,
+                         true,
+                         GlobalValue::PrivateLinkage,
+                         0,
+                         "__tsan_default_suppressions_value");
+    suppression_str->setAlignment(1);
+    IRBuilder<> IRB(M->getContext());
+    Constant* c = M->getOrInsertFunction("__tsan_default_suppressions",
+                                         IRB.getInt8PtrTy(),
+                                         NULL);
+    Constant *suppression_str_const =
+      ConstantDataArray::getString(M->getContext(),
+      "called_from_lib:libomp.so\nthread:^__kmp_create_worker$\n", true);
+    suppression_str->setInitializer(suppression_str_const);
+    Function* __tsan_default_suppressions = cast<Function>(c);
+    __tsan_default_suppressions->setCallingConv(CallingConv::C);
+    BasicBlock* block = BasicBlock::Create(M->getContext(), "entry", __tsan_default_suppressions);
+    IRBuilder<> builder(block);
+    builder.CreateRet(suppression_str);
     return true;
   }
 
   if(functionName.endswith("_dtor") ||
      functionName.endswith("__swordomp__") ||
      functionName.endswith("__clang_call_terminate") ||
+     functionName.endswith("__tsan_default_suppressions") ||
      (F.getLinkage() == llvm::GlobalValue::AvailableExternallyLinkage)) {
     return true;
   }
