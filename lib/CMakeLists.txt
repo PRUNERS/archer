@@ -4,6 +4,10 @@ else()
   set(ARCHER_HEADER_FILES ${PROJECT_SOURCE_DIR}/tools/archer/include)
 endif()
 
+if(${LIBOMP_TSAN_SUPPORT})
+  add_definitions(-D TSAN_SUPPORT=1)
+endif()
+
 include_directories(${ARCHER_HEADER_FILES})
 
 set(ARCHER_SOURCE_FILES

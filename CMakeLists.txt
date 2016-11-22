@@ -4,6 +4,9 @@ if(POLICY CMP0057)
   cmake_policy(SET CMP0057 NEW)
 endif()
 
+# TSAN-support wiht annotated OpenMP Runtime
+set(LIBOMP_TSAN_SUPPORT FALSE CACHE BOOL "TSAN-support?")
+
 # Standalone build or part of LLVM?
 set(ARCHER_STANDALONE_BUILD FALSE)
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
