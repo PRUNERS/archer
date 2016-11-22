@@ -118,6 +118,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     }
     F.removeFnAttr(llvm::Attribute::SanitizeThread);
 
+#ifndef LIBOMP_TSAN_SUPPORT    
     // Add function for Tsan suppressions
     // const char *__tsan_default_suppressions() {
     //   return "called_from_lib:libomp.so\nthread:^__kmp_create_worker$\n";
@@ -144,6 +145,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     BasicBlock* block = BasicBlock::Create(M->getContext(), "entry", __tsan_default_suppressions);
     IRBuilder<> builder(block);
     builder.CreateRet(suppression_str);
+#endif
     return true;
   }
 
