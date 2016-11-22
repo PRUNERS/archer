@@ -11,10 +11,11 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   set(ARCHER_STANDALONE_BUILD TRUE)
 endif()
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 if(${ARCHER_STANDALONE_BUILD})
   # LLVM detection part
   set(LLVM_ROOT "" CACHE PATH "Root of LLVM install.")
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
   find_package(LLVM 3.9 MODULE REQUIRED)
 
   # A bit of a sanity check:
@@ -47,7 +48,7 @@ message(STATUS "Boost Libraries: ${Boost_LIBRARY_DIRS}")
 add_subdirectory(lib)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test")
   find_package(OmptTsan)
-  set(ARCHER_LIB_PATH ${CMAKE_CURRENT_BINARY_DIR}/lib)
+  set(ARCHER_LIB_PATH ${CMAKE_BINARY_DIR}/lib)
   set(ARCHER_LIB LLVMArcher.so)
   add_subdirectory(test)
 endif()
