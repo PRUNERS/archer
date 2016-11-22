@@ -34,9 +34,8 @@ if(${ARCHER_STANDALONE_BUILD})
 endif()
 
 # Setting directory names
-MESSAGE(${CMAKE_CURRENT_SOURCE_DIR})
 set(LIBARCHER_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(LIBARCHER_SRC_DIR ${LIBARCHER_BASE_DIR}/lib)
+set(LIBARCHER_SRC_DIR ${LIBARCHER_BASE_DIR}/src)
 set(LIBARCHER_TOOLS_DIR ${LIBARCHER_BASE_DIR}/tools)
 set(LIBARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -47,7 +46,9 @@ message(STATUS "Boost Libraries: ${Boost_LIBRARY_DIRS}")
 
 add_subdirectory(lib)
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test")
-  set(LIBARCHER_HAVE_LIBARCHER TRUE)
+  find_package(OmptTsan)
+  set(ARCHER_LIB_PATH ${CMAKE_CURRENT_BINARY_DIR}/lib)
+  set(ARCHER_LIB LLVMArcher.so)
   add_subdirectory(test)
 endif()
 add_subdirectory(tools)
