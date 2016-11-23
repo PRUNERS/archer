@@ -4,8 +4,8 @@ if(POLICY CMP0057)
   cmake_policy(SET CMP0057 NEW)
 endif()
 
-# TSAN-support wiht annotated OpenMP Runtime
-set(LIBOMP_TSAN_SUPPORT FALSE CACHE BOOL "TSAN-support?")
+# TSAN-support with annotated OpenMP Runtime
+set(LIBOMP_ANNOTATION_TSAN_SUPPORT FALSE CACHE BOOL "TSAN-support?")
 
 # Standalone build or part of LLVM?
 set(ARCHER_STANDALONE_BUILD FALSE)
@@ -19,7 +19,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 if(${ARCHER_STANDALONE_BUILD})
   # LLVM detection part
   set(LLVM_ROOT "" CACHE PATH "Root of LLVM install.")
-  find_package(LLVM 3.9 MODULE REQUIRED)
+  find_package(LLVM 4.0 MODULE REQUIRED)
 
   # A bit of a sanity check:
   if( NOT EXISTS ${LLVM_ROOT}/include/llvm )
@@ -42,6 +42,9 @@ set(LIBARCHER_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(LIBARCHER_SRC_DIR ${LIBARCHER_BASE_DIR}/src)
 set(LIBARCHER_TOOLS_DIR ${LIBARCHER_BASE_DIR}/tools)
 set(LIBARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+find_package(Omp)
+find_package(Ompt)
 
 set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.41 COMPONENTS REQUIRED)
