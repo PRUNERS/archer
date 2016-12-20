@@ -102,19 +102,20 @@ bool InstrumentParallel::runOnFunction(Function &F) {
 
   if(functionName.compare("main") == 0) {
     ompStatusGlobal = M->getNamedGlobal("__swordomp_status__");
-    if(ompStatusGlobal &&
-       (ompStatusGlobal->getLinkage() != llvm::GlobalValue::CommonLinkage)) {
-      ompStatusGlobal->setLinkage(llvm::GlobalValue::CommonLinkage);
-      ompStatusGlobal->setExternallyInitialized(false);
-      ompStatusGlobal->setInitializer(Zero);
-    } else if(!ompStatusGlobal) {
+    // if(ompStatusGlobal &&
+    //    (ompStatusGlobal->getLinkage() != llvm::GlobalValue::CommonLinkage)) {
+    //   ompStatusGlobal->setLinkage(llvm::GlobalValue::CommonLinkage);
+    //   ompStatusGlobal->setExternallyInitialized(false);
+    //   ompStatusGlobal->setInitializer(Zero);
+    // } else
+      if(!ompStatusGlobal) {
       IntegerType *Int32Ty = IntegerType::getInt32Ty(M->getContext());
       ompStatusGlobal =
         new llvm::GlobalVariable(*M, Int32Ty, false,
-                                 llvm::GlobalValue::CommonLinkage,
+                                 llvm::GlobalValue::ExternalLinkage,
                                  Zero, "__swordomp_status__", NULL,
                                  GlobalVariable::GeneralDynamicTLSModel,
-                                 0, false);
+                                 0, true);
     }
     F.removeFnAttr(llvm::Attribute::SanitizeThread);
 
