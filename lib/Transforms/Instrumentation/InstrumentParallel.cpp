@@ -46,17 +46,24 @@
 
 using namespace llvm;
 
+#define MIN_VERSION 39
+
 namespace {
 
 struct InstrumentParallel : public FunctionPass {
-  InstrumentParallel() : FunctionPass(ID) {}
+  InstrumentParallel() : FunctionPass(ID) { PassName = "InstrumentParallel"; }
+#if LLVM_VERSION > MIN_VERSION
   StringRef getPassName() const override;
+#else
+  const char *getPassName() const override;
+#endif
   void getAnalysisUsage(AnalysisUsage &AU) const override;
   bool runOnFunction(Function &F) override;
   bool doInitialization(Module &M) override;
   static char ID;  // Pass identification, replacement for typeid.
 
 private:
+  std::string PassName;
   void setMetadata(Instruction *Inst, const char *name, const char *description);
 };
 }  // namespace
@@ -71,9 +78,15 @@ INITIALIZE_PASS_END(
     "InstrumentParallel: instrument parallel functions.",
     false, false)
 
-StringRef InstrumentParallel::getPassName() const {
-  return "InstrumentParallel";
-}
+#if LLVM_VERSION > MIN_VERSION
+	StringRef InstrumentParallel::getPassName() const {
+		return PassName;
+	}
+#else
+	const char *InstrumentParallel::getPassName() const {
+		return PassName.c_str();
+	}
+#endif
 
 void InstrumentParallel::getAnalysisUsage(AnalysisUsage &AU) const {
 }

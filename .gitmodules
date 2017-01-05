@@ -1,3 +1,0 @@
-[submodule "test"]
-	path = test
-	url = git@github.com:PRUNER/omp-race-tests.git

@@ -6,12 +6,34 @@ endif()
 
 # TSAN-support with annotated OpenMP Runtime
 set(LIBOMP_ANNOTATION_TSAN_SUPPORT FALSE CACHE BOOL "TSAN-support?")
+set(ARCHER_STATIC_ANALYSIS_SUPPORT TRUE CACHE BOOL "StaticAnalysisSupport?")
 
 # Standalone build or part of LLVM?
 set(ARCHER_STANDALONE_BUILD FALSE)
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
-  project(archer C CXX)
+    project(archer C CXX)
+
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        # require at least clang 3.9
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.9)
+            message(FATAL_ERROR "Clang version must be at least 3.9!")
+        endif()
+    else()
+        message(FATAL_ERROR "You are using an unsupported compiler! The required compiler is Clang version >= 3.9.")
+    endif()
+    
+    if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+        # require at least clang 3.9
+        if (CMAKE_C_COMPILER_VERSION VERSION_LESS 3.9)
+            message(FATAL_ERROR "Clang version must be at least 3.9!")
+        endif()
+    else()
+        message(FATAL_ERROR "You are using an unsupported compiler! The required compiler is Clang version >= 3.9.")
+    endif()
   set(ARCHER_STANDALONE_BUILD TRUE)
+  string(SUBSTRING ${CMAKE_CXX_COMPILER_VERSION} 0 3 LLVM_VERSION)
+  string(REPLACE "." "" LLVM_VERSION ${LLVM_VERSION})
+  add_definitions(-DLLVM_VERSION=${LLVM_VERSION})
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -19,10 +41,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 if(${ARCHER_STANDALONE_BUILD})
   # LLVM detection part
   set(LLVM_ROOT "" CACHE PATH "Root of LLVM install.")
-  find_package(LLVM 4.0 MODULE REQUIRED)
+  find_package(LLVM MODULE REQUIRED)
 
-  # A bit of a sanity check:
-  if( NOT EXISTS ${LLVM_ROOT}/include/llvm )
+  # Sanity check
+  if(NOT EXISTS ${LLVM_ROOT}/include/llvm)
     message(FATAL_ERROR "LLVM_ROOT (${LLVM_ROOT}) is not a valid LLVM install")
   endif()
 
@@ -37,25 +59,27 @@ if(${ARCHER_STANDALONE_BUILD})
   include_directories(${LLVM_INCLUDE_DIRS})
 endif()
 
-# Setting directory names
-set(LIBARCHER_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(LIBARCHER_SRC_DIR ${LIBARCHER_BASE_DIR}/src)
-set(LIBARCHER_TOOLS_DIR ${LIBARCHER_BASE_DIR}/tools)
-set(LIBARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-
 find_package(Omp)
 find_package(Ompt)
 
-set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost 1.41 COMPONENTS REQUIRED)
-message(STATUS "Boost Include: ${Boost_INCLUDE_DIR}")
-message(STATUS "Boost Libraries: ${Boost_LIBRARY_DIRS}")
+include_directories(${OMP_INCLUDE_PATH})
+include_directories(${OMPT_INCLUDE_PATH})
 
-add_subdirectory(lib)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test")
-  find_package(OmptTsan)
-  set(ARCHER_LIB_PATH ${CMAKE_BINARY_DIR}/lib)
-  set(ARCHER_LIB LLVMArcher.so)
-  add_subdirectory(test)
+# Setting directory names
+set(ARCHER_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(ARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(ARCHER_RUNTIME_PATH ${CMAKE_BINARY_DIR}/rtl)
+set(ARCHER_ARCHER_RUNTIME_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/rtl/suppressions.txt)
+set(ARCHER_RTL libarcher.so)
+
+set(ARCHER_LIB_PATH "")
+if(${ARCHER_STATIC_ANALYSIS_SUPPORT})
+    set(ARCHER_LIB_PATH ${CMAKE_BINARY_DIR}/lib)
+    set(ARCHER_LIB LLVMArcher.so)
+    set(ARCHER_TOOLS_DIR ${ARCHER_BASE_DIR}/tools)
+    add_subdirectory(lib)
 endif()
+
+add_subdirectory(rtl)
+add_subdirectory(test)
 add_subdirectory(tools)

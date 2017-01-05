@@ -7,4 +7,4 @@ FIND_PATH(OMP_INCLUDE_PATH omp.h
 # if not-found, try again at cmake locations
 FIND_PATH(OMPT_INCLUDE_PATH omp.h)
 
-find_package_handle_standard_args(OMP DEFAULT_MSG OMP_INCLUDE_PATH )
+find_package_handle_standard_args(OpenMP DEFAULT_MSG OMP_INCLUDE_PATH )
