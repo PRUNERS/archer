@@ -6,6 +6,8 @@ endif()
 
 # TSAN-support with annotated OpenMP Runtime
 set(LIBOMP_ANNOTATION_TSAN_SUPPORT FALSE CACHE BOOL "TSAN-support?")
+
+# Disable Archer static analysis support
 set(ARCHER_STATIC_ANALYSIS_SUPPORT TRUE CACHE BOOL "StaticAnalysisSupport?")
 
 # Standalone build or part of LLVM?

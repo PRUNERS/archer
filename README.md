@@ -9,9 +9,12 @@
 <ul>
 <li><a href="#sec-4-1">4.1. Automatic Building</a></li>
 <li><a href="#sec-4-2">4.2. Manual Building</a></li>
-<li><a href="#sec-4-3">4.3. Stand-alone Building</a></li>
-<li><a href="#sec-4-4">4.4. OpenMP Runtime Stand-Alone Building</a></li>
-<li><a href="#sec-4-5">4.5. Within Clang/LLVM Building</a></li>
+<li><a href="#sec-4-3">4.3. Stand-alone Building</a>
+<ul>
+<li><a href="#sec-4-3-1">4.3.1. OpenMP Runtime Stand-Alone Building</a></li>
+</ul>
+</li>
+<li><a href="#sec-4-4">4.4. Within Clang/LLVM Building</a></li>
 </ul>
 </li>
 <li><a href="#sec-5">5. Usage</a>
@@ -99,6 +102,7 @@ Obtain ARCHER:
 Let us build ARCHER with the following commands:
 
     export ARCHER_INSTALL=$HOME/usr           # or any other install path
+    cd archer
     mkdir build && cd build
     cmake -G Ninja \
      -D CMAKE_C_COMPILER=clang \
@@ -106,26 +110,53 @@ Let us build ARCHER with the following commands:
      -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
      -D LIBOMP_TSAN_SUPPORT=TRUE \
      ..
-    ninja -j8 -l8                           # or any number of available cores
+    ninja -j8 -l8                             # or any number of available cores
     ninja install
+    cd ../..
 
-## OpenMP Runtime Stand-Alone Building<a id="sec-4-4" name="sec-4-4"></a>
+### OpenMP Runtime Stand-Alone Building<a id="sec-4-3-1" name="sec-4-3-1"></a>
 
 Obtain LLVM OpenMP Runtime:
 
-    cd projects
     git clone git@github.com:llvm-mirror/openmp.git openmp
-    cd ..
+
+Let us build the OpenMP Runtime with the following command:
+
+    export OPENMP_INSTALL=$HOME/usr           # or any other install path
+    cd openmp/runtime
+    mkdir build && cd build
+    cmake -G Ninja \
+     -D CMAKE_C_COMPILER=clang \
+     -D CMAKE_CXX_COMPILER=clang++ \
+     -D CMAKE_BUILD_TYPE=Release \
+     -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL \
+     -D LIBOMP_TSAN_SUPPORT=TRUE \
+     ..
+    ninja -j8 -l8                             # or any number of available cores
+    ninja install
 
 or obtain LLVM OpenMP Runtime with OMPT support:
 
-    cd projects
-    git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git
-    cd openmp
-    git checkout align-to-tr
-    cd ../..
+    git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
 
-## Within Clang/LLVM Building<a id="sec-4-5" name="sec-4-5"></a>
+Let us build the OpenMP Runtime with the following command:
+
+    export OPENMP_INSTALL=$HOME/usr           # or any other install path
+    cd openmp/runtime
+    mkdir build && cd build
+    cmake -G Ninja \
+     -D CMAKE_C_COMPILER=clang \
+     -D CMAKE_CXX_COMPILER=clang++ \
+     -D CMAKE_BUILD_TYPE=Release \
+     -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL \
+     -D LIBOMP_OMPT_SUPPORT=on \
+     -D LIBOMP_OMPT_BLAME=on \
+     -D LIBOMP_OMPT_TRACE=on \
+     ..
+    ninja -j8 -l8                             # or any number of available cores
+    ninja install
+
+## Within Clang/LLVM Building<a id="sec-4-4" name="sec-4-4"></a>
 
 Create a folder to download and build Clang/LLVM and ARCHER:
 

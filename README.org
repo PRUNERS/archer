@@ -16,6 +16,7 @@
 
 * License
 Please see LICENSE for usage terms.
+
 * Introduction
 #+HTML: <img src="resources/images/archer_logo.png" hspace="5" vspace="5" height="45%" width="45%" alt="ARCHER Logo" title="ARCHER" align="right" />
 
@@ -77,6 +78,7 @@ Let us build ARCHER with the following commands:
 
 #+BEGIN_SRC sh :exports code
   export ARCHER_INSTALL=$HOME/usr           # or any other install path
+  cd archer
   mkdir build && cd build
   cmake -G Ninja \
    -D CMAKE_C_COMPILER=clang \
@@ -84,28 +86,59 @@ Let us build ARCHER with the following commands:
    -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
    -D LIBOMP_TSAN_SUPPORT=TRUE \
    ..
-  ninja -j8 -l8                           # or any number of available cores
+  ninja -j8 -l8                             # or any number of available cores
   ninja install
+  cd ../..
 #+END_SRC
 
-** OpenMP Runtime Stand-Alone Building
+*** OpenMP Runtime Stand-Alone Building
 
 Obtain LLVM OpenMP Runtime:
 
 #+BEGIN_SRC sh :exports code
-  cd projects
   git clone git@github.com:llvm-mirror/openmp.git openmp
-  cd ..
+#+END_SRC
+
+Let us build the OpenMP Runtime with the following command:
+
+#+BEGIN_SRC sh :exports code
+  export OPENMP_INSTALL=$HOME/usr           # or any other install path
+  cd openmp/runtime
+  mkdir build && cd build
+  cmake -G Ninja \
+   -D CMAKE_C_COMPILER=clang \
+   -D CMAKE_CXX_COMPILER=clang++ \
+   -D CMAKE_BUILD_TYPE=Release \
+   -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL \
+   -D LIBOMP_TSAN_SUPPORT=TRUE \
+   ..
+  ninja -j8 -l8                             # or any number of available cores
+  ninja install
 #+END_SRC
 
 or obtain LLVM OpenMP Runtime with OMPT support:
 
 #+BEGIN_SRC sh :exports code
-  cd projects
-  git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git
-  cd openmp
-  git checkout align-to-tr
-  cd ../..
+  git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
+#+END_SRC
+
+Let us build the OpenMP Runtime with the following command:
+
+#+BEGIN_SRC sh :exports code
+  export OPENMP_INSTALL=$HOME/usr           # or any other install path
+  cd openmp/runtime
+  mkdir build && cd build
+  cmake -G Ninja \
+   -D CMAKE_C_COMPILER=clang \
+   -D CMAKE_CXX_COMPILER=clang++ \
+   -D CMAKE_BUILD_TYPE=Release \
+   -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL \
+   -D LIBOMP_OMPT_SUPPORT=on \
+   -D LIBOMP_OMPT_BLAME=on \
+   -D LIBOMP_OMPT_TRACE=on \
+   ..
+  ninja -j8 -l8                             # or any number of available cores
+  ninja install
 #+END_SRC
 
 ** Within Clang/LLVM Building
