@@ -275,8 +275,8 @@ options available for clang are also available for *clang-archer*.
 
 # Sponsor<a id="sec-6" name="sec-6"></a>
 
-<img src="resources/images/uofu_logo.png" hspace="5" vspace="5" height="20%" width="20%" alt="UofU Logo" title="University of Utah" align="left" />
+<img src="resources/images/uofu_logo.png" hspace="5" vspace="5" width="200" alt="UofU Logo" title="University of Utah" align="left" />
 
-<img src="resources/images/llnl_logo.png" hspace="5" vspace="5" height="25%" width="25%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" align="center" />
+<img src="resources/images/llnl_logo.png" hspace="5" vspace="5" width="200" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" align="center" />
 
-<img src="resources/images/rwthaachen_logo.png" hspace="5" vspace="5" height="25%" width="25%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" align="right" />
+<img src="resources/images/rwthaachen_logo.png" hspace="5" vspace="5" width="200" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" align="right" />
