@@ -77,10 +77,10 @@ For an automatic building script (recommended) visit the GitHub page
 ARCHER comes as an LLVM tool, it can be compiled both as stand-alone
 tool or within the Clang/LLVM infrastructure.
 
-In order to obtain and build ARCHER execute the following commands in
-your command-line (instructions are based on bash shell, Clang/LLVM
-3.9 version, Ninja build system, and the LLVM OpenMP Runtime with OMPT
-support).
+In order to obtain and build ARCHER follow the instructions below for
+stand-alone or full Clang/LLVM with ARCHER support building
+(instructions are based on bash shell, Clang/LLVM 3.9 version, Ninja
+build system, and the LLVM OpenMP Runtime with OMPT support).
 
 Note: Using the LLVM OpenMP Runtime version >= 3.9 may results in some
 false positives during the data race detection process.
@@ -275,8 +275,8 @@ options available for clang are also available for *clang-archer*.
 
 # Sponsor<a id="sec-6" name="sec-6"></a>
 
-<img src="resources/images/uofu_logo.png" hspace="5" vspace="5" height="35%" width="35%" alt="UofU Logo" title="University of Utah" align="left" />
+<img src="resources/images/uofu_logo.png" hspace="5" vspace="5" height="25%" width="25%" alt="UofU Logo" title="University of Utah" align="left" />
 
-<img src="resources/images/llnl_logo.png" hspace="5" vspace="5" height="50%" width="50%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" align="center" />
+<img src="resources/images/llnl_logo.png" hspace="5" vspace="5" height="30%" width="30%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" align="center" />
 
-<img src="resources/images/rwthaachen_logo.png" hspace="5" vspace="5" height="50%" width="50%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" align="right" />
+<img src="resources/images/rwthaachen_logo.png" hspace="5" vspace="5" height="30%" width="30%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" align="right" />
