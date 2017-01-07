@@ -256,7 +256,7 @@ First we boostrap clang:
     CC=$(which gcc) CXX=$(which g++) cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_TOOL_ARCHER_BUILD=OFF -DLLVM_TARGETS_TO_BUILD=Native llvm_src
     ninja -j8 -l8
     cd ..
-    export LD_LIBRARY_PATH="${PWD}/llvm_bootstrap/lib:${LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH="${PWD}/llvm_bootmstrap/lib:${LD_LIBRARY_PATH}"
     export PATH="${PWD}/llvm_bootstrap/bin:${PATH}"
 
 Then, we can actually build LLVM/Clang with ARCHER support:
@@ -327,6 +327,9 @@ The command *clang-archer* works as a compiler wrapper, all the
 options available for clang are also available for *clang-archer*.
 
 # Contact and Support<a id="sec-6" name="sec-6"></a>
+
+-   [Google group](https://groups.google.com/forum/#!forum/archer-pruner)
+-   [Slack Channel](https://pruner.slack.com/shared_invite/MTIzNzExNzg4ODgxLTE0ODM3MzE2NTctNmRjNmM0NDYwNA)
 
 # Sponsor<a id="sec-7" name="sec-7"></a>
 

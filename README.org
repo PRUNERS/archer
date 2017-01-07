@@ -349,7 +349,8 @@ options available for clang are also available for /clang-archer/.
 
 * Contact and Support
 
-
+- [[https://groups.google.com/forum/#!forum/archer-pruner][Google group]]
+- [[https://pruner.slack.com/shared_invite/MTIzNzExNzg4ODgxLTE0ODM3MzE2NTctNmRjNmM0NDYwNA][Slack Channel]]
 
 * Sponsor
 
