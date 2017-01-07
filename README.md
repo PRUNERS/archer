@@ -208,7 +208,7 @@ Obtain ARCHER:
 Obtain the LLVM compiler-rt:
 
     cd projects
-    git clone git@github.com:llvm-mirror/compilter-rt.git compiler-rt
+    git clone git@github.com:llvm-mirror/compiler-rt.git compiler-rt
     cd compiler-rt
     git checkout release_39
     cd ../..
@@ -256,7 +256,7 @@ First we boostrap clang:
     CC=$(which gcc) CXX=$(which g++) cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_TOOL_ARCHER_BUILD=OFF -DLLVM_TARGETS_TO_BUILD=Native llvm_src
     ninja -j8 -l8
     cd ..
-    export LD_LIBRARY_PATH="${PWD}/llvm_boostrap/lib:${LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH="${PWD}/llvm_bootstrap/lib:${LD_LIBRARY_PATH}"
     export PATH="${PWD}/llvm_bootstrap/bin:${PATH}"
 
 Then, we can actually build LLVM/Clang with ARCHER support:
