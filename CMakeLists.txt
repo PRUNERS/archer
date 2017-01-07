@@ -23,7 +23,7 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
     else()
         message(FATAL_ERROR "You are using an unsupported compiler! The required compiler is Clang version >= 3.9.")
     endif()
-    
+
     if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
         # require at least clang 3.9
         if (CMAKE_C_COMPILER_VERSION VERSION_LESS 3.9)

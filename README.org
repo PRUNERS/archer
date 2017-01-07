@@ -61,45 +61,20 @@ build system, and the LLVM OpenMP Runtime with OMPT support).
 Note: Using the LLVM OpenMP Runtime version >= 3.9 may results in some
 false positives during the data race detection process.
 
-** Stand-alone Building
+** Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
 
-Create a folder to download and build Clang/LLVM and ARCHER:
+Create a folder to download and build ARCHER:
 
 export ARCHER_BUILD=$PWD/ArcherBuild
 mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
 
-Obtain ARCHER:
-
-#+BEGIN_SRC sh :exports code
-  git clone git@github.com:PRUNER/archer.git archer
-#+END_SRC
-
-Let us build ARCHER with the following commands:
-
-#+BEGIN_SRC sh :exports code
-  export ARCHER_INSTALL=$HOME/usr           # or any other install path
-  cd archer
-  mkdir build && cd build
-  cmake -G Ninja \
-   -D CMAKE_C_COMPILER=clang \
-   -D CMAKE_CXX_COMPILER=clang++ \
-   -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
-   -D LIBOMP_TSAN_SUPPORT=TRUE \
-   ..
-  ninja -j8 -l8                             # or any number of available cores
-  ninja install
-  cd ../..
-#+END_SRC
-
-*** OpenMP Runtime Stand-Alone Building
-
-Obtain LLVM OpenMP Runtime:
+Obtain the LLVM OpenMP Runtime:
 
 #+BEGIN_SRC sh :exports code
   git clone git@github.com:llvm-mirror/openmp.git openmp
 #+END_SRC
 
-Let us build the OpenMP Runtime with the following command:
+and build it with the following command:
 
 #+BEGIN_SRC sh :exports code
   export OPENMP_INSTALL=$HOME/usr           # or any other install path
@@ -116,13 +91,43 @@ Let us build the OpenMP Runtime with the following command:
   ninja install
 #+END_SRC
 
-or obtain LLVM OpenMP Runtime with OMPT support:
+Obtain ARCHER:
+
+#+BEGIN_SRC sh :exports code
+  git clone git@github.com:PRUNER/archer.git archer
+#+END_SRC
+
+and build it with the following commands:
+
+#+BEGIN_SRC sh :exports code
+  export ARCHER_INSTALL=$HOME/usr           # or any other install path
+  cd archer
+  mkdir build && cd build
+  cmake -G Ninja \
+   -D CMAKE_C_COMPILER=clang \
+   -D CMAKE_CXX_COMPILER=clang++ \
+   -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
+   -D LIBOMP_TSAN_SUPPORT=TRUE \
+   ..
+  ninja -j8 -l8                             # or any number of available cores
+  ninja install
+  cd ../..
+#+END_SRC
+
+** Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support
+
+Create a folder to download and build ARCHER:
+
+export ARCHER_BUILD=$PWD/ArcherBuild
+mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
+
+Obtain the LLVM OpenMP Runtime with OMPT support:
 
 #+BEGIN_SRC sh :exports code
   git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
 #+END_SRC
 
-Let us build the OpenMP Runtime with the following command:
+and build it with the following command:
 
 #+BEGIN_SRC sh :exports code
   export OPENMP_INSTALL=$HOME/usr           # or any other install path
@@ -141,7 +146,30 @@ Let us build the OpenMP Runtime with the following command:
   ninja install
 #+END_SRC
 
-** Within Clang/LLVM Building
+Obtain ARCHER:
+
+#+BEGIN_SRC sh :exports code
+  git clone git@github.com:PRUNER/archer.git archer
+#+END_SRC
+
+and build it with the following commands:
+
+#+BEGIN_SRC sh :exports code
+  export ARCHER_INSTALL=$HOME/usr           # or any other install path
+  cd archer
+  mkdir build && cd build
+  cmake -G Ninja \
+   -D CMAKE_C_COMPILER=clang \
+   -D CMAKE_CXX_COMPILER=clang++ \
+   -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
+   -D LIBOMP_TSAN_SUPPORT=TRUE \
+   ..
+  ninja -j8 -l8                             # or any number of available cores
+  ninja install
+  cd ../..
+#+END_SRC
+
+** Build ARCHER within Clang/LLVM
 
 Create a folder to download and build Clang/LLVM and ARCHER:
 
@@ -163,6 +191,14 @@ Obtain Clang:
   git clone git@github.com:llvm-mirror/clang.git clang
   cd clang
   git checkout release_39
+  cd ..
+#+END_SRC
+
+Obtain ARCHER:
+
+#+BEGIN_SRC sh :exports code
+  cd tools
+  git clone git@github.com:PRUNER/archer.git archer
   cd ..
 #+END_SRC
 
@@ -200,15 +236,7 @@ Obtain LLVM libunwind:
   cd ..
 #+END_SRC
 
-Obtain ARCHER:
-
-#+BEGIN_SRC sh :exports code
-  cd projects
-  git clone git@github.com:PRUNER/archer.git archer
-  cd ..
-#+END_SRC
-
-Obtain LLVM OpenMP Runtime:
+Obtain official LLVM OpenMP Runtime:
 
 #+BEGIN_SRC sh :exports code
   cd projects
@@ -318,6 +346,10 @@ CC = mpicc -cc=clang-archer
 
 The command /clang-archer/ works as a compiler wrapper, all the
 options available for clang are also available for /clang-archer/.
+
+* Contact and Support
+
+
 
 * Sponsor
 

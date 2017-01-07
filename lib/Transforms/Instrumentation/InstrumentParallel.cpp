@@ -113,24 +113,22 @@ bool InstrumentParallel::runOnFunction(Function &F) {
   ConstantInt *Zero = ConstantInt::get(Type::getInt32Ty(M->getContext()), 0);
   ConstantInt *One = ConstantInt::get(Type::getInt32Ty(M->getContext()), 1);
 
+  ompStatusGlobal = M->getNamedGlobal("__swordomp_status__");
   if(functionName.compare("main") == 0) {
-    ompStatusGlobal = M->getNamedGlobal("__swordomp_status__");
-    // if(ompStatusGlobal &&
-    //    (ompStatusGlobal->getLinkage() != llvm::GlobalValue::CommonLinkage)) {
-    //   ompStatusGlobal->setLinkage(llvm::GlobalValue::CommonLinkage);
-    //   ompStatusGlobal->setExternallyInitialized(false);
-    //   ompStatusGlobal->setInitializer(Zero);
-    // } else
-      if(!ompStatusGlobal) {
+    if(!ompStatusGlobal) {
       IntegerType *Int32Ty = IntegerType::getInt32Ty(M->getContext());
       ompStatusGlobal =
         new llvm::GlobalVariable(*M, Int32Ty, false,
-                                 llvm::GlobalValue::ExternalLinkage,
+                                 llvm::GlobalValue::CommonLinkage,
                                  Zero, "__swordomp_status__", NULL,
                                  GlobalVariable::GeneralDynamicTLSModel,
-                                 0, true);
+                                 0, false);
+    } else if(ompStatusGlobal &&
+              (ompStatusGlobal->getLinkage() != llvm::GlobalValue::CommonLinkage)) {
+      ompStatusGlobal->setLinkage(llvm::GlobalValue::CommonLinkage);
+      ompStatusGlobal->setExternallyInitialized(false);
+      ompStatusGlobal->setInitializer(Zero);
     }
-    F.removeFnAttr(llvm::Attribute::SanitizeThread);
 
 #if !LIBOMP_ANNOTATION_TSAN_SUPPORT
     // Add function for Tsan suppressions
@@ -160,6 +158,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     IRBuilder<> builder(block);
     builder.CreateRet(suppression_str);
 #endif
+    F.removeFnAttr(llvm::Attribute::SanitizeThread);
     return true;
   }
 
@@ -171,12 +170,11 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     return true;
   }
 
-  ompStatusGlobal = M->getNamedGlobal("__swordomp_status__");
   if(!ompStatusGlobal) {
     IntegerType *Int32Ty = IntegerType::getInt32Ty(M->getContext());
     ompStatusGlobal =
       new llvm::GlobalVariable(*M, Int32Ty, false,
-                               llvm::GlobalValue::ExternalLinkage,
+                               llvm::GlobalValue::AvailableExternallyLinkage,
                                0, "__swordomp_status__", NULL,
                                GlobalVariable::GeneralDynamicTLSModel,
                                0, true);

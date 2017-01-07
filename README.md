@@ -9,12 +9,9 @@
 <ul>
 <li><a href="#sec-4-1">4.1. Automatic Building</a></li>
 <li><a href="#sec-4-2">4.2. Manual Building</a></li>
-<li><a href="#sec-4-3">4.3. Stand-alone Building</a>
-<ul>
-<li><a href="#sec-4-3-1">4.3.1. OpenMP Runtime Stand-Alone Building</a></li>
-</ul>
-</li>
-<li><a href="#sec-4-4">4.4. Within Clang/LLVM Building</a></li>
+<li><a href="#sec-4-3">4.3. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support</a></li>
+<li><a href="#sec-4-4">4.4. Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
+<li><a href="#sec-4-5">4.5. Build ARCHER within Clang/LLVM</a></li>
 </ul>
 </li>
 <li><a href="#sec-5">5. Usage</a>
@@ -29,7 +26,8 @@
 <li><a href="#sec-5-2">5.2. Options</a></li>
 </ul>
 </li>
-<li><a href="#sec-6">6. Sponsor</a></li>
+<li><a href="#sec-6">6. Contact and Support</a></li>
+<li><a href="#sec-7">7. Sponsor</a></li>
 </ul>
 </div>
 </div>
@@ -88,39 +86,18 @@ build system, and the LLVM OpenMP Runtime with OMPT support).
 Note: Using the LLVM OpenMP Runtime version >= 3.9 may results in some
 false positives during the data race detection process.
 
-## Stand-alone Building<a id="sec-4-3" name="sec-4-3"></a>
+## Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support<a id="sec-4-3" name="sec-4-3"></a>
 
-Create a folder to download and build Clang/LLVM and ARCHER:
+Create a folder to download and build ARCHER:
 
 export ARCHER<sub>BUILD</sub>=$PWD/ArcherBuild
 mkdir $ARCHER<sub>BUILD</sub> && cd $ARCHER<sub>BUILD</sub>
 
-Obtain ARCHER:
-
-    git clone git@github.com:PRUNER/archer.git archer
-
-Let us build ARCHER with the following commands:
-
-    export ARCHER_INSTALL=$HOME/usr           # or any other install path
-    cd archer
-    mkdir build && cd build
-    cmake -G Ninja \
-     -D CMAKE_C_COMPILER=clang \
-     -D CMAKE_CXX_COMPILER=clang++ \
-     -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
-     -D LIBOMP_TSAN_SUPPORT=TRUE \
-     ..
-    ninja -j8 -l8                             # or any number of available cores
-    ninja install
-    cd ../..
-
-### OpenMP Runtime Stand-Alone Building<a id="sec-4-3-1" name="sec-4-3-1"></a>
-
-Obtain LLVM OpenMP Runtime:
+Obtain the LLVM OpenMP Runtime:
 
     git clone git@github.com:llvm-mirror/openmp.git openmp
 
-Let us build the OpenMP Runtime with the following command:
+and build it with the following command:
 
     export OPENMP_INSTALL=$HOME/usr           # or any other install path
     cd openmp/runtime
@@ -135,11 +112,37 @@ Let us build the OpenMP Runtime with the following command:
     ninja -j8 -l8                             # or any number of available cores
     ninja install
 
-or obtain LLVM OpenMP Runtime with OMPT support:
+Obtain ARCHER:
+
+    git clone git@github.com:PRUNER/archer.git archer
+
+and build it with the following commands:
+
+    export ARCHER_INSTALL=$HOME/usr           # or any other install path
+    cd archer
+    mkdir build && cd build
+    cmake -G Ninja \
+     -D CMAKE_C_COMPILER=clang \
+     -D CMAKE_CXX_COMPILER=clang++ \
+     -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
+     -D LIBOMP_TSAN_SUPPORT=TRUE \
+     ..
+    ninja -j8 -l8                             # or any number of available cores
+    ninja install
+    cd ../..
+
+## Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support<a id="sec-4-4" name="sec-4-4"></a>
+
+Create a folder to download and build ARCHER:
+
+export ARCHER<sub>BUILD</sub>=$PWD/ArcherBuild
+mkdir $ARCHER<sub>BUILD</sub> && cd $ARCHER<sub>BUILD</sub>
+
+Obtain the LLVM OpenMP Runtime with OMPT support:
 
     git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
 
-Let us build the OpenMP Runtime with the following command:
+and build it with the following command:
 
     export OPENMP_INSTALL=$HOME/usr           # or any other install path
     cd openmp/runtime
@@ -156,7 +159,26 @@ Let us build the OpenMP Runtime with the following command:
     ninja -j8 -l8                             # or any number of available cores
     ninja install
 
-## Within Clang/LLVM Building<a id="sec-4-4" name="sec-4-4"></a>
+Obtain ARCHER:
+
+    git clone git@github.com:PRUNER/archer.git archer
+
+and build it with the following commands:
+
+    export ARCHER_INSTALL=$HOME/usr           # or any other install path
+    cd archer
+    mkdir build && cd build
+    cmake -G Ninja \
+     -D CMAKE_C_COMPILER=clang \
+     -D CMAKE_CXX_COMPILER=clang++ \
+     -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
+     -D LIBOMP_TSAN_SUPPORT=TRUE \
+     ..
+    ninja -j8 -l8                             # or any number of available cores
+    ninja install
+    cd ../..
+
+## Build ARCHER within Clang/LLVM<a id="sec-4-5" name="sec-4-5"></a>
 
 Create a folder to download and build Clang/LLVM and ARCHER:
 
@@ -175,6 +197,12 @@ Obtain Clang:
     git clone git@github.com:llvm-mirror/clang.git clang
     cd clang
     git checkout release_39
+    cd ..
+
+Obtain ARCHER:
+
+    cd tools
+    git clone git@github.com:PRUNER/archer.git archer
     cd ..
 
 Obtain the LLVM compiler-rt:
@@ -203,13 +231,7 @@ Obtain LLVM libunwind:
     git clone git@github.com:llvm-mirror/libunwind.git
     cd ..
 
-Obtain ARCHER:
-
-    cd projects
-    git clone git@github.com:PRUNER/archer.git archer
-    cd ..
-
-Obtain LLVM OpenMP Runtime:
+Obtain official LLVM OpenMP Runtime:
 
     cd projects
     git clone git@github.com:llvm-mirror/openmp.git openmp
@@ -304,6 +326,8 @@ In your Makefile, set the following variables:
 The command *clang-archer* works as a compiler wrapper, all the
 options available for clang are also available for *clang-archer*.
 
-# Sponsor<a id="sec-6" name="sec-6"></a>
+# Contact and Support<a id="sec-6" name="sec-6"></a>
+
+# Sponsor<a id="sec-7" name="sec-7"></a>
 
 <img src="resources/images/uofu_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="UofU Logo" title="University of Utah" style="float:left" /> <img src="resources/images/llnl_logo.png" hspace="70" vspace="5" height="30%" width="30%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" style="float:center" /> <img src="resources/images/rwthaachen_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" style="float:left" />

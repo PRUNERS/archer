@@ -5,4 +5,4 @@ install(TARGETS archer archer_static
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib/static)
 
-install(FILES suppressions.txt DESTINATION shared/archer)
+install(FILES suppressions.txt DESTINATION share/archer)
