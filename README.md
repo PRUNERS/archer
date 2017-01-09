@@ -217,19 +217,22 @@ Obtain LLVM libc++:
 
     cd projects
     git clone git@github.com:llvm-mirror/libcxx.git
-    cd ..
+    git checkout release_39
+    cd ../..
 
 Obtain LLVM libc++abi:
 
     cd projects
     git clone git@github.com:llvm-mirror/libcxxabi.git
-    cd ..
+    git checkout release_39
+    cd ../..
 
 Obtain LLVM libunwind:
 
     cd projects
     git clone git@github.com:llvm-mirror/libunwind.git
-    cd ..
+    git checkout release_39
+    cd ../..
 
 Obtain official LLVM OpenMP Runtime:
 
