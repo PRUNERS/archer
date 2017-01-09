@@ -90,8 +90,8 @@ false positives during the data race detection process.
 
 Create a folder to download and build ARCHER:
 
-export ARCHER<sub>BUILD</sub>=$PWD/ArcherBuild
-mkdir $ARCHER<sub>BUILD</sub> && cd $ARCHER<sub>BUILD</sub>
+    export ARCHER_BUILD=$PWD/ArcherBuild
+    mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
 
 Obtain the LLVM OpenMP Runtime:
 
@@ -135,8 +135,8 @@ and build it with the following commands:
 
 Create a folder to download and build ARCHER:
 
-export ARCHER<sub>BUILD</sub>=$PWD/ArcherBuild
-mkdir $ARCHER<sub>BUILD</sub> && cd $ARCHER<sub>BUILD</sub>
+    export ARCHER_BUILD=$PWD/ArcherBuild
+    mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
 
 Obtain the LLVM OpenMP Runtime with OMPT support:
 
@@ -182,8 +182,8 @@ and build it with the following commands:
 
 Create a folder to download and build Clang/LLVM and ARCHER:
 
-export ARCHER<sub>BUILD</sub>=$PWD/ArcherBuild
-mkdir $ARCHER<sub>BUILD</sub> && cd $ARCHER<sub>BUILD</sub>
+    export ARCHER_BUILD=$PWD/ArcherBuild
+    mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
 
 Obtain LLVM:
 
