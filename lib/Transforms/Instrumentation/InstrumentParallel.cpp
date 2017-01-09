@@ -130,7 +130,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
       ompStatusGlobal->setInitializer(Zero);
     }
 
-#if !LIBOMP_ANNOTATION_TSAN_SUPPORT
+#if !LIBOMP_TSAN_SUPPORT
     // Add function for Tsan suppressions
     // const char *__tsan_default_suppressions() {
     //   return "called_from_lib:libomp.so\nthread:^__kmp_create_worker$\n";

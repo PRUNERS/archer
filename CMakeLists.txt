@@ -5,7 +5,7 @@ if(POLICY CMP0057)
 endif()
 
 # TSAN-support with annotated OpenMP Runtime
-set(LIBOMP_ANNOTATION_TSAN_SUPPORT FALSE CACHE BOOL "TSAN-support?")
+set(LIBOMP_TSAN_SUPPORT FALSE CACHE BOOL "TSAN-support?")
 
 # Disable Archer static analysis support
 set(ARCHER_STATIC_ANALYSIS_SUPPORT TRUE CACHE BOOL "StaticAnalysisSupport?")
@@ -63,7 +63,7 @@ endif()
 
 find_package(Omp)
 include_directories(${OMP_INCLUDE_PATH})
-if(NOT ${LIBOMP_ANNOTATION_TSAN_SUPPORT})
+if(NOT ${LIBOMP_TSAN_SUPPORT})
     find_package(Ompt)
     include_directories(${OMPT_INCLUDE_PATH})
 endif()
@@ -71,7 +71,7 @@ endif()
 # Setting directory names
 set(ARCHER_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(ARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-if(NOT ${LIBOMP_ANNOTATION_TSAN_SUPPORT})
+if(NOT ${LIBOMP_TSAN_SUPPORT})
     set(ARCHER_RUNTIME_PATH ${CMAKE_BINARY_DIR}/rtl)
     set(ARCHER_ARCHER_RUNTIME_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/rtl/suppressions.txt)
     set(ARCHER_RTL libarcher.so)
@@ -85,7 +85,7 @@ if(${ARCHER_STATIC_ANALYSIS_SUPPORT})
     add_subdirectory(lib)
 endif()
 
-if(NOT ${LIBOMP_ANNOTATION_TSAN_SUPPORT})
+if(NOT ${LIBOMP_TSAN_SUPPORT})
     add_subdirectory(rtl)
 endif()
 add_subdirectory(test)
