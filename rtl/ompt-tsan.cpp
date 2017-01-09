@@ -12,6 +12,7 @@
 
 #include <ompt.h>
 
+#if LLVM_VERSION >= 40
 class ArcherFlags {
 public:
 	int flush_shadow;
@@ -26,9 +27,14 @@ public:
 	}
 };
 
-extern __thread int __swordomp_status__;
-// __attribute__((weak)) = 0;
+extern "C" int __attribute__((weak)) __swordomp__get_omp_status();
+//extern __thread int __swordomp_status__;
+//extern "C" int __attribute__((weak)) __swordomp__get_omp_status() {
+//	printf("Pippo\n");
+//	return -1;
+//}
 extern "C" void __tsan_flush_memory();
+#endif
 
 /// Required OMPT inquiry functions.
 ompt_get_parallel_data_t ompt_get_parallel_data;
@@ -153,12 +159,6 @@ static void ompt_tsan_parallel_begin(ompt_task_data_t parent_task_data,
 		uint32_t requested_team_size, void *parallel_function,
 		ompt_invoker_t invoker) {
 
-	if(__swordomp_status__ == 0 && archer_flags->flush_shadow) {
-		std::cout << "Flushing shadow" << std::endl;
-		__tsan_flush_memory();
-		return;
-	}
-
 	ParallelData* Data = new ParallelData;
 
 	parallel_data->ptr = Data;
@@ -219,6 +219,13 @@ static void ompt_tsan_parallel_end(ompt_parallel_data_t parallel_data,
 	ParallelData* Data = ToParallelData(parallel_data);
 
 	delete Data;
+
+#if LLVM_VERSION >= 40
+	if(&__swordomp__get_omp_status) {
+		if(__swordomp__get_omp_status() == 0 && archer_flags->flush_shadow)
+			__tsan_flush_memory();
+	}
+#endif
 }
 
 
@@ -399,8 +406,10 @@ static void ompt_tsan_initialize(ompt_function_lookup_t lookup,
 		exit(1);
 	}
 
+#if LLVM_VERSION >= 40
 	const char *options = getenv("ARCHER_OPTIONS");
 	archer_flags = new ArcherFlags(options);
+#endif
 
 	// Register parallel callbacks.
 	ompt_set_callback(ompt_event_parallel_begin, (ompt_callback_t) &ompt_tsan_parallel_begin);

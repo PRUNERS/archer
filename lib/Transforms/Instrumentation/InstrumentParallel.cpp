@@ -158,6 +158,20 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     IRBuilder<> builder(block);
     builder.CreateRet(suppression_str);
 #endif
+
+#if LLVM_VERSION >= 40
+    IRBuilder<> IRB2(M->getContext());
+    Constant* constant = M->getOrInsertFunction("__swordomp__get_omp_status",
+    		IRB2.getInt32Ty(),
+			NULL);
+    Function* __swordomp_get_omp_status = cast<Function>(constant);
+    __swordomp_get_omp_status->setCallingConv(CallingConv::C);
+    BasicBlock* block2 = BasicBlock::Create(M->getContext(), "entry", __swordomp_get_omp_status);
+    IRBuilder<> builder2(block2);
+    LoadInst *loadOmpStatus = builder2.CreateLoad(IRB2.getInt32Ty(), ompStatusGlobal);
+    builder2.CreateRet(loadOmpStatus);
+#endif
+
     F.removeFnAttr(llvm::Attribute::SanitizeThread);
     return true;
   }
@@ -166,6 +180,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
      functionName.endswith("__swordomp__") ||
      functionName.endswith("__clang_call_terminate") ||
      functionName.endswith("__tsan_default_suppressions") ||
+	 functionName.endswith("__swordomp__get_omp_status") ||
      (F.getLinkage() == llvm::GlobalValue::AvailableExternallyLinkage)) {
     return true;
   }
@@ -215,12 +230,14 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     ValueToValueMapTy VMap;
     Function *new_function = CloneFunction(&F, VMap);
     new_function->setName(functionName + "__swordomp__");
-    Function::ArgumentListType::iterator it = F.getArgumentList().begin();                                                       Function::ArgumentListType::iterator end = F.getArgumentList().end();
+    Function::ArgumentListType::iterator it = F.getArgumentList().begin();
+    Function::ArgumentListType::iterator end = F.getArgumentList().end();
     std::vector<Value*> args;
     while (it != end) {
       Argument *Args = &(*it);
       args.push_back(Args);
-      it++;                                                                                                                      }
+      it++;
+    }
 
     // Removing SanitizeThread attribute so the sequential functions
     // won't be instrumented
