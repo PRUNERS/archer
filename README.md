@@ -278,6 +278,7 @@ Then, we can actually build LLVM/Clang with ARCHER support:
     cmake -G Ninja \
      -D CMAKE_C_COMPILER=clang \
      -D CMAKE_CXX_COMPILER=clang++ \
+     -D CMAKE_BUILD_TYPE=Release \
      -D CMAKE_INSTALL_PREFIX:PATH=${LLVM_INSTALL} \
      -D CLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp \
      -D LLVM_ENABLE_LIBCXX=ON \
