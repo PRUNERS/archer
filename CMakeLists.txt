@@ -62,18 +62,16 @@ if(${ARCHER_STANDALONE_BUILD})
 endif()
 
 find_package(Omp)
+include_directories(${OMP_INCLUDE_PATH})
 if(NOT ${LIBOMP_ANNOTATION_TSAN_SUPPORT})
     find_package(Ompt)
+    include_directories(${OMPT_INCLUDE_PATH})
 endif()
-
-include_directories(${OMP_INCLUDE_PATH})
-include_directories(${OMPT_INCLUDE_PATH})
 
 # Setting directory names
 set(ARCHER_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(ARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 if(NOT ${LIBOMP_ANNOTATION_TSAN_SUPPORT})
-MESSAGE("Tua mamma")
     set(ARCHER_RUNTIME_PATH ${CMAKE_BINARY_DIR}/rtl)
     set(ARCHER_ARCHER_RUNTIME_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/rtl/suppressions.txt)
     set(ARCHER_RTL libarcher.so)
