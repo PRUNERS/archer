@@ -268,7 +268,7 @@ First we boostrap clang:
      ../llvm_src
     ninja -j8 -l8                           # or any number of available cores
     cd ..
-    export LD_LIBRARY_PATH="${PWD}/llvm_bootmstrap/lib:${LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH="${PWD}/llvm_bootstrap/lib:${LD_LIBRARY_PATH}"
     export PATH="${PWD}/llvm_bootstrap/bin:${PATH}"
 
 Then, we can actually build LLVM/Clang with ARCHER support:
