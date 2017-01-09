@@ -297,8 +297,8 @@ to allow ARCHER to work correctly.
 
 Please set the following path variables:
 
-    export PATH=${LLVM_INSTALL}/bin:\${PATH}"
-    export LD_LIBRARY_PATH=${LLVM_INSTALL}/lib:\${LD_LIBRARY_PATH}"
+    export PATH=${LLVM_INSTALL}/bin:${PATH}"
+    export LD_LIBRARY_PATH=${LLVM_INSTALL}/lib:${LD_LIBRARY_PATH}"
 
 To make the environment permanent add the previous lines or
 equivalents to your shell start-up script such as "~/.bashrc".
