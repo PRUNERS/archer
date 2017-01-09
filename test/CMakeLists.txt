@@ -35,7 +35,7 @@ if(${ARCHER_STANDALONE_BUILD})
   else()
     set(cmake_3_2_USES_TERMINAL USES_TERMINAL)
   endif()
-  set(ARCHER_TEST_COMPILER ${CMAKE_CURRENT_BINARY_DIR}/clang CACHE STRING
+  set(ARCHER_TEST_COMPILER ${CMAKE_C_COMPILER} CACHE STRING
     "Compiler to use for testing Archer library")
   set(ARCHER_TEST_OPENMP_FLAG -fopenmp CACHE STRING
     "Compiler flag to use for testing Archer library")
@@ -75,6 +75,7 @@ else()
   # LLVM source tree build, test just-built clang
   if(NOT MSVC)
     set(ARCHER_TEST_COMPILER ${LLVM_RUNTIME_OUTPUT_INTDIR}/clang)
+    MESSAGE(${LLVM_RUNTIME_OUTPUT_INTDIR})
   else()
     set(ARCHER_TEST_COMPILER ${LLVM_RUNTIME_OUTPUT_INTDIR}/clang.exe)
   endif()
