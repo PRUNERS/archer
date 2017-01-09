@@ -263,7 +263,7 @@ First we boostrap clang:
     cd llvm_bootstrap
     CC=$(which gcc) CXX=$(which g++) cmake -G Ninja \
      -DCMAKE_BUILD_TYPE=Release \
-     -DLLVM_TARGETS_TO_BUILD=Native
+     -DLLVM_TARGETS_TO_BUILD=Native \
      ../llvm_src
     ninja -j8 -l8                           # or any number of available cores
     cd ..
