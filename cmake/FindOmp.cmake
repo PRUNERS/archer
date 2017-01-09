@@ -2,7 +2,7 @@ include(FindPackageHandleStandardArgs)
 
 # use an explicitly given ompt path first
 
-MESSAGE(${CMAKE_BINARY_DIR})
+MESSAGE(${CMAKE_CURRENT_SOURCE_DIR})
 
 FIND_PATH(OMP_INCLUDE_PATH omp.h
             PATHS ${LLVM_ROOT}/include ${CMAKE_BINARY_DIR}/projects/openmp/runtime/src ${CMAKE_BINARY_DIR}/include /usr /usr/local}
