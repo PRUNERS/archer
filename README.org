@@ -253,7 +253,9 @@ Obtain official LLVM OpenMP Runtime:
 #+BEGIN_SRC sh :exports code
   cd projects
   git clone git@github.com:llvm-mirror/openmp.git openmp
-  cd ..
+  cd openmp
+  git checkout release_391
+  cd ../..
 #+END_SRC
 
 or obtain LLVM OpenMP Runtime with OMPT support:
