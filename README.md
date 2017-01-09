@@ -285,7 +285,7 @@ Then, we can actually build LLVM/Clang with ARCHER support:
      -D LLVM_ENABLE_LIBCXXABI=ON \
      -D LIBCXXABI_USE_LLVM_UNWINDER=ON \
      -D CLANG_DEFAULT_CXX_STDLIB=libc++ \
-     -D LIBOMP_TSAN_SUPPORT=TRUE \
+     -D LIBOMP_TSAN_SUPPORT=TRUE \          # remove or set to FALSE if building with LLVM OpenMP Runtime with OMPT support
      ../llvm_src
     ninja -j8 -l8                           # or any number of available cores
     ninja install
