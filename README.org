@@ -223,6 +223,7 @@ Obtain LLVM libc++:
 #+BEGIN_SRC sh :exports cod
   cd projects
   git clone git@github.com:llvm-mirror/libcxx.git
+  cd libcxx
   git checkout release_39
   cd ../..
 #+END_SRC
@@ -232,6 +233,7 @@ Obtain LLVM libc++abi:
 #+BEGIN_SRC sh :exports code
   cd projects
   git clone git@github.com:llvm-mirror/libcxxabi.git
+  cd libcxxabi
   git checkout release_39
   cd ../..
 #+END_SRC
@@ -241,6 +243,7 @@ Obtain LLVM libunwind:
 #+BEGIN_SRC sh :exports code
   cd projects
   git clone git@github.com:llvm-mirror/libunwind.git
+  cd libunwind
   git checkout release_39
   cd ../..
 #+END_SRC

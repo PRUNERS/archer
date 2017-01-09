@@ -217,6 +217,7 @@ Obtain LLVM libc++:
 
     cd projects
     git clone git@github.com:llvm-mirror/libcxx.git
+    cd libcxx
     git checkout release_39
     cd ../..
 
@@ -224,6 +225,7 @@ Obtain LLVM libc++abi:
 
     cd projects
     git clone git@github.com:llvm-mirror/libcxxabi.git
+    cd libcxxabi
     git checkout release_39
     cd ../..
 
@@ -231,6 +233,7 @@ Obtain LLVM libunwind:
 
     cd projects
     git clone git@github.com:llvm-mirror/libunwind.git
+    cd libunwind
     git checkout release_39
     cd ../..
 
