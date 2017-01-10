@@ -84,9 +84,11 @@ stand-alone or full Clang/LLVM with ARCHER support building
 build system, and the LLVM OpenMP Runtime with OMPT support).
 
 Note: Using the LLVM OpenMP Runtime version >= 3.9 may results in some
-false positives during the data race detection process. Please, pay
-attention to the comments next to some of the building commands for
-further details.
+false positives during the data race detection process. Please, notice
+that the full building of Clang/LLVM with ARCHER support depends on
+the version of LLVM OpenMP runtime. In the configuration section there
+will be two different commands depending on the type of runtime
+chosen.
 
 ## Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support<a id="sec-4-3" name="sec-4-3"></a>
 
