@@ -393,7 +393,7 @@ separate flags are separated with spaces, e.g.:
 <thead>
 <tr>
 <th scope="col" class="left">Flag Name</th>
-<th scope="col" class="right">Default value</th>
+<th scope="col" class="right"><nobr>Default value<\nobr></th>
 <th scope="col" class="left">Description</th>
 </tr>
 </thead>
