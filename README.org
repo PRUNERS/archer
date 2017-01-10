@@ -290,7 +290,9 @@ First we boostrap clang:
   export PATH="$ARCHER_BUILD/llvm_bootstrap/bin:${PATH}"
 #+END_SRC
 
-Then, we can actually build LLVM/Clang with ARCHER support:
+Then, we can actually build LLVM/Clang with ARCHER support.
+
+With official LLVM OpenMP Runtime run:
 
 #+BEGIN_SRC sh :exports code
   export LLVM_INSTALL=$HOME/usr           # or any other install path
@@ -305,7 +307,30 @@ Then, we can actually build LLVM/Clang with ARCHER support:
    -D LLVM_ENABLE_LIBCXXABI=ON \
    -D LIBCXXABI_USE_LLVM_UNWINDER=ON \
    -D CLANG_DEFAULT_CXX_STDLIB=libc++ \
-   -D LIBOMP_TSAN_SUPPORT=TRUE \          # remove or set to FALSE if building with LLVM OpenMP Runtime with OMPT support
+   -D LIBOMP_TSAN_SUPPORT=TRUE \
+   ../llvm_src
+  ninja -j8 -l8                           # or any number of available cores
+  ninja install
+#+END_SRC
+
+Otherwise, with LLVM OpenMP Runtime with OMPT support run:
+
+#+BEGIN_SRC sh :exports code
+  export LLVM_INSTALL=$HOME/usr           # or any other install path
+  mkdir llvm_build && cd llvm_build
+  cmake -G Ninja \
+   -D CMAKE_C_COMPILER=clang \
+   -D CMAKE_CXX_COMPILER=clang++ \
+   -D CMAKE_BUILD_TYPE=Release \
+   -D CMAKE_INSTALL_PREFIX:PATH=$LLVM_INSTALL \
+   -D CLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp \
+   -D LLVM_ENABLE_LIBCXX=ON \
+   -D LLVM_ENABLE_LIBCXXABI=ON \
+   -D LIBCXXABI_USE_LLVM_UNWINDER=ON \
+   -D CLANG_DEFAULT_CXX_STDLIB=libc++ \
+   -D LIBOMP_OMPT_SUPPORT=on \
+   -D LIBOMP_OMPT_BLAME=on \
+   -D LIBOMP_OMPT_TRACE=on \
    ../llvm_src
   ninja -j8 -l8                           # or any number of available cores
   ninja install
