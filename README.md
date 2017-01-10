@@ -26,7 +26,7 @@
 <li><a href="#sec-5-2">5.2. Options</a></li>
 </ul>
 </li>
-<li><a href="#sec-6">6. Contact and Support</a></li>
+<li><a href="#sec-6">6. Contacts and Support</a></li>
 <li><a href="#sec-7">7. Sponsor</a></li>
 </ul>
 </div>
@@ -367,7 +367,7 @@ In your Makefile, set the following variables:
 The command *clang-archer* works as a compiler wrapper, all the
 options available for clang are also available for *clang-archer*.
 
-# Contact and Support<a id="sec-6" name="sec-6"></a>
+# Contacts and Support<a id="sec-6" name="sec-6"></a>
 
 -   [Google group](https://groups.google.com/forum/#!forum/archer-pruner)
 -   [Slack Channel](https://pruner.slack.com/shared_invite/MTIzNzExNzg4ODgxLTE0ODM3MzE2NTctNmRjNmM0NDYwNA)
