@@ -377,7 +377,7 @@ options available for clang are also available for *clang-archer*.
 
 ## Runtime Flags<a id="sec-5-3" name="sec-5-3"></a>
 
-Runtime flags are passed via **ARCHER{\_}OPTIONS** environment variable,
+Runtime flags are passed via **ARCHER\_OPTIONS** environment variable,
 separate flags are separated with spaces, e.g.:
 
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
