@@ -9,49 +9,49 @@
 #//===----------------------------------------------------------------------===//
 #
 
-# void archer_say(string message_to_user);
+# void libarcher_say(string message_to_user);
 # - prints out message_to_user
-macro(archer_say message_to_user)
+macro(libarcher_say message_to_user)
   message(STATUS "ARCHER: ${message_to_user}")
 endmacro()
 
-# void archer_warning_say(string message_to_user);
+# void libarcher_warning_say(string message_to_user);
 # - prints out message_to_user with a warning
-macro(archer_warning_say message_to_user)
+macro(libarcher_warning_say message_to_user)
   message(WARNING "ARCHER: ${message_to_user}")
 endmacro()
 
-# void archer_error_say(string message_to_user);
+# void libarcher_error_say(string message_to_user);
 # - prints out message_to_user with an error and exits cmake
-macro(archer_error_say message_to_user)
+macro(libarcher_error_say message_to_user)
   message(FATAL_ERROR "ARCHER: ${message_to_user}")
 endmacro()
 
-# archer_append(<flag> <flags_list> [(IF_TRUE | IF_FALSE | IF_TRUE_1_0 ) BOOLEAN])
+# libarcher_append(<flag> <flags_list> [(IF_TRUE | IF_FALSE | IF_TRUE_1_0 ) BOOLEAN])
 #
-# archer_append(<flag> <flags_list>)
+# libarcher_append(<flag> <flags_list>)
 #   - unconditionally appends <flag> to the list of definitions
 #
-# archer_append(<flag> <flags_list> <BOOLEAN>)
+# libarcher_append(<flag> <flags_list> <BOOLEAN>)
 #   - appends <flag> to the list of definitions if BOOLEAN is true
 #
-# archer_append(<flag> <flags_list> IF_TRUE <BOOLEAN>)
+# libarcher_append(<flag> <flags_list> IF_TRUE <BOOLEAN>)
 #   - appends <flag> to the list of definitions if BOOLEAN is true
 #
-# archer_append(<flag> <flags_list> IF_FALSE <BOOLEAN>)
+# libarcher_append(<flag> <flags_list> IF_FALSE <BOOLEAN>)
 #   - appends <flag> to the list of definitions if BOOLEAN is false
 #
-# archer_append(<flag> <flags_list> IF_DEFINED <VARIABLE>)
+# libarcher_append(<flag> <flags_list> IF_DEFINED <VARIABLE>)
 #   - appends <flag> to the list of definitions if VARIABLE is defined
 #
-# archer_append(<flag> <flags_list> IF_TRUE_1_0 <BOOLEAN>)
+# libarcher_append(<flag> <flags_list> IF_TRUE_1_0 <BOOLEAN>)
 #   - appends <flag>=1 to the list of definitions if <BOOLEAN> is true, <flag>=0 otherwise
-# e.g., archer_append("-D USE_FEATURE" IF_TRUE_1_0 HAVE_FEATURE)
+# e.g., libarcher_append("-D USE_FEATURE" IF_TRUE_1_0 HAVE_FEATURE)
 #     appends "-D USE_FEATURE=1" if HAVE_FEATURE is true
 #     or "-D USE_FEATURE=0" if HAVE_FEATURE is false
-macro(archer_append flags flag)
+macro(libarcher_append flags flag)
   if(NOT (${ARGC} EQUAL 2 OR ${ARGC} EQUAL 3 OR ${ARGC} EQUAL 4))
-    archer_error_say("archer_append: takes 2, 3, or 4 arguments")
+    libarcher_error_say("libarcher_append: takes 2, 3, or 4 arguments")
   endif()
   if(${ARGC} EQUAL 2)
     list(APPEND ${flags} "${flag}")
@@ -79,15 +79,15 @@ macro(archer_append flags flag)
         list(APPEND ${flags} "${flag}=0")
       endif()
     else()
-      archer_error_say("archer_append: third argument must be one of IF_TRUE, IF_FALSE, IF_DEFINED, IF_TRUE_1_0")
+      libarcher_error_say("libarcher_append: third argument must be one of IF_TRUE, IF_FALSE, IF_DEFINED, IF_TRUE_1_0")
     endif()
   endif()
 endmacro()
 
-# void archer_get_legal_arch(string* return_arch_string);
+# void libarcher_get_legal_arch(string* return_arch_string);
 # - returns (through return_arch_string) the formal architecture
 #   string or warns user of unknown architecture
-function(archer_get_legal_arch return_arch_string)
+function(libarcher_get_legal_arch return_arch_string)
   if(${IA32})
     set(${return_arch_string} "IA-32" PARENT_SCOPE)
   elseif(${INTEL64})
@@ -103,17 +103,17 @@ function(archer_get_legal_arch return_arch_string)
   elseif(${AARCH64})
     set(${return_arch_string} "AARCH64" PARENT_SCOPE)
   else()
-    set(${return_arch_string} "${archer_ARCH}" PARENT_SCOPE)
-    archer_warning_say("archer_get_legal_arch(): Warning: Unknown architecture: Using ${archer_ARCH}")
+    set(${return_arch_string} "${libarcher_ARCH}" PARENT_SCOPE)
+    libarcher_warning_say("libarcher_get_legal_arch(): Warning: Unknown architecture: Using ${libarcher_ARCH}")
   endif()
 endfunction()
 
-# void archer_check_variable(string var, ...);
+# void libarcher_check_variable(string var, ...);
 # - runs through all values checking if ${var} == value
 # - uppercase and lowercase do not matter
 # - if the var is found, then just print it out
 # - if the var is not found, then error out
-function(archer_check_variable var)
+function(libarcher_check_variable var)
   set(valid_flag 0)
   string(TOLOWER "${${var}}" var_lower)
   foreach(value IN LISTS ARGN)
@@ -124,13 +124,13 @@ function(archer_check_variable var)
     endif()
   endforeach()
   if(${valid_flag} EQUAL 0)
-    archer_error_say("archer_check_variable(): ${var} = ${${var}} is unknown")
+    libarcher_error_say("libarcher_check_variable(): ${var} = ${${var}} is unknown")
   endif()
 endfunction()
 
-# void archer_get_build_number(string src_dir, string* return_build_number);
+# void libarcher_get_build_number(string src_dir, string* return_build_number);
 # - grab the eight digit build number (or 00000000) from kmp_version.c
-function(archer_get_build_number src_dir return_build_number)
+function(libarcher_get_build_number src_dir return_build_number)
   # sets file_lines_list to a list of all lines in kmp_version.c
   file(STRINGS "${src_dir}/src/kmp_version.c" file_lines_list)
 
@@ -147,9 +147,9 @@ function(archer_get_build_number src_dir return_build_number)
   set(${return_build_number} "${build_number}" PARENT_SCOPE) # return build number
 endfunction()
 
-# void archer_get_legal_type(string* return_legal_type);
+# void libarcher_get_legal_type(string* return_legal_type);
 # - set the legal type name Performance/Profiling/Stub
-function(archer_get_legal_type return_legal_type)
+function(libarcher_get_legal_type return_legal_type)
   if(${NORMAL_LIBRARY})
     set(${return_legal_type} "Performance" PARENT_SCOPE)
   elseif(${PROFILE_LIBRARY})
@@ -159,10 +159,10 @@ function(archer_get_legal_type return_legal_type)
   endif()
 endfunction()
 
-# void archer_add_suffix(string suffix, list<string>* list_of_items);
+# void libarcher_add_suffix(string suffix, list<string>* list_of_items);
 # - returns list_of_items with suffix appended to all items
 # - original list is modified
-function(archer_add_suffix suffix list_of_items)
+function(libarcher_add_suffix suffix list_of_items)
   set(local_list "")
   foreach(item IN LISTS "${list_of_items}")
     if(NOT "${item}" STREQUAL "")
@@ -172,18 +172,18 @@ function(archer_add_suffix suffix list_of_items)
   set(${list_of_items} "${local_list}" PARENT_SCOPE)
 endfunction()
 
-# void archer_list_to_string(list<string> list_of_things, string* return_string);
+# void libarcher_list_to_string(list<string> list_of_things, string* return_string);
 # - converts a list to a space separated string
-function(archer_list_to_string list_of_things return_string)
+function(libarcher_list_to_string list_of_things return_string)
   string(REPLACE ";" " " output_variable "${list_of_things}")
   set(${return_string} "${output_variable}" PARENT_SCOPE)
 endfunction()
 
-# void archer_string_to_list(string str, list<string>* return_list);
+# void libarcher_string_to_list(string str, list<string>* return_list);
 # - converts a string to a semicolon separated list
 # - what it really does is just string_replace all running whitespace to a semicolon
 # - in cmake, a list is strings separated by semicolons: i.e., list of four items, list = "item1;item2;item3;item4"
-function(archer_string_to_list str return_list)
+function(libarcher_string_to_list str return_list)
   set(outstr)
   string(REGEX REPLACE "[ \t]+" ";" outstr "${str}")
   set(${return_list} "${outstr}" PARENT_SCOPE)
