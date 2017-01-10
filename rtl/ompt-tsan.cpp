@@ -21,25 +21,19 @@ public:
 		if(env) {
 			int ret = sscanf(env, "flush_shadow=%d", &flush_shadow);
 			if(!ret) {
-				std::cerr << "Illegal values for ARCHER_OPTIONS variable, no options have been set." << std::endl;
+				std::cerr << "Illegal values for ARCHER_OPTIONS variable, no option has been set." << std::endl;
 			}
 		}
 	}
 };
 
 extern "C" int __attribute__((weak)) __swordomp__get_omp_status();
-//extern __thread int __swordomp_status__;
-//extern "C" int __attribute__((weak)) __swordomp__get_omp_status() {
-//	printf("Pippo\n");
-//	return -1;
-//}
 extern "C" void __tsan_flush_memory();
+ArcherFlags *archer_flags;
 #endif
 
 /// Required OMPT inquiry functions.
 ompt_get_parallel_data_t ompt_get_parallel_data;
-ArcherFlags *archer_flags;
-
 
 /// Data structure to store additional information for parallel regions.
 struct ParallelData {
