@@ -1,5 +1,6 @@
 include(FindPythonInterp)
 include(CheckTypeSize)
+include(CheckLibraryExists)
 
 if(NOT PYTHONINTERP_FOUND)
   libarcher_warning_say("Could not find Python.")
