@@ -369,10 +369,15 @@ gcc, etc.).
 The following are some of the examples of how one can integrate
 /clang-archer/ into his/her build system.
 
+If you are using ARCHER and the LLVM OpenMP Runtime with OMPT support,
+it is necessary to link your executable against the ARCHER runtime
+library /libarcher.so/. (In the example below the runtime library will
+be shown in square brackets).
+
 *** Single source
 
 #+BEGIN_SRC
-clang-archer example.c -o example
+clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 #+END_SRC
 
 *** Makefile
@@ -380,7 +385,8 @@ clang-archer example.c -o example
 In your Makefile, set the following variables:
 
 #+BEGIN_SRC
-CC = clang-archer
+CC=clang-archer
+[ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 #+END_SRC
 
 *** Hybrid MPI-OpenMP programs
@@ -389,12 +395,25 @@ In your Makefile, set the following variables:
 
 #+BEGIN_SRC
 CC = mpicc -cc=clang-archer
+[ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 #+END_SRC
 
 ** Options
 
 The command /clang-archer/ works as a compiler wrapper, all the
 options available for clang are also available for /clang-archer/.
+
+** Runtime Flags
+
+Runtime flags are passed via ARCHER_OPTIONS environment variable,
+separate flags are separated with spaces, e.g.:
+
+#+STARTUP: align
+|--------------+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *Flag Name*  | *Default value* | *Description*                                                                                                                                                                                                                                                                |
+|--------------+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| flush_shadow |               0 | Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory. |
+|--------------+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 * Contacts and Support
 

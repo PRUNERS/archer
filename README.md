@@ -24,6 +24,7 @@
 </ul>
 </li>
 <li><a href="#sec-5-2">5.2. Options</a></li>
+<li><a href="#sec-5-3">5.3. Runtime Flags</a></li>
 </ul>
 </li>
 <li><a href="#sec-6">6. Contacts and Support</a></li>
@@ -346,26 +347,65 @@ gcc, etc.).
 The following are some of the examples of how one can integrate
 *clang-archer* into his/her build system.
 
+If you are using ARCHER and the LLVM OpenMP Runtime with OMPT support,
+it is necessary to link your executable against the ARCHER runtime
+library *libarcher.so*. (In the example below the runtime library will
+be shown in square brackets).
+
 ### Single source<a id="sec-5-1-1" name="sec-5-1-1"></a>
 
-    clang-archer example.c -o example
+    clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 
 ### Makefile<a id="sec-5-1-2" name="sec-5-1-2"></a>
 
 In your Makefile, set the following variables:
 
-    CC = clang-archer
+    CC=clang-archer
+    [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 ### Hybrid MPI-OpenMP programs<a id="sec-5-1-3" name="sec-5-1-3"></a>
 
 In your Makefile, set the following variables:
 
     CC = mpicc -cc=clang-archer
+    [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 ## Options<a id="sec-5-2" name="sec-5-2"></a>
 
 The command *clang-archer* works as a compiler wrapper, all the
 options available for clang are also available for *clang-archer*.
+
+## Runtime Flags<a id="sec-5-3" name="sec-5-3"></a>
+
+Runtime flags are passed via ARCHER<sub>OPTIONS</sub> environment variable,
+separate flags are separated with spaces, e.g.:
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="right" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">**Flag Name**</th>
+<th scope="col" class="right">**Default value**</th>
+<th scope="col" class="left">**Description**</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td class="left">flush<sub>shadow</sub></td>
+<td class="right">0</td>
+<td class="left">Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory.</td>
+</tr>
+</tbody>
+</table>
 
 # Contacts and Support<a id="sec-6" name="sec-6"></a>
 
