@@ -145,7 +145,7 @@ Create a folder to download and build ARCHER:
 
 Obtain the LLVM OpenMP Runtime with OMPT support:
 
-    git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
+    git clone -b align-to-tr git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
 
 and build it with the following command:
 
@@ -166,6 +166,7 @@ and build it with the following command:
 
 Obtain ARCHER:
 
+    cd $ARCHER_BUILD
     git clone git@github.com:PRUNER/archer.git archer
 
 and build it with the following commands:
