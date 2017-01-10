@@ -403,12 +403,9 @@ CC = mpicc -cc=clang-archer
 The command /clang-archer/ works as a compiler wrapper, all the
 options available for clang are also available for /clang-archer/.
 
-
 ** Runtime Flags
 
-#+OPTIONS: ^:nil
-
-Runtime flags are passed via *ARCHER_OPTIONS* environment variable,
+Runtime flags are passed via *ARCHER&#95;OPTIONS* environment variable,
 separate flags are separated with spaces, e.g.:
 
 |---------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
