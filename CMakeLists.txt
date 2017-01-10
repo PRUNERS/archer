@@ -41,6 +41,9 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   add_definitions(-DLLVM_VERSION=${LLVM_VERSION})
 endif()
 
+# These include files are in the cmake/ subdirectory
+include(LibarcherUtils)
+
 if(${ARCHER_STANDALONE_BUILD})
   # LLVM detection part
   set(LLVM_ROOT "" CACHE PATH "Root of LLVM install.")
@@ -89,7 +92,5 @@ endif()
 if(NOT ${LIBOMP_TSAN_SUPPORT})
     add_subdirectory(rtl)
 endif()
-#if(ARCHER_LLVM_LIT_EXECUTABLE) && ARCHER_LLVM_TOOLS_DIR)
 add_subdirectory(test)
-#end()
 add_subdirectory(tools)
