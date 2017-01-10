@@ -380,7 +380,7 @@ options available for clang are also available for *clang-archer*.
 Runtime flags are passed via **ARCHER&#95;OPTIONS** environment variable,
 separate flags are separated with spaces, e.g.:
 
-<table border="2" cellspacing="0" cellpadding="200" rules="groups" frame="hsides">
+<table border="2" cellspacing="100" cellpadding="6" rules="groups" frame="hsides">
 
 
 <colgroup>
