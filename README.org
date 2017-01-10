@@ -292,7 +292,7 @@ First we boostrap clang:
 
 Then, we can actually build LLVM/Clang with ARCHER support.
 
-With official LLVM OpenMP Runtime run:
+In case of official LLVM OpenMP Runtime run:
 
 #+BEGIN_SRC sh :exports code
   export LLVM_INSTALL=$HOME/usr           # or any other install path
@@ -313,7 +313,7 @@ With official LLVM OpenMP Runtime run:
   ninja install
 #+END_SRC
 
-Otherwise, with LLVM OpenMP Runtime with OMPT support run:
+Otherwise, in case of LLVM OpenMP Runtime with OMPT support run:
 
 #+BEGIN_SRC sh :exports code
   export LLVM_INSTALL=$HOME/usr           # or any other install path
