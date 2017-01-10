@@ -27,8 +27,9 @@
 <li><a href="#sec-5-3">5.3. Runtime Flags</a></li>
 </ul>
 </li>
-<li><a href="#sec-6">6. Contacts and Support</a></li>
-<li><a href="#sec-7">7. Sponsors</a></li>
+<li><a href="#sec-6">6. Example</a></li>
+<li><a href="#sec-7">7. Contacts and Support</a></li>
+<li><a href="#sec-8">8. Sponsors</a></li>
 </ul>
 </div>
 </div>
@@ -71,8 +72,8 @@ ARCHER has been developed under LLVM 3.9 (for more information visit
 
 ## Automatic Building<a id="sec-4-1" name="sec-4-1"></a>
 
-For an automatic building script (recommended) visit the GitHub page
-<https://github.com/PRUNER/llvm_archer>.
+For an automatic building script (recommended) please visit the GitHub
+page <https://github.com/PRUNER/llvm_archer>.
 
 ## Manual Building<a id="sec-4-2" name="sec-4-2"></a>
 
@@ -407,7 +408,9 @@ separate flags are separated with spaces, e.g.:
 </tbody>
 </table>
 
-# Contacts and Support<a id="sec-6" name="sec-6"></a>
+# Example<a id="sec-6" name="sec-6"></a>
+
+# Contacts and Support<a id="sec-7" name="sec-7"></a>
 
 -   [Google group](https://groups.google.com/forum/#!forum/archer-pruner)
 -   [Slack Channel](https://pruner.slack.com/shared_invite/MTIzNzExNzg4ODgxLTE0ODM3MzE2NTctNmRjNmM0NDYwNA)
@@ -415,6 +418,6 @@ separate flags are separated with spaces, e.g.:
 
     <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
 
-# Sponsors<a id="sec-7" name="sec-7"></a>
+# Sponsors<a id="sec-8" name="sec-8"></a>
 
 <img src="resources/images/uofu_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="UofU Logo" title="University of Utah" style="float:left" /> <img src="resources/images/llnl_logo.png" hspace="70" vspace="5" height="30%" width="30%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" style="float:center" /> <img src="resources/images/rwthaachen_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" style="float:left" />
