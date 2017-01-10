@@ -380,15 +380,12 @@ options available for clang are also available for *clang-archer*.
 Runtime flags are passed via **ARCHER\_OPTIONS** environment variable,
 separate flags are separated with spaces, e.g.:
 
+<div class="export">
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
-
-
 <colgroup>
-<col  class="left" />
-
-<col  class="right" />
-
-<col  class="left" />
+<col  class="center" />
+<col  class="center" />
+<col  class="center" />
 </colgroup>
 <thead>
 <tr>
@@ -397,15 +394,15 @@ separate flags are separated with spaces, e.g.:
 <th scope="col" class="left">Description</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td class="left">flush\_shadow</td>
 <td class="right">0</td>
 <td class="left">Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory and may cause an "out of memory" exception when checked by ARCHER.</td>
-</tr>
 </tbody>
 </table>
+
+</div>
 
 # Contacts and Support<a id="sec-6" name="sec-6"></a>
 
