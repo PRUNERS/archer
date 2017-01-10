@@ -118,6 +118,7 @@ and build it with the following command:
 
 Obtain ARCHER:
 
+    cd $ARCHER_BUILD
     git clone git@github.com:PRUNER/archer.git archer
 
 and build it with the following commands:
@@ -294,6 +295,7 @@ In case of official LLVM OpenMP Runtime run:
      -D LIBOMP_TSAN_SUPPORT=TRUE \
      ../llvm_src
     ninja -j8 -l8                           # or any number of available cores
+    ninja check-libarcher
     ninja install
 
 Otherwise, in case of LLVM OpenMP Runtime with OMPT support run:
@@ -315,6 +317,7 @@ Otherwise, in case of LLVM OpenMP Runtime with OMPT support run:
      -D LIBOMP_OMPT_TRACE=on \
      ../llvm_src
     ninja -j8 -l8                           # or any number of available cores
+    ninja check-libarcher
     ninja install
 
 Once the installation completes, you need to setup your environement
