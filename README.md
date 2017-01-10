@@ -2,47 +2,47 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgbf15717">1. License</a></li>
-<li><a href="#org441476a">2. Introduction</a></li>
-<li><a href="#org93697f9">3. Prerequisites</a></li>
-<li><a href="#org2fcf5cc">4. Installation</a>
+<li><a href="#org1f31a19">1. License</a></li>
+<li><a href="#org0286010">2. Introduction</a></li>
+<li><a href="#org29c8014">3. Prerequisites</a></li>
+<li><a href="#org0434d1c">4. Installation</a>
 <ul>
-<li><a href="#org1ad5c29">4.1. Automatic Building</a></li>
-<li><a href="#orgf5cdc4a">4.2. Manual Building</a></li>
-<li><a href="#orga0f2792">4.3. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support</a></li>
-<li><a href="#org5d1dc4d">4.4. Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
-<li><a href="#org03afd7f">4.5. Build ARCHER within Clang/LLVM</a></li>
+<li><a href="#orgad0a538">4.1. Automatic Building</a></li>
+<li><a href="#org52d7f53">4.2. Manual Building</a></li>
+<li><a href="#org5d1fa5b">4.3. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support</a></li>
+<li><a href="#org23c1d01">4.4. Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
+<li><a href="#org6369e13">4.5. Build ARCHER within Clang/LLVM</a></li>
 </ul>
 </li>
-<li><a href="#org8759da5">5. Usage</a>
+<li><a href="#org32cf22e">5. Usage</a>
 <ul>
-<li><a href="#org02a15ef">5.1. How to compile</a>
+<li><a href="#org1791cc1">5.1. How to compile</a>
 <ul>
-<li><a href="#orgf80ea1e">5.1.1. Single source</a></li>
-<li><a href="#orge57d577">5.1.2. Makefile</a></li>
-<li><a href="#org5e1c541">5.1.3. Hybrid MPI-OpenMP programs</a></li>
+<li><a href="#orgceafe98">5.1.1. Single source</a></li>
+<li><a href="#org1dee4c3">5.1.2. Makefile</a></li>
+<li><a href="#org940f618">5.1.3. Hybrid MPI-OpenMP programs</a></li>
 </ul>
 </li>
-<li><a href="#orgccc938d">5.2. Options</a></li>
-<li><a href="#org131539c">5.3. Runtime Flags</a></li>
+<li><a href="#org36230b5">5.2. Options</a></li>
+<li><a href="#orgbd3d410">5.3. Runtime Flags</a></li>
 </ul>
 </li>
-<li><a href="#orgd8e1c20">6. Example</a></li>
-<li><a href="#orga83009e">7. Contacts and Support</a></li>
-<li><a href="#orge235abf">8. Sponsors</a></li>
+<li><a href="#orgc1421d5">6. Example</a></li>
+<li><a href="#orgd3d47dc">7. Contacts and Support</a></li>
+<li><a href="#org3afca19">8. Sponsors</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="orgbf15717"></a>
+<a id="org1f31a19"></a>
 
 # License
 
 Please see LICENSE for usage terms.
 
 
-<a id="org441476a"></a>
+<a id="org0286010"></a>
 
 # Introduction
 
@@ -57,7 +57,7 @@ on open-source tools infrastructure such as LLVM, ThreadSanitizer, and
 OMPT to provide portability.
 
 
-<a id="org93697f9"></a>
+<a id="org29c8014"></a>
 
 # Prerequisites
 
@@ -73,7 +73,7 @@ development at <https://github.com/OpenMPToolsInterface/LLVM-openmp>
 (under the branch "align-to-tr").
 
 
-<a id="org2fcf5cc"></a>
+<a id="org0434d1c"></a>
 
 # Installation
 
@@ -81,7 +81,7 @@ ARCHER has been developed under LLVM 3.9 (for more information visit
 <http://llvm.org>).
 
 
-<a id="org1ad5c29"></a>
+<a id="orgad0a538"></a>
 
 ## Automatic Building
 
@@ -89,7 +89,7 @@ For an automatic building script (recommended) please visit the GitHub
 page <https://github.com/PRUNER/llvm_archer>.
 
 
-<a id="orgf5cdc4a"></a>
+<a id="org52d7f53"></a>
 
 ## Manual Building
 
@@ -109,7 +109,7 @@ will be two different commands depending on the type of runtime
 chosen.
 
 
-<a id="orga0f2792"></a>
+<a id="org5d1fa5b"></a>
 
 ## Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
 
@@ -158,7 +158,7 @@ and build it with the following commands:
     cd ../..
 
 
-<a id="org5d1dc4d"></a>
+<a id="org23c1d01"></a>
 
 ## Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support
 
@@ -208,7 +208,7 @@ and build it with the following commands:
     cd ../..
 
 
-<a id="org03afd7f"></a>
+<a id="org6369e13"></a>
 
 ## Build ARCHER within Clang/LLVM
 
@@ -359,12 +359,12 @@ To make the environment permanent add the previous lines or
 equivalents to your shell start-up script such as "~/.bashrc".
 
 
-<a id="org8759da5"></a>
+<a id="org32cf22e"></a>
 
 # Usage
 
 
-<a id="org02a15ef"></a>
+<a id="org1791cc1"></a>
 
 ## How to compile
 
@@ -385,14 +385,14 @@ library *libarcher.so*. (In the example below the runtime library will
 be shown in square brackets).
 
 
-<a id="orgf80ea1e"></a>
+<a id="orgceafe98"></a>
 
 ### Single source
 
     clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="orge57d577"></a>
+<a id="org1dee4c3"></a>
 
 ### Makefile
 
@@ -402,7 +402,7 @@ In your Makefile, set the following variables:
     [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="org5e1c541"></a>
+<a id="org940f618"></a>
 
 ### Hybrid MPI-OpenMP programs
 
@@ -412,7 +412,7 @@ In your Makefile, set the following variables:
     [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="orgccc938d"></a>
+<a id="org36230b5"></a>
 
 ## Options
 
@@ -420,7 +420,7 @@ The command *clang-archer* works as a compiler wrapper, all the
 options available for clang are also available for *clang-archer*.
 
 
-<a id="org131539c"></a>
+<a id="orgbd3d410"></a>
 
 ## Runtime Flags
 
@@ -461,7 +461,7 @@ separate flags are separated with spaces, e.g.:
 </table>
 
 
-<a id="orgd8e1c20"></a>
+<a id="orgc1421d5"></a>
 
 # Example
 
@@ -470,19 +470,19 @@ check the program for data races.
 
 Suppose our program is called *myprogram.c*:
 
-     1: #include <stdio.h>
-     2:
-     3: #define N 1000
-     4:
-     5: int main (int argc, char **argv)
-     6: {
-     7:   int a[N];
-     8:
-     9: #pragma omp parallel for
-    10:   for (int i = 0; i < N - 1; i++) {
-    11:     a[i] = a[i + 1];
-    12:   }
-    13: }
+    20   1: #include <stdio.h>
+    21   2:
+    22   3: #define N 1000
+    23   4:
+    24   5: int main (int argc, char **argv)
+    25   6: {
+    26   7:   int a[N];
+    27   8:
+    28   9: #pragma omp parallel for
+    29  10:   for (int i = 0; i < N - 1; i++) {
+    30  11:     a[i] = a[i + 1];
+    31  12:   }
+    32  13: }
 
 In case we installed ARCHER with the official LLVM OpenMP runtime and
 ThreadSanitizer support we compile the program as follow:
@@ -525,7 +525,7 @@ the report will look as follow:
     ThreadSanitizer: reported 1 warnings
 
 
-<a id="orga83009e"></a>
+<a id="orgd3d47dc"></a>
 
 # Contacts and Support
 
@@ -536,7 +536,7 @@ the report will look as follow:
     <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
 
 
-<a id="orge235abf"></a>
+<a id="org3afca19"></a>
 
 # Sponsors
 

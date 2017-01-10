@@ -421,7 +421,7 @@ check the program for data races.
 
 Suppose our program is called /myprogram.c/:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC emacs-lisp -n 20 sh :exports code
  1: #include <stdio.h>
  2:
  3: #define N 1000
