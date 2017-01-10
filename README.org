@@ -491,7 +491,7 @@ ThreadSanitizer: reported 1 warnings
   M. Schulz, G. L. Lee, J. Protze, and M. S. Müller. 2016. “ARCHER:
   Effectively Spotting Data Races in Large Openmp Applications.” In
   2016 IEEE International Parallel and Distributed Processing
-  Symposium (IPDPS), 53–62. doi:10.1109/IPDPS.2016.68
+  Symposium (IPDPS), 53–62. http://ieeexplore.ieee.org/document/7516001/
 - Protze, Joachim, Simone Atzeni, Dong H. Ahn, Martin Schulz, Ganesh
   Gopalakrishnan, Matthias S. Müller, Ignacio Laguna, Zvonimir
   Rakamarić, and Greg L. Lee. 2014. “Towards Providing Low-Overhead
