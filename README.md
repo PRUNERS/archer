@@ -28,7 +28,7 @@
 </ul>
 </li>
 <li><a href="#sec-6">6. Contacts and Support</a></li>
-<li><a href="#sec-7">7. Sponsor</a></li>
+<li><a href="#sec-7">7. Sponsors</a></li>
 </ul>
 </div>
 </div>
@@ -415,6 +415,6 @@ separate flags are separated with spaces, e.g.:
 
     <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
 
-# Sponsor<a id="sec-7" name="sec-7"></a>
+# Sponsors<a id="sec-7" name="sec-7"></a>
 
 <img src="resources/images/uofu_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="UofU Logo" title="University of Utah" style="float:left" /> <img src="resources/images/llnl_logo.png" hspace="70" vspace="5" height="30%" width="30%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" style="float:center" /> <img src="resources/images/rwthaachen_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" style="float:left" />
