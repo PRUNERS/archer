@@ -372,8 +372,8 @@ options available for clang are also available for *clang-archer*.
 -   [Google group](https://groups.google.com/forum/#!forum/archer-pruner)
 -   [Slack Channel](https://pruner.slack.com/shared_invite/MTIzNzExNzg4ODgxLTE0ODM3MzE2NTctNmRjNmM0NDYwNA)
 -   E-Mail Contacts:
-    -   Simone Atzeni
-    -   [Joachim Protze]( protze@itc.rwth-aachen.de)
+
+    <ul style="list-style-type:square"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> <\li> <br> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> <\li> </ul>
 
 # Sponsor<a id="sec-7" name="sec-7"></a>
 
