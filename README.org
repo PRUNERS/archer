@@ -1,8 +1,4 @@
-#+TITLE:     ARCHER
-#+AUTHOR:    Simone Atzeni
-#+EMAIL:     simone@cs.utah.edu
-#+DATE:      2014-10-22 Wed
-#+DESCRIPTION:
+#+DESCRIPTION: ARCHER, a data race detection tool for large OpenMP applications
 #+KEYWORDS:
 #+LANGUAGE:  en
 #+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
@@ -426,20 +422,19 @@ check the program for data races.
 Suppose our program is called /myprogram.c/:
 
 #+BEGIN_SRC sh :exports code
-setq-default org-export-last-code-line-counter-value 42)
-#include <stdio.h>
-
-#define N 1000
-
-int main (int argc, char **argv)
-{
-  int a[N];
-
-#pragma omp parallel for
-  for (int i = 0; i < N - 1; i++) {
-    a[i] = a[i + 1];
-  }
-}
+ 1: #include <stdio.h>
+ 2:
+ 3: #define N 1000
+ 4:
+ 5: int main (int argc, char **argv)
+ 6: {
+ 7:   int a[N];
+ 8:
+ 9: #pragma omp parallel for
+10:   for (int i = 0; i < N - 1; i++) {
+11:     a[i] = a[i + 1];
+12:   }
+13: }
 #+END_SRC
 
 In case we installed ARCHER with the official LLVM OpenMP runtime and
