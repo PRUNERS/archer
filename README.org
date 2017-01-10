@@ -403,16 +403,17 @@ CC = mpicc -cc=clang-archer
 The command /clang-archer/ works as a compiler wrapper, all the
 options available for clang are also available for /clang-archer/.
 
+
 ** Runtime Flags
+#+OPTIONS: ^:nil
 
 Runtime flags are passed via *ARCHER_OPTIONS* environment variable,
 separate flags are separated with spaces, e.g.:
 
-#+OPTIONS: ^:nil
 |---------------+---------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Flag Name     | Default value | Description                                                                                                                                                                                                                                                                  |
 |---------------+---------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| flush\_shadow |             0 | Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory. |
+| flush_shadow  |             0 | Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory. |
 |---------------+---------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 * Contacts and Support
