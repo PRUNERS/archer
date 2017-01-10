@@ -346,7 +346,7 @@ to allow ARCHER to work correctly.
 
 Please set the following path variables:
 
-#+BEGIN_SRC
+#+BEGIN_SRC sh :exports code
 export PATH=${LLVM_INSTALL}/bin:${PATH}"
 export LD_LIBRARY_PATH=${LLVM_INSTALL}/lib:${LD_LIBRARY_PATH}"
 #+END_SRC
@@ -376,7 +376,7 @@ be shown in square brackets).
 
 *** Single source
 
-#+BEGIN_SRC
+#+BEGIN_SRC sh :exports code
 clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 #+END_SRC
 
@@ -384,7 +384,7 @@ clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 
 In your Makefile, set the following variables:
 
-#+BEGIN_SRC
+#+BEGIN_SRC sh :exports code
 CC=clang-archer
 [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 #+END_SRC
@@ -393,7 +393,7 @@ CC=clang-archer
 
 In your Makefile, set the following variables:
 
-#+BEGIN_SRC
+#+BEGIN_SRC sh :exports code
 CC = mpicc -cc=clang-archer
 [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 #+END_SRC
@@ -408,15 +408,87 @@ options available for clang are also available for /clang-archer/.
 Runtime flags are passed via *ARCHER&#95;OPTIONS* environment variable,
 separate flags are separated with spaces, e.g.:
 
-|------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Flag Name        | Default value | Description                                                                                                                                                                                                                                                                                                                                    |
-|------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| flush&#95;shadow |             0 | Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory and may cause an "out of memory" exception when checked by ARCHER. |
-|------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+#+BEGIN_SRC sh :exports code
+ARCHER_OPTIONS="flush_shadow=1" ./myprogram
+#+END_SRC
+
+|------------------+---------------+--------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Flag Name        | Default value | Clang/LLVM Version | Description                                                                                                                                                                                                                                                                                                                                    |
+|------------------+---------------+--------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| flush&#95;shadow |             0 | >= 4.0             | Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory and may cause an "out of memory" exception when checked by ARCHER. |
+|------------------+---------------+--------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 * Example
 
+Let us take the program below and follow the steps to compile and
+check the program for data races.
 
+Suppose our program is called /myprogram.c/:
+
+#+BEGIN_SRC sh :exports code
+setq-default org-export-last-code-line-counter-value 42)
+#include <stdio.h>
+
+#define N 1000
+
+int main (int argc, char **argv)
+{
+  int a[N];
+
+#pragma omp parallel for
+  for (int i = 0; i < N - 1; i++) {
+    a[i] = a[i + 1];
+  }
+}
+#+END_SRC
+
+In case we installed ARCHER with the official LLVM OpenMP runtime and
+ThreadSanitizer support we compile the program as follow:
+
+#+BEGIN_SRC sh :exports code
+clang-archer myprogram.c -o myprogram
+#+END_SRC
+
+otherwise, if we installed ARCHER with the LLVM OpenMP runtime and
+ThreadSanitizer OMPT support our compile command will look like:
+
+#+BEGIN_SRC sh :exports code
+clang-archer myprogram.c -o myprogram -larcher
+#+END_SRC
+
+Now we can run the program with the following commands:
+
+#+BEGIN_SRC sh :exports code
+export OMP_NUM_THREADS=2
+./myprogram
+#+END_SRC
+
+ARCHER will output a report in case it finds data races. In our case
+the report will look as follow:
+
+#+BEGIN_SRC sh :exports code
+==================
+WARNING: ThreadSanitizer: data race (pid=13641)
+  Read of size 4 at 0x7fff79a01170 by main thread:
+    #0 .omp_outlined. myprogram.c:11:12 (myprogram+0x00000049b5a2)
+    #1 __kmp_invoke_microtask <null> (libomp.so+0x000000077842)
+    #2 __libc_start_main /build/glibc-t3gR2i/glibc-2.23/csu/../csu/libc-start.c:291 (libc.so.6+0x00000002082f)
+
+  Previous write of size 4 at 0x7fff79a01170 by thread T1:
+    #0 .omp_outlined. myprogram.c:11:10 (myprogram+0x00000049b5d6)
+    #1 __kmp_invoke_microtask <null> (libomp.so+0x000000077842)
+
+  Location is stack of main thread.
+
+  Thread T1 (tid=13643, running) created by main thread at:
+    #0 pthread_create tsan_interceptors.cc:902:3 (myprogram+0x00000043db75)
+    #1 __kmp_create_worker <null> (libomp.so+0x00000006c364)
+    #2 __libc_start_main /build/glibc-t3gR2i/glibc-2.23/csu/../csu/libc-start.c:291 (libc.so.6+0x00000002082f)
+
+SUMMARY: ThreadSanitizer: data race myprogram.c:11:12 in .omp_outlined.
+==================
+ThreadSanitizer: reported 1 warnings
+#+END_SRC
 
 * Contacts and Support
 
