@@ -396,7 +396,7 @@ separate flags are separated with spaces, e.g.:
 </thead>
 <tbody>
 <tr>
-<td class="left">flush\_shadow</td>
+<td class="left"><pre>flush&#95;shadow</pre></td>
 <td class="right">0</td>
 <td class="left">Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory and may cause an "out of memory" exception when checked by ARCHER.</td>
 </tbody>
