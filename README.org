@@ -485,6 +485,21 @@ SUMMARY: ThreadSanitizer: data race myprogram.c:11:12 in .omp_outlined.
 ThreadSanitizer: reported 1 warnings
 #+END_SRC
 
+* Publications
+
+- Atzeni, S., G. Gopalakrishnan, Z. Rakamaric, D. H. Ahn, I. Laguna,
+  M. Schulz, G. L. Lee, J. Protze, and M. S. Müller. 2016. “ARCHER:
+  Effectively Spotting Data Races in Large Openmp Applications.” In
+  2016 IEEE International Parallel and Distributed Processing
+  Symposium (IPDPS), 53–62. doi:10.1109/IPDPS.2016.68
+- Protze, Joachim, Simone Atzeni, Dong H. Ahn, Martin Schulz, Ganesh
+  Gopalakrishnan, Matthias S. Müller, Ignacio Laguna, Zvonimir
+  Rakamarić, and Greg L. Lee. 2014. “Towards Providing Low-Overhead
+  Data Race Detection for Large Openmp Applications.” In
+  Proceedings of the 2014 LLVM Compiler Infrastructure in
+  HPC, 40–47. LLVM-HPC ’14. Piscataway, NJ, USA: IEEE
+  Press. http://dl.acm.org/citation.cfm?id=2688369
+
 * Contacts and Support
 
 - [[https://groups.google.com/forum/#!forum/archer-pruner][Google group]]

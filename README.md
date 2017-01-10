@@ -2,47 +2,48 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org312de7c">1. License</a></li>
-<li><a href="#org0e7d919">2. Introduction</a></li>
-<li><a href="#orge2b9ea1">3. Prerequisites</a></li>
-<li><a href="#org824ac0c">4. Installation</a>
+<li><a href="#org87abbda">1. License</a></li>
+<li><a href="#orgc9d4cd6">2. Introduction</a></li>
+<li><a href="#org069b511">3. Prerequisites</a></li>
+<li><a href="#org674691d">4. Installation</a>
 <ul>
-<li><a href="#orgfa6ad3d">4.1. Automatic Building</a></li>
-<li><a href="#org86a2246">4.2. Manual Building</a></li>
-<li><a href="#orge6ce679">4.3. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support</a></li>
-<li><a href="#org9ec9bea">4.4. Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
-<li><a href="#org23978e2">4.5. Build ARCHER within Clang/LLVM</a></li>
+<li><a href="#org78a3a2d">4.1. Automatic Building</a></li>
+<li><a href="#orgcbf0d1a">4.2. Manual Building</a></li>
+<li><a href="#orgd54219f">4.3. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support</a></li>
+<li><a href="#org25da2b9">4.4. Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
+<li><a href="#org99304b9">4.5. Build ARCHER within Clang/LLVM</a></li>
 </ul>
 </li>
-<li><a href="#org703af01">5. Usage</a>
+<li><a href="#org74896dc">5. Usage</a>
 <ul>
-<li><a href="#org044b8e0">5.1. How to compile</a>
+<li><a href="#org51459d2">5.1. How to compile</a>
 <ul>
-<li><a href="#org6bf36d9">5.1.1. Single source</a></li>
-<li><a href="#orga2e2666">5.1.2. Makefile</a></li>
-<li><a href="#org1416f16">5.1.3. Hybrid MPI-OpenMP programs</a></li>
+<li><a href="#org0a75e90">5.1.1. Single source</a></li>
+<li><a href="#org21be94b">5.1.2. Makefile</a></li>
+<li><a href="#org7d7f8ce">5.1.3. Hybrid MPI-OpenMP programs</a></li>
 </ul>
 </li>
-<li><a href="#orgc05bea8">5.2. Options</a></li>
-<li><a href="#orgecfab85">5.3. Runtime Flags</a></li>
+<li><a href="#org3ab76c1">5.2. Options</a></li>
+<li><a href="#org0bbcfac">5.3. Runtime Flags</a></li>
 </ul>
 </li>
-<li><a href="#org26324bd">6. Example</a></li>
-<li><a href="#orgd9368b3">7. Contacts and Support</a></li>
-<li><a href="#orgc557a14">8. Sponsors</a></li>
+<li><a href="#org1eba1e4">6. Example</a></li>
+<li><a href="#org538c002">7. Publications</a></li>
+<li><a href="#org6429ea7">8. Contacts and Support</a></li>
+<li><a href="#org36536e4">9. Sponsors</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="org312de7c"></a>
+<a id="org87abbda"></a>
 
 # License
 
 Please see LICENSE for usage terms.
 
 
-<a id="org0e7d919"></a>
+<a id="orgc9d4cd6"></a>
 
 # Introduction
 
@@ -57,7 +58,7 @@ on open-source tools infrastructure such as LLVM, ThreadSanitizer, and
 OMPT to provide portability.
 
 
-<a id="orge2b9ea1"></a>
+<a id="org069b511"></a>
 
 # Prerequisites
 
@@ -73,7 +74,7 @@ development at <https://github.com/OpenMPToolsInterface/LLVM-openmp>
 (under the branch "align-to-tr").
 
 
-<a id="org824ac0c"></a>
+<a id="org674691d"></a>
 
 # Installation
 
@@ -81,7 +82,7 @@ ARCHER has been developed under LLVM 3.9 (for more information visit
 <http://llvm.org>).
 
 
-<a id="orgfa6ad3d"></a>
+<a id="org78a3a2d"></a>
 
 ## Automatic Building
 
@@ -89,7 +90,7 @@ For an automatic building script (recommended) please visit the GitHub
 page <https://github.com/PRUNER/llvm_archer>.
 
 
-<a id="org86a2246"></a>
+<a id="orgcbf0d1a"></a>
 
 ## Manual Building
 
@@ -109,7 +110,7 @@ will be two different commands depending on the type of runtime
 chosen.
 
 
-<a id="orge6ce679"></a>
+<a id="orgd54219f"></a>
 
 ## Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
 
@@ -158,7 +159,7 @@ and build it with the following commands:
     cd ../..
 
 
-<a id="org9ec9bea"></a>
+<a id="org25da2b9"></a>
 
 ## Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support
 
@@ -208,7 +209,7 @@ and build it with the following commands:
     cd ../..
 
 
-<a id="org23978e2"></a>
+<a id="org99304b9"></a>
 
 ## Build ARCHER within Clang/LLVM
 
@@ -359,12 +360,12 @@ To make the environment permanent add the previous lines or
 equivalents to your shell start-up script such as "~/.bashrc".
 
 
-<a id="org703af01"></a>
+<a id="org74896dc"></a>
 
 # Usage
 
 
-<a id="org044b8e0"></a>
+<a id="org51459d2"></a>
 
 ## How to compile
 
@@ -385,14 +386,14 @@ library *libarcher.so*. (In the example below the runtime library will
 be shown in square brackets).
 
 
-<a id="org6bf36d9"></a>
+<a id="org0a75e90"></a>
 
 ### Single source
 
     clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="orga2e2666"></a>
+<a id="org21be94b"></a>
 
 ### Makefile
 
@@ -402,7 +403,7 @@ In your Makefile, set the following variables:
     [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="org1416f16"></a>
+<a id="org7d7f8ce"></a>
 
 ### Hybrid MPI-OpenMP programs
 
@@ -412,7 +413,7 @@ In your Makefile, set the following variables:
     [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="orgc05bea8"></a>
+<a id="org3ab76c1"></a>
 
 ## Options
 
@@ -420,7 +421,7 @@ The command *clang-archer* works as a compiler wrapper, all the
 options available for clang are also available for *clang-archer*.
 
 
-<a id="orgecfab85"></a>
+<a id="org0bbcfac"></a>
 
 ## Runtime Flags
 
@@ -461,7 +462,7 @@ separate flags are separated with spaces, e.g.:
 </table>
 
 
-<a id="org26324bd"></a>
+<a id="org1eba1e4"></a>
 
 # Example
 
@@ -525,7 +526,25 @@ the report will look as follow:
     ThreadSanitizer: reported 1 warnings
 
 
-<a id="orgd9368b3"></a>
+<a id="org538c002"></a>
+
+# Publications
+
+-   Atzeni, S., G. Gopalakrishnan, Z. Rakamaric, D. H. Ahn, I. Laguna,
+    M. Schulz, G. L. Lee, J. Protze, and M. S. Müller. 2016. “ARCHER:
+    Effectively Spotting Data Races in Large Openmp Applications.” In
+    2016 IEEE International Parallel and Distributed Processing
+    Symposium (IPDPS), 53–62. <10.1109/IPDPS.2016.68>
+-   Protze, Joachim, Simone Atzeni, Dong H. Ahn, Martin Schulz, Ganesh
+    Gopalakrishnan, Matthias S. Müller, Ignacio Laguna, Zvonimir
+    Rakamarić, and Greg L. Lee. 2014. “Towards Providing Low-Overhead
+    Data Race Detection for Large Openmp Applications.” In
+    Proceedings of the 2014 LLVM Compiler Infrastructure in
+    HPC, 40–47. LLVM-HPC ’14. Piscataway, NJ, USA: IEEE
+    Press. <http://dl.acm.org/citation.cfm?id=2688369>
+
+
+<a id="org6429ea7"></a>
 
 # Contacts and Support
 
@@ -536,7 +555,7 @@ the report will look as follow:
     <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
 
 
-<a id="orgc557a14"></a>
+<a id="org36536e4"></a>
 
 # Sponsors
 
