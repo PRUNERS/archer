@@ -75,7 +75,6 @@ else()
   # LLVM source tree build, test just-built clang
   if(NOT MSVC)
     set(ARCHER_TEST_COMPILER ${LLVM_RUNTIME_OUTPUT_INTDIR}/clang)
-    MESSAGE(${LLVM_RUNTIME_OUTPUT_INTDIR})
   else()
     set(ARCHER_TEST_COMPILER ${LLVM_RUNTIME_OUTPUT_INTDIR}/clang.exe)
   endif()
