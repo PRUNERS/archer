@@ -46,6 +46,7 @@ if(${ARCHER_STANDALONE_BUILD})
     libarcher_say("Cannot find llvm-lit.")
     libarcher_say("Please put llvm-lit in your PATH, set ARCHER_LLVM_LIT_EXECUTABLE to its full path or point ARCHER_LLVM_TOOLS_DIR to its directory")
     libarcher_warning_say("The check-libarcher target will not be available!")
+    return()
   endif()
   find_program(FILECHECK_EXECUTABLE
     NAMES FileCheck

@@ -38,7 +38,8 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   add_definitions(-DLLVM_VERSION=${LLVM_VERSION})
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+# Add cmake directory to search for custom cmake functions
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 if(${ARCHER_STANDALONE_BUILD})
   # LLVM detection part
