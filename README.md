@@ -386,14 +386,14 @@ separate flags are separated with spaces, e.g.:
 <colgroup>
 <col  class="left" />
 
-<col  class="right" />
+<col  class="left" />
 
 <col  class="left" />
 </colgroup>
 <thead>
 <tr>
 <th scope="col" class="left">Flag Name</th>
-<th scope="col" class="right">Default value</th>
+<th scope="col" class="left">Default value</th>
 <th scope="col" class="left">Description</th>
 </tr>
 </thead>
@@ -401,15 +401,8 @@ separate flags are separated with spaces, e.g.:
 <tbody>
 <tr>
 <td class="left">flush&#95;shadow</td>
-<td class="right">0</td>
-<td class="left">Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%.</td>
-</tr>
-
-
-<tr>
-<td class="left">&#xa0;</td>
-<td class="right">&#xa0;</td>
-<td class="left">This flag is useful for large OpenMP applications that normally requires a large amount of memory and may cause an "out of memory" exception when checked by ARCHER.</td>
+<td class="left"><20> 0</td>
+<td class="left">Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory and may cause an "out of memory" exception when checked by ARCHER.</td>
 </tr>
 </tbody>
 </table>
