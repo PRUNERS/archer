@@ -488,17 +488,17 @@ ThreadSanitizer: reported 1 warnings
 * Publications
 
 - S. Atzeni, G. Gopalakrishnan, Z. Rakamaric, D. H. Ahn, I. Laguna,
-  M. Schulz, G. L. Lee, J. Protze, and M. S. Müller. 2016. “ARCHER:
-  Effectively Spotting Data Races in Large Openmp Applications.” In
+  M. Schulz, G. L. Lee, J. Protze, and M. S. Müller. 2016. "ARCHER:
+  Effectively Spotting Data Races in Large Openmp Applications." In
   2016 IEEE International Parallel and Distributed Processing
   Symposium (IPDPS),
   53–62. http://ieeexplore.ieee.org/document/7516001/
 - J. Protze, S. Atzeni, D. H. Ahn, M. Schulz, G.  Gopalakrishnan,
   M. S. Müller, I. Laguna, Z.  Rakamarić, and
-  G. L. Lee. 2014. “Towards Providing Low-Overhead Data Race Detection
-  for Large Openmp Applications.” In Proceedings of the 2014 LLVM
-  Compiler Infrastructure in HPC, 40–47. LLVM-HPC ’14. Piscataway, NJ,
-  USA: IEEE Press. http://dl.acm.org/citation.cfm?id=2688369
+  G. L. Lee. 2014. "Towards Providing Low-Overhead Data Race Detection
+  for Large Openmp Applications." In Proceedings of the 2014 LLVM
+  Compiler Infrastructure in HPC,
+  40–47. http://dl.acm.org/citation.cfm?id=2688369
 
 * Contacts and Support
 
