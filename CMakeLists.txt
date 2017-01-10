@@ -4,6 +4,9 @@ if(POLICY CMP0057)
   cmake_policy(SET CMP0057 NEW)
 endif()
 
+# Add cmake directory to search for custom cmake functions
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
 # TSAN-support with annotated OpenMP Runtime
 set(LIBOMP_TSAN_SUPPORT FALSE CACHE BOOL "TSAN-support?")
 
@@ -37,9 +40,6 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   string(REPLACE "." "" LLVM_VERSION ${LLVM_VERSION})
   add_definitions(-DLLVM_VERSION=${LLVM_VERSION})
 endif()
-
-# Add cmake directory to search for custom cmake functions
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 if(${ARCHER_STANDALONE_BUILD})
   # LLVM detection part
