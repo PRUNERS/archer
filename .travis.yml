@@ -6,7 +6,7 @@ services:
 env:
   - DIST_NAME: ubuntu
     DIST_VERS: 16.04
-#    TAG: liblightnvm
+    TAG: archer
 #  - DIST_NAME: ubuntu
 #    DIST_VERS: 14.04
 #  - DIST_NAME: ubuntu
@@ -19,7 +19,8 @@ before_install:
   
 script:
   - CONTAINER_ID=$(cat container.id)
-  - docker exec cmake --version
+  - docker ps -a
+  - docker exec -t ${TAG} cmake --version
 #  - docker ps -a
 #  - docker exec -t ${TAG} hostname
 #  - docker exec -t ${TAG} ls
