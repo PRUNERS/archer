@@ -13,12 +13,13 @@ before_install:
 
 install:
   # Create tools dir
-  - cd tools;
+  - pwd;
+    cd tools;
     ls
   - mkdir -p tools && cd tools
   # Obtain and install cmake >= 3.4.3
   - wget https://cmake.org/files/v3.7/cmake-3.7.1.tar.gz;
-    tar xzvf cmake-3.7.1.tar.gz;
+    tar xzf cmake-3.7.1.tar.gz;
     cd cmake-3.7.1;
     mkdir build && cd build;
     ../bootstrap;
