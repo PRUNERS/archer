@@ -21,6 +21,9 @@ script:
   - CONTAINER_ID=$(cat container.id)
   - docker ps -a
   - docker exec -t ${TAG} cmake --version
+  - docker exec -t ${TAG} pwd
+  - docker exec -t ${TAG} ls
+  - docker exec -t ${TAG} ls ..
 #  - docker ps -a
 #  - docker exec -t ${TAG} hostname
 #  - docker exec -t ${TAG} ls
