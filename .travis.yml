@@ -41,6 +41,7 @@ install:
     cd ../..
 
 script:
+  - cd $HOME
   - git clone https://github.com/PRUNER/llvm_archer.git
     # ARCHER with OpenMP Runtime and OMPT Support (Clang/LLVM 3.9)
   - cd llvm_archer;
