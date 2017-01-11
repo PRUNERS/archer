@@ -38,8 +38,7 @@ install:
     git checkout release;
     ./bootstrap.py > /dev/null 2>&1;
     sudo cp -v ninja /usr/bin/;
-    cd ..;
-  - cd .. ; 
+    cd
 
 script:
   - git clone git@github.com:PRUNER/llvm_archer.git
