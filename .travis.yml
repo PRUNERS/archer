@@ -21,13 +21,18 @@ before_install:
   - tar xf $LLVM_ARCHIVE_PATH -C $HOME/usr --strip-components 1
   - export PATH=$HOME/usr/bin:$PATH
   - export LD_LIBRARY_PATH=$HOME/usr/bin:$LD_LIBRARY_PATH
+
 install:
   # Create tools dir
   - mkdir -p tools && cd tools
   # Obtain and install cmake >= 3.4.3
-  - sudo add-apt-repository ppa:george-edison55/cmake-3.x -y
-  - sudo apt-get update -q
-  - sudo apt search cmake
+  - wget https://cmake.org/files/v3.7/cmake-3.7.1.tar.gz;
+    tar xzf cmake-3.7.1.tar.gz;
+    cd cmake-3.7.1;
+    mkdir build && cd build;
+    ../bootstrap --prefix=/usr;
+    make && sudo make install;
+    cd ..;
   # Obtain and install ninja
   - mkdir .tmp
   - curl -L https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip -o .tmp/ninja-linux.zip
@@ -38,10 +43,7 @@ before_script:
   - export PATH=$PATH:$PWD/.tmp  
 
 script:
-  - cmake --version
-  - ninja --version
-  - echo `pwd`
-  
+
 notifications:
   email:
     recipients:
