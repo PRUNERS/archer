@@ -45,14 +45,14 @@ script:
   - git clone https://github.com/PRUNER/llvm_archer.git
     # ARCHER with OpenMP Runtime and OMPT Support (Clang/LLVM 3.9)
   - cd llvm_archer;
-    ./install.sh --prefix=$HOME/usr ArcherBuild01;
+    ./install.sh --prefix=$HOME/usr -http ArcherBuild01;
     cd ..;
     cd ArcherBuild01/llvm_build;
     ninja check-libarcher;
     cd ../..
     # ARCHER with OpenMP Runtime and ThreadSanitizer support (Clang/LLVM 3.9)
   - cd llvm_archer;
-    ./install.sh --prefix=$HOME/usr ArcherBuild02 --omp-tsan-support;
+    ./install.sh --prefix=$HOME/usr -http --omp-tsan-support ArcherBuild02;
     cd ..;
     cd ArcherBuild01/llvm_build;
     ninja check-libarcher 
