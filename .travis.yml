@@ -30,8 +30,8 @@ install:
     tar xzf cmake-3.7.1.tar.gz;
     cd cmake-3.7.1;
     mkdir build && cd build;
-    ../bootstrap;
-    make && make install;
+    ../bootstrap --prefix=/usr;
+    make && sudo make install;
     cd ..;
   # Obtain and install ninja
   - git clone git://github.com/ninja-build/ninja.git && cd ninja;
