@@ -57,9 +57,9 @@ script:
     ninja check-libarcher 
 
 notifications:
-  # slack: pruner:aXHVdiVFtqtMfzNW4IutZNDW
   email:
     recipients:
      - simone@cs.utah.edu
     on_success: always
     on_failure: always
+  # slack: pruner:aXHVdiVFtqtMfzNW4IutZNDW
