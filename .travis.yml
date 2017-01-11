@@ -42,7 +42,8 @@ install:
   - cd .. ; 
 
 script:
-  - clang --version  
+  - clang --version
+  - clang --help | grep fsanitize  
 
 notifications:
   # slack: pruner:aXHVdiVFtqtMfzNW4IutZNDW
