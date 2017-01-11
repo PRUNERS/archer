@@ -1,6 +1,6 @@
 language: cpp
 cache: apt
-dist: xenaial
+dist: xenial
 
 before_install:
    - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
