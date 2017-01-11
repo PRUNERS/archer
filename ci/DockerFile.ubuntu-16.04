@@ -10,8 +10,7 @@ ENV LC_ALL en_US.UTF-8
 # Install dependencies
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
-# RUN apt-get install -qq wget unzip build-essential
-# RUN apt-get install -qq cmake gcc libcunit1-dev libudev-dev
+RUN apt-get install -qq build-essential cmake ninja-build
 
 # Grab the checked out source
 # RUN mkdir -p /workdir
