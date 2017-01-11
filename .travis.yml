@@ -1,23 +1,22 @@
 language: cpp
-cache: apt
-sudo: required
-dist: trusty
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - gcc-5
-    - g++-5
 
-env:
-  global:
-    - LLVM_VERSION=3.9.0
-    - LLVM_ARCHIVE_PATH=$HOME/clang+llvm.tar.xz
-    
 services:
   - docker
- 
+
+#dist: trusty
+#addons:
+#  apt:
+#    sources:
+#    - ubuntu-toolchain-r-test
+#    packages:
+#    - gcc-5
+#    - g++-5
+
+#env:
+#  global:
+#    - LLVM_VERSION=3.9.0
+#    - LLVM_ARCHIVE_PATH=$HOME/clang+llvm.tar.xz
+    
 before_install:
   - docker pull ubuntu:16.04
   - docker run -it ubuntu bash
