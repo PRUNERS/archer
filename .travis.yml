@@ -10,23 +10,36 @@ addons:
     - g++-5
 
 before_install:
-   - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
-   - sudo apt-get -qq update
-   - sudo apt-get -qq install gcc-4.9
-   - sudo apt-get install --yes cmake
 
 install:
+  # Create tools dir
+  - mkdir tools
+    cd tools
+  # Obtain and install cmake >= 3.4.3
+  - wget https://cmake.org/files/v3.7/cmake-3.7.1.tar.gz
+    tar xzvf cmake-3.7.1.tar.gz
+    cd cmake-3.7.1
+    mkdir build
+    cd build
+    ../bootstrap
+    make
+    make install
+    cd ..
+  # Obtain and install ninja
   - git clone git://github.com/ninja-build/ninja.git && cd ninja
     git checkout release
-    ./bootstrap.py > /dev/null 2>&1;
-    sudo cp -v ninja /usr/bin/;
-    cd ..;
+    ./bootstrap.py > /dev/null 2>&1
+    sudo cp -v ninja /usr/bin/
+    cd ..
+  - cd ..  
 
 script:
-  - lsb_release -a
-  - gcc --version
+  - gcc-5 --version
   - clang --version
   - cmake --version
+  - python --version
+  - git --version
+  - ninja --version 
 
 notifications:
   # slack: pruner:aXHVdiVFtqtMfzNW4IutZNDW
