@@ -21,42 +21,27 @@ before_install:
   - tar xf $LLVM_ARCHIVE_PATH -C $HOME/usr --strip-components 1
   - export PATH=$HOME/usr/bin:$PATH
   - export LD_LIBRARY_PATH=$HOME/usr/bin:$LD_LIBRARY_PATH
-
 install:
   # Create tools dir
   - mkdir -p tools && cd tools
   # Obtain and install cmake >= 3.4.3
-  - wget https://cmake.org/files/v3.7/cmake-3.7.1.tar.gz;
-    tar xzf cmake-3.7.1.tar.gz;
-    cd cmake-3.7.1;
-    mkdir build && cd build;
-    ../bootstrap --prefix=/usr;
-    make && sudo make install;
-    cd ..;
+  - sudo add-apt-repository ppa:george-edison55/cmake-3.x
+  - sudo apt-get update
+  - sudo apt search cmake
   # Obtain and install ninja
-  - git clone git://github.com/ninja-build/ninja.git && cd ninja;
-    git checkout release;
-    ./bootstrap.py > /dev/null 2>&1;
-    sudo cp -v ninja /usr/bin/;
-    cd ../..
+  - mkdir .tmp
+  - curl -L https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip -o .tmp/ninja-linux.zip
+  - unzip .tmp/ninja-linux.zip -d .tmp
+  - sudo cp .tmp/ninja /usr/bin 
+  
+before_script:
+  - export PATH=$PATH:$PWD/.tmp  
 
 script:
-  - cd $HOME
-  - git clone https://github.com/PRUNER/llvm_archer.git
-    # ARCHER with OpenMP Runtime and OMPT Support (Clang/LLVM 3.9)
-  - cd llvm_archer;
-    ./install.sh --prefix=$HOME/usr --http ArcherBuild01;
-    cd ..;
-    cd ArcherBuild01/llvm_build;
-    ninja check-libarcher;
-    cd ../..
-    # ARCHER with OpenMP Runtime and ThreadSanitizer support (Clang/LLVM 3.9)
-  - cd llvm_archer;
-    ./install.sh --prefix=$HOME/usr --http --omp-tsan-support ArcherBuild02;
-    cd ..;
-    cd ArcherBuild01/llvm_build;
-    ninja check-libarcher 
-
+  - cmake --version
+  - ninja --version
+  - echo `pwd`
+  
 notifications:
   email:
     recipients:
