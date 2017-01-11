@@ -47,7 +47,7 @@ script:
     ./install.sh --prefix=$HOME/usr ArcherBuild01;
     cd ..;
     cd ArcherBuild01/llvm_build;
-    ninja check-libarcher
+    ninja check-libarcher;
     cd ../..
     # ARCHER with OpenMP Runtime and ThreadSanitizer support (Clang/LLVM 3.9)
   - cd llvm_archer;
