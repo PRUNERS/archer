@@ -21,7 +21,7 @@ script:
   - cmake --version
 
 notifications:
-  slack: pruner:aXHVdiVFtqtMfzNW4IutZNDW
+  # slack: pruner:aXHVdiVFtqtMfzNW4IutZNDW
   email:
     recipients:
      - simone@cs.utah.edu
