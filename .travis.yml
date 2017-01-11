@@ -2,7 +2,9 @@ language: cpp
 cache: apt
 
 before_install:
-   - sudo apt-get --yes update
+   - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+   - sudo apt-get -qq update
+   - sudo apt-get -qq install gcc-4.9
    - sudo apt-get install --yes cmake
 
 install:
@@ -13,11 +15,8 @@ install:
     cd ..;
 
 script:
-  - cd archer
-  - ls
-  - mkdir -p build
-  - cd build
-  - clang --version
+  - gcc --version
+  - cmake --version
 
 notifications:
   slack: pruner:aXHVdiVFtqtMfzNW4IutZNDW
