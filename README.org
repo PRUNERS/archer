@@ -65,20 +65,20 @@ chosen.
 
 Create a folder to download and build ARCHER:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   export ARCHER_BUILD=$PWD/ArcherBuild
   mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
 #+END_SRC
 
 Obtain the LLVM OpenMP Runtime:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   git clone git@github.com:llvm-mirror/openmp.git openmp
 #+END_SRC
 
 and build it with the following command:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   export OPENMP_INSTALL=$HOME/usr           # or any other install path
   cd openmp/runtime
   mkdir build && cd build
@@ -95,14 +95,14 @@ and build it with the following command:
 
 Obtain ARCHER:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   cd $ARCHER_BUILD
   git clone git@github.com:PRUNER/archer.git archer
 #+END_SRC
 
 and build it with the following commands:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   export ARCHER_INSTALL=$HOME/usr           # or any other install path
   cd archer
   mkdir build && cd build
@@ -121,20 +121,20 @@ and build it with the following commands:
 
 Create a folder to download and build ARCHER:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   export ARCHER_BUILD=$PWD/ArcherBuild
   mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
 #+END_SRC
 
 Obtain the LLVM OpenMP Runtime with OMPT support:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   git clone -b align-to-tr git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
 #+END_SRC
 
 and build it with the following command:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   export OPENMP_INSTALL=$HOME/usr           # or any other install path
   cd openmp/runtime
   mkdir build && cd build
@@ -153,14 +153,14 @@ and build it with the following command:
 
 Obtain ARCHER:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   cd $ARCHER_BUILD
   git clone git@github.com:PRUNER/archer.git archer
 #+END_SRC
 
 and build it with the following commands:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   export ARCHER_INSTALL=$HOME/usr           # or any other install path
   cd archer
   mkdir build && cd build
@@ -178,14 +178,14 @@ and build it with the following commands:
 
 Create a folder to download and build Clang/LLVM and ARCHER:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   export ARCHER_BUILD=$PWD/ArcherBuild
   mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
 #+END_SRC
 
 Obtain LLVM:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   git clone git@github.com:llvm-mirror/llvm.git llvm_src
   cd llvm_src
   git checkout release_39
@@ -193,7 +193,7 @@ Obtain LLVM:
 
 Obtain Clang:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   cd tools
   git clone git@github.com:llvm-mirror/clang.git clang
   cd clang
@@ -203,7 +203,7 @@ Obtain Clang:
 
 Obtain ARCHER:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   cd tools
   git clone git@github.com:PRUNER/archer.git archer
   cd ..
@@ -211,7 +211,7 @@ Obtain ARCHER:
 
 Obtain the LLVM compiler-rt:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   cd projects
   git clone git@github.com:llvm-mirror/compiler-rt.git compiler-rt
   cd compiler-rt
@@ -221,7 +221,7 @@ Obtain the LLVM compiler-rt:
 
 Obtain LLVM libc++:
 
-#+BEGIN_SRC sh :exports cod
+#+BEGIN_SRC bash :exports cod
   cd projects
   git clone git@github.com:llvm-mirror/libcxx.git
   cd libcxx
@@ -231,7 +231,7 @@ Obtain LLVM libc++:
 
 Obtain LLVM libc++abi:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   cd projects
   git clone git@github.com:llvm-mirror/libcxxabi.git
   cd libcxxabi
@@ -241,7 +241,7 @@ Obtain LLVM libc++abi:
 
 Obtain LLVM libunwind:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   cd projects
   git clone git@github.com:llvm-mirror/libunwind.git
   cd libunwind
@@ -251,7 +251,7 @@ Obtain LLVM libunwind:
 
 Obtain official LLVM OpenMP Runtime:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   cd projects
   git clone git@github.com:llvm-mirror/openmp.git openmp
   cd openmp
@@ -261,7 +261,7 @@ Obtain official LLVM OpenMP Runtime:
 
 or obtain LLVM OpenMP Runtime with OMPT support:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   cd projects
   git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git
   cd openmp
@@ -274,7 +274,7 @@ will build LLVM/Clang infrastructure with ARCHER support.
 
 First we boostrap clang:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   cd $ARCHER_BUILD
   mkdir -p llvm_bootstrap
   cd llvm_bootstrap
@@ -293,7 +293,7 @@ Then, we can actually build LLVM/Clang with ARCHER support.
 
 In case of official LLVM OpenMP Runtime run:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   export LLVM_INSTALL=$HOME/usr           # or any other install path
   mkdir llvm_build && cd llvm_build
   cmake -G Ninja \
@@ -315,7 +315,7 @@ In case of official LLVM OpenMP Runtime run:
 
 Otherwise, in case of LLVM OpenMP Runtime with OMPT support run:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
   export LLVM_INSTALL=$HOME/usr           # or any other install path
   mkdir llvm_build && cd llvm_build
   cmake -G Ninja \
@@ -342,7 +342,7 @@ to allow ARCHER to work correctly.
 
 Please set the following path variables:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
 export PATH=${LLVM_INSTALL}/bin:${PATH}"
 export LD_LIBRARY_PATH=${LLVM_INSTALL}/lib:${LD_LIBRARY_PATH}"
 #+END_SRC
@@ -372,7 +372,7 @@ be shown in square brackets).
 
 *** Single source
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
 clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 #+END_SRC
 
@@ -380,7 +380,7 @@ clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 
 In your Makefile, set the following variables:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
 CC=clang-archer
 [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 #+END_SRC
@@ -389,7 +389,7 @@ CC=clang-archer
 
 In your Makefile, set the following variables:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
 CC = mpicc -cc=clang-archer
 [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 #+END_SRC
@@ -404,7 +404,7 @@ options available for clang are also available for /clang-archer/.
 Runtime flags are passed via *ARCHER&#95;OPTIONS* environment variable,
 separate flags are separated with spaces, e.g.:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
 ARCHER_OPTIONS="flush_shadow=1" ./myprogram
 #+END_SRC
 
@@ -421,7 +421,7 @@ check the program for data races.
 
 Suppose our program is called /myprogram.c/:
 
-#+BEGIN_SRC emacs-lisp -n 1 sh :exports code
+#+BEGIN_SRC emacs-lisp -n 1 bash :exports code
 #include <stdio.h>
 
 #define N 1000
@@ -440,20 +440,20 @@ int main (int argc, char **argv)
 In case we installed ARCHER with the official LLVM OpenMP runtime and
 ThreadSanitizer support we compile the program as follow:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
 clang-archer myprogram.c -o myprogram
 #+END_SRC
 
 otherwise, if we installed ARCHER with the LLVM OpenMP runtime and
 ThreadSanitizer OMPT support our compile command will look like:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
 clang-archer myprogram.c -o myprogram -larcher
 #+END_SRC
 
 Now we can run the program with the following commands:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
 export OMP_NUM_THREADS=2
 ./myprogram
 #+END_SRC
@@ -461,7 +461,7 @@ export OMP_NUM_THREADS=2
 ARCHER will output a report in case it finds data races. In our case
 the report will look as follow:
 
-#+BEGIN_SRC sh :exports code
+#+BEGIN_SRC bash :exports code
 ==================
 WARNING: ThreadSanitizer: data race (pid=13641)
   Read of size 4 at 0x7fff79a01170 by main thread:
