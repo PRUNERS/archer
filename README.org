@@ -44,7 +44,7 @@ http://llvm.org).
 
 ** Automatic Building
 For an automatic building script (recommended) please visit the GitHub
-page https://github.com/PRUNERS/PRUNERS-LLVM_ARCHER.
+page https://github.com/PRUNERS/LLVM_ARCHER.
 
 ** Manual Building
 ARCHER comes as an LLVM tool, it can be compiled both as stand-alone
@@ -98,7 +98,7 @@ Obtain ARCHER:
 
 #+BEGIN_SRC bash :exports code
   cd $ARCHER_BUILD
-  git clone git@github.com:PRUNERS/PRUNERS-ARCHER.git archer
+  git clone git@github.com:PRUNERS/ARCHER.git archer
 #+END_SRC
 
 and build it with the following commands:
@@ -156,7 +156,7 @@ Obtain ARCHER:
 
 #+BEGIN_SRC bash :exports code
   cd $ARCHER_BUILD
-  git clone git@github.com:PRUNERS/PRUNERS-ARCHER.git archer
+  git clone git@github.com:PRUNERS/ARCHER.git archer
 #+END_SRC
 
 and build it with the following commands:
@@ -206,7 +206,7 @@ Obtain ARCHER:
 
 #+BEGIN_SRC bash :exports code
   cd tools
-  git clone git@github.com:PRUNERS/PRUNERS-ARCHER.git archer
+  git clone git@github.com:PRUNERS/ARCHER.git archer
   cd ..
 #+END_SRC
 
