@@ -27,7 +27,7 @@ install:
   - pwd
   - wget https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.sh;
     chmod +x cmake-3.7.2-Linux-x86_64.sh;
-    ./cmake-3.7.2-Linux-x86_64.sh --prefix=$HOME/usr
+    ./cmake-3.7.2-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir
   # Obtain and install ninja
   - mkdir .tmp
   - curl -L https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip -o .tmp/ninja-linux.zip
