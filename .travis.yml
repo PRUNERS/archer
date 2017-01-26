@@ -17,33 +17,35 @@ env:
     - export LD_LIBRARY_PATH=$HOME/usr/bin:$LD_LIBRARY_PATH
       
 before_install:
+
+install:
   - cd $HOME/build
+  # Install LLVM/Clang 3.9
   - wget http://llvm.org/releases/$LLVM_VERSION/clang+llvm-$LLVM_VERSION-x86_64-linux-gnu-ubuntu-14.04.tar.xz -O $LLVM_ARCHIVE_PATH
   - mkdir $HOME/usr
   - tar xf $LLVM_ARCHIVE_PATH -C $HOME/usr --strip-components 1
+  # Obtain and install cmake >= 3.4.3
+  - wget https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.sh
+  - chmod +x cmake-3.7.2-Linux-x86_64.sh
+  - ./cmake-3.7.2-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir
+  # Obtain and install ninja
+  - mkdir .tmp
+  - curl -L https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip -o ninja-linux.zip
+  - unzip .tmp/ninja-linux.zip -d $HOME/usr/bin
+  # Install testing tools
   - git clone --recursive https://github.com/PRUNERS/TestingTools.git
   - cd TestingTools
   - mkdir build && cd build
   - cmake -G Ninja -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=$HOME/usr -DCMAKE_CXX_FLAGS="-fno-rtti" ..
   - ninja && ninja install
-  - cd $HOME/build
-
-install:
-  # Obtain and install cmake >= 3.4.3
-  - wget https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.sh;
-    chmod +x cmake-3.7.2-Linux-x86_64.sh;
-    ./cmake-3.7.2-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir
-  # Obtain and install ninja
-  - mkdir .tmp
-  - curl -L https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip -o .tmp/ninja-linux.zip
-  - unzip .tmp/ninja-linux.zip -d .tmp
-  - cp .tmp/ninja $HOME/usr/bin
-
+  
 script:
   - cmake --version
   - clang --version
   - llvm-lit --version
   - FileCheck --version
+  - cd $HOME/build/PRUNERS/ARCHER
+  - mkdir build && cd build
 
 notifications:
   email:
