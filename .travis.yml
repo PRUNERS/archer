@@ -40,13 +40,23 @@ install:
   - ninja && ninja install
   
 script:
-  - cmake --version
-  - clang --version
-  - llvm-lit --version
-  - FileCheck --version
+  - cd $HOME/build/PRUNERS
+  # Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
+  - git clone git@github.com:llvm-mirror/openmp.git openmp
+  - export OPENMP_INSTALL=$HOME/usr
+  - cd openmp/runtime
+  - mkdir build && cd build
+  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL -D LIBOMP_TSAN_SUPPORT=TRUE ..
+  - ninja -j4 -l4
+  - ninja install
+  - export ARCHER_INSTALL=$HOME/usr
   - cd $HOME/build/PRUNERS/ARCHER
   - mkdir build && cd build
-
+  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D LIBOMP_TSAN_SUPPORT=TRUE -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
+  - ninja -j4 -l4
+  - ninja install 
+  - ninja check-libarcher
+  
 notifications:
   email:
     recipients:
