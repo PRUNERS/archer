@@ -51,7 +51,7 @@ script:
   - ninja install
   - export ARCHER_INSTALL=$HOME/usr
   - cd $HOME/build/PRUNERS/ARCHER
-  - mkdir build && cd build
+  - mkdir -p build && cd build
   - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D LIBOMP_TSAN_SUPPORT=TRUE -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
   - ninja -j4 -l4
   - ninja install 
@@ -68,7 +68,8 @@ script:
   - ninja install
   - export ARCHER_INSTALL=$HOME/usr
   - cd $HOME/build/PRUNERS/ARCHER
-  - mkdir build && cd build
+  - rm -rf build
+  - mkdir -p build && cd build
   - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
   - ninja -j4 -l4
   - ninja install 
