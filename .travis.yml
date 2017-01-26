@@ -42,7 +42,7 @@ install:
 script:
   - cd $HOME/build/PRUNERS
   # Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
-  - git clone git@github.com:llvm-mirror/openmp.git openmp
+  - git clone https://github.com/llvm-mirror/openmp.git openmp
   - export OPENMP_INSTALL=$HOME/usr
   - cd openmp/runtime
   - mkdir build && cd build
