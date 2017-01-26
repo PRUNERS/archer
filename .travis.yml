@@ -17,7 +17,8 @@ env:
     - export LD_LIBRARY_PATH=$HOME/usr/bin:$LD_LIBRARY_PATH
       
 before_install:
-
+  - pip install lit
+  
 install:
   - cd $HOME/build
   # Install LLVM/Clang 3.9
