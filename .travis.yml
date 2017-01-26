@@ -29,9 +29,8 @@ install:
   - chmod +x cmake-3.7.2-Linux-x86_64.sh
   - ./cmake-3.7.2-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir
   # Obtain and install ninja
-  - mkdir .tmp
   - curl -L https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip -o ninja-linux.zip
-  - unzip .tmp/ninja-linux.zip -d $HOME/usr/bin
+  - unzip ninja-linux.zip -d $HOME/usr/bin
   # Install testing tools
   - git clone --recursive https://github.com/PRUNERS/TestingTools.git
   - cd TestingTools
