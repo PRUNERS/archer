@@ -21,8 +21,9 @@ before_install:
   - tar xf $LLVM_ARCHIVE_PATH -C $HOME/usr --strip-components 1
   - export PATH=$HOME/usr/bin:$PATH
   - export LD_LIBRARY_PATH=$HOME/usr/bin:$LD_LIBRARY_PATH
-  - git clone --recursive https://github.com/PRUNERS/TestingTools.git
+  - git clone https://github.com/PRUNERS/TestingTools.git
   - cd TestingTools
+  - git submodule init && git submodule update
   - mkdir build && cd build
   - cmake -G Ninja -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=$HOME/usr -DCMAKE_CXX_FLAGS="-fno-rtti" ..
   - ninja && ninja install
@@ -42,6 +43,8 @@ install:
 script:
   - cmake --version
   - clang --version
+  - llvm-lit --version
+  - FileCheck --version
 
 notifications:
   email:
