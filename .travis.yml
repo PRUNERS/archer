@@ -15,7 +15,8 @@ env:
     - LLVM_ARCHIVE_PATH=$HOME/clang+llvm.tar.xz
     
 before_install:
-  - cd
+  - cd $HOME/PRUNER
+  - pwd
   - wget http://llvm.org/releases/$LLVM_VERSION/clang+llvm-$LLVM_VERSION-x86_64-linux-gnu-ubuntu-14.04.tar.xz -O $LLVM_ARCHIVE_PATH
   - mkdir $HOME/usr
   - tar xf $LLVM_ARCHIVE_PATH -C $HOME/usr --strip-components 1
@@ -24,7 +25,6 @@ before_install:
 
 install:
   # Obtain and install cmake >= 3.4.3
-  - pwd
   - wget https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.sh;
     chmod +x cmake-3.7.2-Linux-x86_64.sh;
     ./cmake-3.7.2-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir
@@ -33,9 +33,6 @@ install:
   - curl -L https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip -o .tmp/ninja-linux.zip
   - unzip .tmp/ninja-linux.zip -d .tmp
   - cp .tmp/ninja $HOME/usr/bin
-  
-before_script:
-  - export PATH=$PATH:$PWD/.tmp  
 
 script:
   - cmake --version
