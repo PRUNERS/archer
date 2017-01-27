@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/PRUNERS/ARCHER.svg?branch=master)](https://travis-ci.org/PRUNERS/ARCHER)
+
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
@@ -114,6 +115,10 @@ chosen.
 <a id="orgd53dc8c"></a>
 
 ## Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
+
+Note: Before building, be aware that the LLVM OpenMP Runtime with
+ThreadSanitizer support suffers from false positives in OpenMP
+applications that use tasking and reduction.
 
 Create a folder to download and build ARCHER:
 
