@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/PRUNERS/ARCHER.svg?branch=master)](https://travis-ci.org/PRUNERS/ARCHER)
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
