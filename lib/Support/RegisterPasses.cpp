@@ -19,8 +19,6 @@
 // enables additional polyhedral optimizations.
 //===----------------------------------------------------------------------===//
 
-#include "archer/ArcherDDA.h"
-#include "archer/InstructionContext.h"
 #include "archer/LinkAllPasses.h"
 #include "llvm/Analysis/CFGPrinter.h"
 #include "llvm/IR/LegacyPassManager.h"
@@ -28,16 +26,12 @@
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Vectorize.h"
 
-using namespace llvm;
-
-namespace archer {
-void initializeArcherPasses(PassRegistry &Registry) {
-  // initializeArcherDDAPass(Registry);
-  // initializeInstructionContextPass(Registry);
+namespace llvm {
+void initializeArcherPasses(llvm::PassRegistry &Registry) {
+  initializeInstrumentParallelPass(Registry);
 }
 
 void registerArcherPasses(llvm::legacy::PassManagerBase &PM) {
-  // PM.add(archer::createArcherDDAPass());
-  // PM.add(archer::createInstructionContextPass());
+  PM.add(createInstrumentParallelPass());
 }
 }

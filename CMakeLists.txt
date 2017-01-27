@@ -1,198 +1,96 @@
-# Check if this is a in tree build.
-if (NOT DEFINED LLVM_MAIN_SRC_DIR)
-  project(Archer)
-  cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.4.3)
 
-  # Where is LLVM installed?
-  set(LLVM_INSTALL_ROOT "" CACHE PATH "Root of LLVM install.")
-  # Check if the LLVM_INSTALL_ROOT valid.
-  if( NOT EXISTS ${LLVM_INSTALL_ROOT}/include/llvm )
-    message(FATAL_ERROR "LLVM_INSTALL_ROOT (${LLVM_INSTALL_ROOT}) is not a valid LLVM installation.")
-  endif(NOT EXISTS ${LLVM_INSTALL_ROOT}/include/llvm)
-  #FileCheck is not install by default, warn the user to Copy FileCheck
-  if( NOT EXISTS ${LLVM_INSTALL_ROOT}/bin/FileCheck
-      OR NOT EXISTS ${LLVM_INSTALL_ROOT}/bin/not)
-    message(WARNING "FileCheck or not are required by running regress tests, "
-                    "but they are not installed! Please copy it to "
-                    "${LLVM_INSTALL_ROOT}/bin.")
-  endif(NOT EXISTS ${LLVM_INSTALL_ROOT}/bin/FileCheck
-        OR NOT EXISTS ${LLVM_INSTALL_ROOT}/bin/not)
-  # Add the llvm header path.
-  include_directories(${LLVM_INSTALL_ROOT}/include/)
+if(POLICY CMP0057)
+  cmake_policy(SET CMP0057 NEW)
+endif()
 
-  # Get the system librarys that will link into LLVM.
-  function(get_system_libs return_var)
-    # Returns in `return_var' a list of system libraries used by LLVM.
-    if( NOT MSVC )
-      if( MINGW )
-        set(system_libs ${system_libs} imagehlp psapi)
-      elseif( CMAKE_HOST_UNIX )
-        if( HAVE_LIBDL )
-          set(system_libs ${system_libs} ${CMAKE_DL_LIBS})
+# Add cmake directory to search for custom cmake functions
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
+# TSAN-support with annotated OpenMP Runtime
+set(LIBOMP_TSAN_SUPPORT FALSE CACHE BOOL "TSAN-support?")
+
+# Disable Archer static analysis support
+set(ARCHER_STATIC_ANALYSIS_SUPPORT TRUE CACHE BOOL "StaticAnalysisSupport?")
+
+# Standalone build or part of LLVM?
+set(ARCHER_STANDALONE_BUILD FALSE)
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+    project(archer C CXX)
+
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        # require at least clang 3.9
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.9)
+            message(FATAL_ERROR "Clang version must be at least 3.9!")
         endif()
-        if( LLVM_ENABLE_THREADS AND HAVE_LIBPTHREAD )
-          set(system_libs ${system_libs} pthread)
+    else()
+        message(FATAL_ERROR "You are using an unsupported compiler! The required compiler is Clang version >= 3.9.")
+    endif()
+
+    if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+        # require at least clang 3.9
+        if (CMAKE_C_COMPILER_VERSION VERSION_LESS 3.9)
+            message(FATAL_ERROR "Clang version must be at least 3.9!")
         endif()
-      endif( MINGW )
-    endif( NOT MSVC )
-    set(${return_var} ${system_libs} PARENT_SCOPE)
-  endfunction(get_system_libs)
-
-  # Now set the header paths.
-  execute_process(COMMAND "${LLVM_INSTALL_ROOT}/bin/llvm-config" --includedir
-                  OUTPUT_VARIABLE LLVM_INCLUDE_DIR
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  include_directories( ${LLVM_INCLUDE_DIR} )
-
-  # Get the TARGET_TRIPLE
-  execute_process(COMMAND "${LLVM_INSTALL_ROOT}/bin/llvm-config" --host-target
-                  OUTPUT_VARIABLE TARGET_TRIPLE
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-  # And then set the cxx flags.
-  execute_process(COMMAND "${LLVM_INSTALL_ROOT}/bin/llvm-config" --cxxflags
-                  OUTPUT_VARIABLE LLVM_CXX_FLAGS
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${LLVM_CXX_FLAGS})
-
-  # Check LLVM_ENABLE_ASSERTIONS
-  execute_process(COMMAND "${LLVM_INSTALL_ROOT}/bin/llvm-config" --assertion-mode
-                  OUTPUT_VARIABLE LLVM_ENABLE_ASSERTIONS
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  # Copied from LLVM's HandleLLVMOptions.cmake
-  if( LLVM_ENABLE_ASSERTIONS )
-    # MSVC doesn't like _DEBUG on release builds. See PR 4379.
-    if( NOT MSVC )
-      add_definitions( -D_DEBUG )
+    else()
+        message(FATAL_ERROR "You are using an unsupported compiler! The required compiler is Clang version >= 3.9.")
     endif()
-    # On non-Debug builds cmake automatically defines NDEBUG, so we
-    # explicitly undefine it:
-    if( NOT uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG" )
-      add_definitions( -UNDEBUG )
-      # Also remove /D NDEBUG to avoid MSVC warnings about conflicting defines.
-      foreach (flags_var_to_scrub
-          CMAKE_CXX_FLAGS_RELEASE
-          CMAKE_CXX_FLAGS_RELWITHDEBINFO
-          CMAKE_CXX_FLAGS_MINSIZEREL
-          CMAKE_C_FLAGS_RELEASE
-          CMAKE_C_FLAGS_RELWITHDEBINFO
-          CMAKE_C_FLAGS_MINSIZEREL)
-        string (REGEX REPLACE "(^| )[/-]D *NDEBUG($| )" " "
-          "${flags_var_to_scrub}" "${${flags_var_to_scrub}}")
-      endforeach()
-    endif()
+  set(ARCHER_STANDALONE_BUILD TRUE)
+  string(SUBSTRING ${CMAKE_CXX_COMPILER_VERSION} 0 3 LLVM_VERSION)
+  string(REPLACE "." "" LLVM_VERSION ${LLVM_VERSION})
+  add_definitions(-DLLVM_VERSION=${LLVM_VERSION})
+endif()
+
+# These include files are in the cmake/ subdirectory
+include(LibarcherUtils)
+
+if(${ARCHER_STANDALONE_BUILD})
+  # LLVM detection part
+  set(LLVM_ROOT "" CACHE PATH "Root of LLVM install.")
+  find_package(LLVM MODULE REQUIRED)
+
+  # Sanity check
+  if(NOT EXISTS ${LLVM_ROOT}/include/llvm)
+    message(FATAL_ERROR "LLVM_ROOT (${LLVM_ROOT}) is not a valid LLVM install")
   endif()
 
-  # Make sure the isl c files are built as fPIC
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-endif(NOT DEFINED LLVM_MAIN_SRC_DIR)
+  # Incorporate the CMake features provided by LLVM:
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_ROOT}/lib/cmake/llvm")
 
-set(ARCHER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+  include(LLVMConfig)
+  include(HandleLLVMOptions)
+  include(AddLLVM)
+
+  add_definitions(${LLVM_DEFINITIONS})
+  include_directories(${LLVM_INCLUDE_DIRS})
+endif()
+
+find_package(Omp)
+include_directories(${OMP_INCLUDE_PATH})
+if(NOT ${LIBOMP_TSAN_SUPPORT})
+    find_package(Ompt)
+    include_directories(${OMPT_INCLUDE_PATH})
+endif()
+
+# Setting directory names
+set(ARCHER_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(ARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+if(NOT ${LIBOMP_TSAN_SUPPORT})
+    set(ARCHER_RUNTIME_PATH ${CMAKE_BINARY_DIR}/rtl)
+    set(ARCHER_ARCHER_RUNTIME_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/rtl/suppressions.txt)
+    set(ARCHER_RTL libarcher.so)
+endif()
 
-# Add path for custom modules
-set(CMAKE_MODULE_PATH
-  ${CMAKE_MODULE_PATH}
-  "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
-  )
+set(ARCHER_LIB_PATH "")
+if(${ARCHER_STATIC_ANALYSIS_SUPPORT})
+    set(ARCHER_LIB_PATH ${CMAKE_BINARY_DIR}/lib)
+    set(ARCHER_LIB LLVMArcher.so)
+    set(ARCHER_TOOLS_DIR ${ARCHER_BASE_DIR}/tools)
+    add_subdirectory(lib)
+endif()
 
-include("archer_macros")
-
-# Add appropriate flags for GCC
-if (CMAKE_COMPILER_IS_GNUCXX)
-  # FIXME: Turn off exceptions, RTTI:
-  # -fno-exceptions -fno-rtti
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-common -Woverloaded-virtual -Wno-long-long -Wall -W -Wno-unused-parameter -Wwrite-strings -fno-exceptions -fno-rtti")
-elseif (MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c-")
-  add_definitions("-D_HAS_EXCEPTIONS=0")
-else ()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
-endif ()
-
-# Add path for custom modules
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${ARCHER_SOURCE_DIR}/cmake")
-
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-include_directories(
-  BEFORE
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/../clang/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/../polly/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/../polly/lib/External/isl/include
-  ${CMAKE_CURRENT_BINARY_DIR}/include
-  ${CMAKE_CURRENT_BINARY_DIR}/../clang/include
-  ${CMAKE_CURRENT_BINARY_DIR}/../polly/include
-  ${CMAKE_CURRENT_BINARY_DIR}/../polly/lib/External/isl/include
-  )
-
-install(DIRECTORY include/
-  DESTINATION include
-  FILES_MATCHING
-  PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
-  )
-
-install(DIRECTORY ${ARCHER_BINARY_DIR}/include/
-  DESTINATION include
-  FILES_MATCHING
-  PATTERN "*.h"
-  PATTERN "CMakeFiles" EXCLUDE
-  PATTERN ".svn" EXCLUDE
-  )
-
-add_definitions( -D_GNU_SOURCE )
-
-#if (LLVM_ENABLE_LIBCXXABI)
-#  # if we use LLVM/libc++, we need to use the new compiler to build/link archer
-#  set(CMAKE_C_COMPILER ${LLVM_BINARY_DIR}/bin/clang)
-#  set(CMAKE_CXX_COMPILER ${LLVM_BINARY_DIR}/bin/clang++)
-#endif (LLVM_ENABLE_LIBCXXABI)
-
-add_subdirectory(lib)
-add_subdirectory(plugin)
+if(NOT ${LIBOMP_TSAN_SUPPORT})
+    add_subdirectory(rtl)
+endif()
+add_subdirectory(test)
 add_subdirectory(tools)
-# add_subdirectory(test)
-# TODO: docs.
-
-
-# configure_file( ${ARCHER_BINARY_DIR}/../polly/include/polly/Config/config.h )
-
-# Add target to check formatting of archer files
-file( GLOB_RECURSE files *.h *.cpp)
-# file( GLOB_RECURSE jsonfiles lib/JSON/*.h lib/JSON/*.cpp)
-file( GLOB_RECURSE islfiles ../polly/lib/External/isl/*.h ../polly/lib/External/isl/*.c
-                    ../polly/lib/External/isl/include/isl/*.h ../polly/lib/External/isl/imath/*.h
-                    ../polly/lib/External/isl/imath/*.c)
-list( REMOVE_ITEM files ${islfiles})
-
-set(check_format_depends)
-set(update_format_depends)
-set(i 0)
-foreach (file IN LISTS files)
-  add_custom_command(OUTPUT archer-check-format${i}
-    COMMAND clang-format -style=llvm ${file} | diff -u ${file} -
-    VERBATIM
-    COMMENT "Checking format of ${file}..."
-  )
-  list(APPEND check_format_depends "archer-check-format${i}")
-
-  add_custom_command(OUTPUT archer-update-format${i}
-    COMMAND clang-format -i -style=llvm ${file}
-    VERBATIM
-    COMMENT "Updating format of ${file}..."
-  )
-  list(APPEND update_format_depends "archer-update-format${i}")
-
-  math(EXPR i ${i}+1)
-endforeach ()
-
-add_custom_target(archer-check-format DEPENDS ${check_format_depends})
-set_target_properties(archer-check-format PROPERTIES FOLDER "Archer")
-
-add_custom_target(archer-update-format DEPENDS ${update_format_depends})
-set_target_properties(archer-update-format PROPERTIES FOLDER "Archer")
-
-# Set the variable ARCHER_LINK_LIBS in the llvm/tools/ dir.
-set(ARCHER_LINK_LIBS ${ARCHER_LINK_LIBS} PARENT_SCOPE)

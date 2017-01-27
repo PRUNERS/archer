@@ -1,2 +1,3 @@
-test/lit.site.cfg
-00*
+.project
+.cproject
+.pydevproject

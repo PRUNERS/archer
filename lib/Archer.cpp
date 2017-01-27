@@ -24,7 +24,7 @@ class StaticInitializer {
 public:
   StaticInitializer() {
     llvm::PassRegistry &Registry = *llvm::PassRegistry::getPassRegistry();
-    archer::initializeArcherPasses(Registry);
+    llvm::initializeArcherPasses(Registry);
   }
 };
 static StaticInitializer InitializeEverything;

@@ -22,11 +22,12 @@ class Pass;
 class PassInfo;
 class PassRegistry;
 class RegionPass;
+class FunctionPass;
+class ModulePass;
 }
 
-namespace archer {
-llvm::Pass *createArcherDDAPass();
-llvm::Pass *createInstructionContextPass();
+namespace llvm {
+llvm::Pass *createInstrumentParallelPass();
 }
 
 namespace {
@@ -39,16 +40,14 @@ struct ArcherForcePassLinking {
     if (std::getenv("bar") != (char *)-1)
       return;
 
-    archer::createArcherDDAPass();
-    archer::createInstructionContextPass();
+    llvm::createInstrumentParallelPass();
   }
 } ArcherForcePassLinking; // Force link by creating a global definition.
 }
 
 namespace llvm {
-class PassRegistry;
-void createArcherDDAPass(llvm::PassRegistry &);
-void createInstructionContextPass(llvm::PassRegistry &);
+void createInstrumentParallelPass(llvm::PassRegistry &);
+void initializeInstrumentParallelPass(llvm::PassRegistry&);
 }
 
 #endif
