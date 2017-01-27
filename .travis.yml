@@ -77,6 +77,8 @@ script:
   - ninja check-libarcher
   
 notifications:
-   slack: pruner:aXHVdiVFtqtMfzNW4IutZNDW
+  slack:
+    rooms: 
+      - pruners:aXHVdiVFtqtMfzNW4IutZNDW
     on_success: always
     on_failure: always
