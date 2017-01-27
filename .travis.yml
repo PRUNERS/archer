@@ -15,10 +15,10 @@ env:
     - LLVM_ARCHIVE_PATH=$HOME/clang+llvm.tar.xz
     - export PATH=$HOME/usr/bin:$PATH
     - export LD_LIBRARY_PATH=$HOME/usr/lib:$LD_LIBRARY_PATH
-      
+
 before_install:
   - pip install lit
-  
+
 install:
   - cd $HOME/build
   # Install LLVM/Clang 3.9
@@ -38,25 +38,25 @@ install:
   - mkdir build && cd build
   - cmake -G Ninja -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=$HOME/usr -DCMAKE_CXX_FLAGS="-fno-rtti" ..
   - ninja && ninja install
-  
+
 script:
   # Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
   - cd $HOME/build/PRUNERS
-  - git clone https://github.com/llvm-mirror/openmp.git openmp
+  # - git clone https://github.com/llvm-mirror/openmp.git openmp
   # - git clone -b annotations https://github.com/PRUNERS/openmp.git
-  - export OPENMP_INSTALL=$HOME/usr
-  - cd openmp/runtime
-  - mkdir build && cd build
-  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL -D LIBOMP_TSAN_SUPPORT=TRUE ..
-  - ninja -j4 -l4
-  - ninja install
-  - export ARCHER_INSTALL=$HOME/usr
-  - cd $HOME/build/PRUNERS/ARCHER
-  - mkdir -p build && cd build
-  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D LIBOMP_TSAN_SUPPORT=TRUE -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
-  - ninja -j4 -l4
-  - ninja install 
-  - ninja check-libarcher
+  # - export OPENMP_INSTALL=$HOME/usr
+  # - cd openmp/runtime
+  # - mkdir build && cd build
+  # - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL -D LIBOMP_TSAN_SUPPORT=TRUE ..
+  # - ninja -j4 -l4
+  # - ninja install
+  # - export ARCHER_INSTALL=$HOME/usr
+  # - cd $HOME/build/PRUNERS/ARCHER
+  # - mkdir -p build && cd build
+  # - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D LIBOMP_TSAN_SUPPORT=TRUE -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
+  # - ninja -j4 -l4
+  # - ninja install
+  # - ninja check-libarcher
   # Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support
   - cd $HOME/build/PRUNERS
   - rm -rf openmp
@@ -64,7 +64,7 @@ script:
   - export OPENMP_INSTALL=$HOME/usr
   - cd openmp/runtime
   - mkdir build && cd build
-  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL -D LIBOMP_OMPT_SUPPORT=on -D LIBOMP_OMPT_BLAME=on -D LIBOMP_OMPT_TRACE=on .. 
+  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL -D LIBOMP_OMPT_SUPPORT=on -D LIBOMP_OMPT_BLAME=on -D LIBOMP_OMPT_TRACE=on ..
   - ninja -j4 -l4
   - ninja install
   - export ARCHER_INSTALL=$HOME/usr
@@ -73,13 +73,13 @@ script:
   - mkdir -p build && cd build
   - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
   - ninja -j4 -l4
-  - ninja install 
+  - ninja install
   - ninja check-libarcher
-  
+
 notifications:
   email: false
   slack:
-    rooms: 
+    rooms:
       - pruners:aXHVdiVFtqtMfzNW4IutZNDW
     on_success: always
     on_failure: always
