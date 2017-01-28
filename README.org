@@ -1,8 +1,8 @@
 #+DESCRIPTION: ARCHER, a data race detection tool for large OpenMP applications
 #+KEYWORDS:
-#+LANGUAGE:  en
-#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
-#+OPTIONS:   skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+LANGUAGE:   en
+#+OPTIONS:    H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:    skip:nil d:nil todo:t pri:nil tags:not-in-toc
 
 #+EXPORT_SELECT_TAGS: export
 #+EXPORT_EXCLUDE_TAGS: noexport
