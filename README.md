@@ -4,29 +4,35 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org96eed5a">1. License</a></li>
-<li><a href="#org6cd5d41">2. Introduction</a></li>
-<li><a href="#org4d6045f">3. Prerequisites</a></li>
-<li><a href="#org6cd814e">4. Installation</a>
+<li><a href="#org8ca9905">1. License</a></li>
+<li><a href="#org77f09bd">2. Introduction</a></li>
+<li><a href="#orga07f94f">3. Prerequisites</a></li>
+<li><a href="#org32d7279">4. Installation</a>
 <ul>
-<li><a href="#org67c0303">4.1. Automatic Building</a></li>
-<li><a href="#orgf97d1c3">4.2. Manual Building</a></li>
-<li><a href="#org6c27631">4.3. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support</a></li>
-<li><a href="#org3692983">4.4. Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
-<li><a href="#org40953dc">4.5. Build ARCHER within Clang/LLVM</a></li>
+<li><a href="#org2fabe1a">4.1. Automatic Building</a></li>
+<li><a href="#orgc3242ce">4.2. Manual Building</a></li>
+<li><a href="#orgb32d79c">4.3. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support</a></li>
+<li><a href="#org65b2d1e">4.4. Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
+<li><a href="#org5680850">4.5. Build ARCHER within Clang/LLVM</a></li>
 </ul>
 </li>
-<li><a href="#orgdcc8309">5. Usage</a>
+<li><a href="#org3295926">5. Usage</a>
 <ul>
-<li><a href="#orga4bf1e4">5.1. How to compile</a></li>
-<li><a href="#orgbec4349">5.2. Options</a></li>
-<li><a href="#org42f118f">5.3. Runtime Flags</a></li>
+<li><a href="#orgf13af9e">5.1. How to compile</a>
+<ul>
+<li><a href="#orgf00443a">5.1.1. Single source</a></li>
+<li><a href="#org0ed4975">5.1.2. Makefile</a></li>
+<li><a href="#org1028cef">5.1.3. Hybrid MPI-OpenMP programs</a></li>
 </ul>
 </li>
-<li><a href="#org871a4c8">6. Example</a></li>
-<li><a href="#orgd7eebb0">7. Publications</a></li>
-<li><a href="#orgd5f6fe5">8. Contacts and Support</a></li>
-<li><a href="#org8342d29">9. Members</a></li>
+<li><a href="#orge12f267">5.2. Options</a></li>
+<li><a href="#org885d0d7">5.3. Runtime Flags</a></li>
+</ul>
+</li>
+<li><a href="#orge3846d9">6. Example</a></li>
+<li><a href="#org64a2110">7. Publications</a></li>
+<li><a href="#org153c75a">8. Contacts and Support</a></li>
+<li><a href="#orgaa56b35">9. Members</a></li>
 </ul>
 </div>
 </div>

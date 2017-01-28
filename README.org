@@ -12,7 +12,7 @@
 
 #+HTML: [![Build Status](https://travis-ci.org/PRUNERS/ARCHER.svg?branch=master)](https://travis-ci.org/PRUNERS/ARCHER)
 
-#+TOC: headlines 2
+#+TOC: headlines 5
 
 * License
 Please see LICENSE for usage terms.
