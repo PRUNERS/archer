@@ -34,7 +34,7 @@ To install the "org" package open Emacs, type M-x list-packages to
 open the package list. Look for "org" package, press ‘i’ to mark for
 installation, and ‘x’ to perform the installation.
 
-From the root folder of the git repository run:
+From the root folder of the git repository run the follwing commands:
 
 
 <a id="orgcb36cae"></a>
