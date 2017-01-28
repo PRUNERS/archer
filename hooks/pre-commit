@@ -1,0 +1,15 @@
+#!/bin/bash
+
+SRC_FILE="$(git diff --cached --name-only | grep README.org)"
+
+if [ ! -z "$SRC_FILE" ];
+then
+    type "emacs" > /dev/null
+    if [ $? -eq 0 ];
+    then
+        touch .commit
+        emacs README.org --batch -f org-md-export-to-markdown --kill
+        echo -e "[![Build Status](https://travis-ci.org/PRUNERS/ARCHER.svg?branch=master)](https://travis-ci.org/PRUNERS/ARCHER)\n" | cat - README.md > temp && mv temp README.md
+    fi
+fi
+exit 0
