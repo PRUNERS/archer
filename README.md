@@ -1,47 +1,50 @@
-[![Build Status](https://travis-ci.org/PRUNERS/ARCHER.svg?branch=master)](https://travis-ci.org/PRUNERS/ARCHER)
-
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org8ca9905">1. License</a></li>
-<li><a href="#org77f09bd">2. Introduction</a></li>
-<li><a href="#orga07f94f">3. Prerequisites</a></li>
-<li><a href="#org32d7279">4. Installation</a>
+<li><a href="#org5f2e0e4">1. License</a></li>
+<li><a href="#orgf3ff939">2. Introduction</a></li>
+<li><a href="#org625ba08">3. Prerequisites</a></li>
+<li><a href="#orgfd23cb8">4. Installation</a>
 <ul>
-<li><a href="#org2fabe1a">4.1. Automatic Building</a></li>
-<li><a href="#orgc3242ce">4.2. Manual Building</a></li>
-<li><a href="#orgb32d79c">4.3. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support</a></li>
-<li><a href="#org65b2d1e">4.4. Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
-<li><a href="#org5680850">4.5. Build ARCHER within Clang/LLVM</a></li>
+<li><a href="#orgcab18e9">4.1. Automatic Building</a></li>
+<li><a href="#orga58092a">4.2. Manual Building</a></li>
+<li><a href="#orge6e2fca">4.3. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support</a></li>
+<li><a href="#org1ebcfde">4.4. Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
+<li><a href="#org1fd8015">4.5. Build ARCHER within Clang/LLVM</a></li>
 </ul>
 </li>
-<li><a href="#org3295926">5. Usage</a>
+<li><a href="#org175e914">5. Usage</a>
 <ul>
-<li><a href="#orgf13af9e">5.1. How to compile</a>
+<li><a href="#org8ff29d0">5.1. How to compile</a>
 <ul>
-<li><a href="#orgf00443a">5.1.1. Single source</a></li>
-<li><a href="#org0ed4975">5.1.2. Makefile</a></li>
-<li><a href="#org1028cef">5.1.3. Hybrid MPI-OpenMP programs</a></li>
+<li><a href="#org6536e93">5.1.1. Single source</a></li>
+<li><a href="#org8b858f1">5.1.2. Makefile</a></li>
+<li><a href="#org820d64f">5.1.3. Hybrid MPI-OpenMP programs</a></li>
 </ul>
 </li>
-<li><a href="#orge12f267">5.2. Options</a></li>
-<li><a href="#org885d0d7">5.3. Runtime Flags</a></li>
+<li><a href="#org9e81531">5.2. Options</a></li>
+<li><a href="#org884dba1">5.3. Runtime Flags</a></li>
 </ul>
 </li>
-<li><a href="#orge3846d9">6. Example</a></li>
-<li><a href="#org64a2110">7. Publications</a></li>
-<li><a href="#org153c75a">8. Contacts and Support</a></li>
-<li><a href="#orgaa56b35">9. Members</a></li>
+<li><a href="#org1fd583d">6. Example</a></li>
+<li><a href="#orgc398d43">7. Publications</a></li>
+<li><a href="#orgedd26a0">8. Contacts and Support</a></li>
+<li><a href="#orga0a6fed">9. Members</a></li>
 </ul>
 </div>
 </div>
+[![Build Status](https://travis-ci.org/PRUNERS/ARCHER.svg?branch=master)](https://travis-ci.org/PRUNERS/ARCHER)
 
+
+<a id="org5f2e0e4"></a>
 
 # License
 
 Please see LICENSE for usage terms.
 
+
+<a id="orgf3ff939"></a>
 
 # Introduction
 
@@ -55,6 +58,8 @@ overheads, while still offering high accuracy and precision. It builds
 on open-source tools infrastructure such as LLVM, ThreadSanitizer, and
 OMPT to provide portability.
 
+
+<a id="org625ba08"></a>
 
 # Prerequisites
 
@@ -70,17 +75,23 @@ development at <https://github.com/OpenMPToolsInterface/LLVM-openmp>
 (under the branch "align-to-tr").
 
 
+<a id="orgfd23cb8"></a>
+
 # Installation
 
 ARCHER has been developed under LLVM 3.9 (for more information visit
 <http://llvm.org>).
 
 
+<a id="orgcab18e9"></a>
+
 ## Automatic Building
 
 For an automatic building script (recommended) please visit the GitHub
 page <https://github.com/PRUNERS/LLVM_ARCHER>.
 
+
+<a id="orga58092a"></a>
 
 ## Manual Building
 
@@ -99,6 +110,8 @@ the version of LLVM OpenMP runtime. In the configuration section there
 will be two different commands depending on the type of runtime
 chosen.
 
+
+<a id="orge6e2fca"></a>
 
 ## Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
 
@@ -147,6 +160,8 @@ and build it with the following commands:
     cd ../..
 
 
+<a id="org1ebcfde"></a>
+
 ## Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support
 
 Create a folder to download and build ARCHER:
@@ -194,6 +209,8 @@ and build it with the following commands:
     ninja install
     cd ../..
 
+
+<a id="org1fd8015"></a>
 
 ## Build ARCHER within Clang/LLVM
 
@@ -344,8 +361,12 @@ To make the environment permanent add the previous lines or
 equivalents to your shell start-up script such as "~/.bashrc".
 
 
+<a id="org175e914"></a>
+
 # Usage
 
+
+<a id="org8ff29d0"></a>
 
 ## How to compile
 
@@ -366,10 +387,14 @@ library *libarcher.so*. (In the example below the runtime library will
 be shown in square brackets).
 
 
+<a id="org6536e93"></a>
+
 ### Single source
 
     clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 
+
+<a id="org8b858f1"></a>
 
 ### Makefile
 
@@ -379,6 +404,8 @@ In your Makefile, set the following variables:
     [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 
+<a id="org820d64f"></a>
+
 ### Hybrid MPI-OpenMP programs
 
 In your Makefile, set the following variables:
@@ -387,11 +414,15 @@ In your Makefile, set the following variables:
     [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 
+<a id="org9e81531"></a>
+
 ## Options
 
 The command *clang-archer* works as a compiler wrapper, all the
 options available for clang are also available for *clang-archer*.
 
+
+<a id="org884dba1"></a>
 
 ## Runtime Flags
 
@@ -431,6 +462,8 @@ separate flags are separated with spaces, e.g.:
 </tbody>
 </table>
 
+
+<a id="org1fd583d"></a>
 
 # Example
 
@@ -482,6 +515,8 @@ the report will look as follow:
     ThreadSanitizer: reported 1 warnings
 
 
+<a id="orgc398d43"></a>
+
 # Publications
 
 -   S. Atzeni, G. Gopalakrishnan, Z. Rakamaric, D. H. Ahn, I. Laguna,
@@ -498,6 +533,8 @@ the report will look as follow:
     40–47. <http://dl.acm.org/citation.cfm?id=2688369>
 
 
+<a id="orgedd26a0"></a>
+
 # Contacts and Support
 
 -   [Google group](https://groups.google.com/forum/#!forum/archer-pruner)
@@ -506,6 +543,8 @@ the report will look as follow:
 
     <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
 
+
+<a id="orga0a6fed"></a>
 
 # Members
 

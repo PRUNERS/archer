@@ -1,7 +1,7 @@
 #+DESCRIPTION: ARCHER, a data race detection tool for large OpenMP applications
 #+KEYWORDS:
 #+LANGUAGE:  en
-#+OPTIONS:   H:3 num:t toc:nil \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
 #+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
 
 #+EXPORT_SELECT_TAGS: export
@@ -12,7 +12,7 @@
 
 #+HTML: [![Build Status](https://travis-ci.org/PRUNERS/ARCHER.svg?branch=master)](https://travis-ci.org/PRUNERS/ARCHER)
 
-#+TOC: headlines 5
+
 
 * License
 Please see LICENSE for usage terms.
