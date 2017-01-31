@@ -41,11 +41,11 @@ From the root folder of the git repository run the follwing commands:
 
 ## Pre-Commit Hook
 
-    ln -s -f ../../hooks/pre-commit .git/hooks/post-pre
+    ln -s -f ../../hooks/pre-commit .git/hooks/pre-commit
 
 
 <a id="orge67a783"></a>
 
 ## Post-Commit Hook
 
-    ln -s -f ../../hooks/pre-commit .git/hooks/post-pre
+    ln -s -f ../../hooks/post-commit .git/hooks/post-commit
