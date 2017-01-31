@@ -258,7 +258,7 @@ Obtain official LLVM OpenMP Runtime:
 or obtain LLVM OpenMP Runtime with OMPT support:
 
     cd projects
-    git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git
+    git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
     cd openmp
     git checkout align-to-tr
     cd ../..

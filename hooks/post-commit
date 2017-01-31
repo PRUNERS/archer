@@ -4,6 +4,6 @@ if [ -a .commit ]
 then
     rm .commit
     rm -rf README.md~
-    git commit README.md > /dev/null
+    git commit README.md -m "Updated Markdown README" > /dev/null
 fi
 exit 0
