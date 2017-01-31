@@ -497,7 +497,8 @@ the report will look as follow:
 
 -   [Google group](https://groups.google.com/forum/#!forum/archer-pruner)
 -   [Slack Channel](https://pruners.slack.com)
-    -   For an invitation please write an email to #+HTML: <a href="<simone@cs.utah.edu?Subject=[archer-slack]%20>" target="<sub>top</sub>">Simone Atzeni</a>.
+    
+    <ul style="list-style-type:circle"> <li> For an invitation please write an email to <a href="mailto:simone@cs.utah.edu?Subject=[archer-slack]%20" target="_top">Simone Atzeni</a>. </li> </ul>
 -   E-Mail Contacts:
     
     <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
