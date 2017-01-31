@@ -503,7 +503,7 @@ ThreadSanitizer: reported 1 warnings
 
 - [[https://groups.google.com/forum/#!forum/archer-pruner][Google group]]
 - [[https://pruners.slack.com][Slack Channel]]
-  - For an invitation please write an email to #+HTML: <a href="mailto:simone@cs.utah.edu?Subject=[archer-slack]%20" target="_top">Simone Atzeni</a>.
+  #+HTML: <ul style="list-style-type:circle"> <li> For an invitation please write an email to <a href="mailto:simone@cs.utah.edu?Subject=[archer-slack]%20" target="_top">Simone Atzeni</a>. </li> </ul>
 - E-Mail Contacts:
   #+HTML: <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
 
