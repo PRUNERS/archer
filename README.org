@@ -263,7 +263,7 @@ or obtain LLVM OpenMP Runtime with OMPT support:
 
 #+BEGIN_SRC bash :exports code
   cd projects
-  git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git
+  git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
   cd openmp
   git checkout align-to-tr
   cd ../..
