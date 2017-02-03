@@ -134,7 +134,7 @@ and build it with the following commands:
     cmake -G Ninja \
      -D CMAKE_C_COMPILER=clang \
      -D CMAKE_CXX_COMPILER=clang++ \
-     -D CMAKE_INSTALL_PREFIX:PATH=$ARCHER_INSTALL \
+     -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
      -D OMP_PREFIX:PATH=$OPENMP_INSTALL \
      -D LIBOMP_TSAN_SUPPORT=TRUE \
      ..
