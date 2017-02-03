@@ -134,7 +134,8 @@ and build it with the following commands:
     cmake -G Ninja \
      -D CMAKE_C_COMPILER=clang \
      -D CMAKE_CXX_COMPILER=clang++ \
-     -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
+     -D CMAKE_INSTALL_PREFIX:PATH=$ARCHER_INSTALL \
+     -D OMP_PREFIX:PATH=$OPENMP_INSTALL \
      -D LIBOMP_TSAN_SUPPORT=TRUE \
      ..
     ninja -j8 -l8                             # or any number of available cores
@@ -182,6 +183,7 @@ and build it with the following commands:
     cmake -G Ninja \
      -D CMAKE_C_COMPILER=clang \
      -D CMAKE_CXX_COMPILER=clang++ \
+     -D OMP_PREFIX:PATH=$OPENMP_INSTALL \
      -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
      ..
     ninja -j8 -l8                             # or any number of available cores
@@ -291,6 +293,7 @@ In case of official LLVM OpenMP Runtime run:
      -D CMAKE_C_COMPILER=clang \
      -D CMAKE_CXX_COMPILER=clang++ \
      -D CMAKE_BUILD_TYPE=Release \
+     -D OMP_PREFIX:PATH=$LLVM_INSTALL \
      -D CMAKE_INSTALL_PREFIX:PATH=$LLVM_INSTALL \
      -D CLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp \
      -D LLVM_ENABLE_LIBCXX=ON \
@@ -311,6 +314,7 @@ Otherwise, in case of LLVM OpenMP Runtime with OMPT support run:
      -D CMAKE_C_COMPILER=clang \
      -D CMAKE_CXX_COMPILER=clang++ \
      -D CMAKE_BUILD_TYPE=Release \
+     -D OMP_PREFIX:PATH=$LLVM_INSTALL \
      -D CMAKE_INSTALL_PREFIX:PATH=$LLVM_INSTALL \
      -D CLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp \
      -D LLVM_ENABLE_LIBCXX=ON \
