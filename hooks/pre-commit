@@ -9,7 +9,7 @@ then
     then
         touch .commit
         emacs README.org --batch -f org-md-export-to-markdown --kill
-        echo -e "[![Build Status](https://travis-ci.org/PRUNERS/ARCHER.svg?branch=master)](https://travis-ci.org/PRUNERS/ARCHER)\n" | cat - README.md > temp && mv temp README.md
+        echo -e "[![Build Status](https://travis-ci.org/PRUNERS/archer.svg?branch=master)](https://travis-ci.org/PRUNERS/archer)\n" | cat - README.md > temp && mv temp README.md
     fi
 fi
 exit 0
