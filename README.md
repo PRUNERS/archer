@@ -13,7 +13,7 @@
 <li><a href="#sec-4-2">4.2. Manual Building</a></li>
 <li><a href="#sec-4-3">4.3. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support</a></li>
 <li><a href="#sec-4-4">4.4. Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
-<li><a href="#sec-4-5">4.5. Build ARCHER within Clang/LLVM</a></li>
+<li><a href="#sec-4-5">4.5. Build Archer within Clang/LLVM</a></li>
 </ul>
 </li>
 <li><a href="#sec-5">5. Usage</a>
@@ -30,9 +30,8 @@
 </ul>
 </li>
 <li><a href="#sec-6">6. Example</a></li>
-<li><a href="#sec-7">7. Publications</a></li>
-<li><a href="#sec-8">8. Contacts and Support</a></li>
-<li><a href="#sec-9">9. Members</a></li>
+<li><a href="#sec-7">7. Contacts and Support</a></li>
+<li><a href="#sec-8">8. Members</a></li>
 </ul>
 </div>
 </div>
@@ -44,12 +43,12 @@ Please see LICENSE for usage terms.
 
 # Introduction<a id="sec-2" name="sec-2"></a>
 
-<img src="resources/images/archer_logo.png" hspace="5" vspace="5" height="45%" width="45%" alt="ARCHER Logo" title="ARCHER" align="right" />
+<img src="resources/images/archer_logo.png" hspace="5" vspace="5" height="45%" width="45%" alt="Archer Logo" title="Archer" align="right" />
 
-**ARCHER** is a data race detector for OpenMP programs.
+**Archer** is a data race detector for OpenMP programs.
 
 
-ARCHER combines static and dynamic techniques to identify data races
+Archer combines static and dynamic techniques to identify data races
 in large OpenMP applications, leading to low runtime and memory
 overheads, while still offering high accuracy and precision. It builds
 on open-source tools infrastructure such as LLVM, ThreadSanitizer, and
@@ -57,47 +56,47 @@ OMPT to provide portability.
 
 # Prerequisites<a id="sec-3" name="sec-3"></a>
 
-To compile ARCHER you need an host Clang/LLVM version >= 3.9, a
+To compile Archer you need an host Clang/LLVM version >= 3.9, a
 CMake version >= 3.4.3.
 
 Ninja build system is preferred. For more information how to obtain
 Ninja visit <https://martine.github.io/ninja>.
 
-ARCHER has been tested with the LLVM OpenMP Runtime version >= 3.9,
+Archer has been tested with the LLVM OpenMP Runtime version >= 3.9,
 and with the LLVM OpenMP Runtime with OMPT support currently under
 development at <https://github.com/OpenMPToolsInterface/LLVM-openmp>
 (under the branch "align-to-tr").
 
 # Installation<a id="sec-4" name="sec-4"></a>
 
-ARCHER has been developed under LLVM 3.9 (for more information visit
+Archer has been developed under LLVM 3.9 (for more information visit
 <http://llvm.org>).
 
 ## Automatic Building<a id="sec-4-1" name="sec-4-1"></a>
 
 For an automatic building script (recommended) please visit the GitHub
-page <https://github.com/PRUNERS/LLVM_ARCHER>.
+page <https://github.com/PRUNERS/llvm_archer>.
 
 ## Manual Building<a id="sec-4-2" name="sec-4-2"></a>
 
-ARCHER comes as an LLVM tool, it can be compiled both as stand-alone
+Archer comes as an LLVM tool, it can be compiled both as stand-alone
 tool or within the Clang/LLVM infrastructure.
 
-In order to obtain and build ARCHER follow the instructions below for
-stand-alone or full Clang/LLVM with ARCHER support building
+In order to obtain and build Archer follow the instructions below for
+stand-alone or full Clang/LLVM with Archer support building
 (instructions are based on bash shell, Clang/LLVM 3.9 version, Ninja
 build system, and the LLVM OpenMP Runtime with OMPT support).
 
 Note: Using the LLVM OpenMP Runtime version >= 3.9 may results in some
 false positives during the data race detection process. Please, notice
-that the full building of Clang/LLVM with ARCHER support depends on
+that the full building of Clang/LLVM with Archer support depends on
 the version of LLVM OpenMP runtime. In the configuration section there
 will be two different commands depending on the type of runtime
 chosen.
 
 ## Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support<a id="sec-4-3" name="sec-4-3"></a>
 
-Create a folder to download and build ARCHER:
+Create a folder to download and build Archer:
 
     export ARCHER_BUILD=$PWD/ArcherBuild
     mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
@@ -121,10 +120,10 @@ and build it with the following command:
     ninja -j8 -l8                             # or any number of available cores
     ninja install
 
-Obtain ARCHER:
+Obtain Archer:
 
     cd $ARCHER_BUILD
-    git clone git@github.com:PRUNERS/ARCHER.git archer
+    git clone git@github.com:PRUNERS/archer.git archer
 
 and build it with the following commands:
 
@@ -144,7 +143,7 @@ and build it with the following commands:
 
 ## Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support<a id="sec-4-4" name="sec-4-4"></a>
 
-Create a folder to download and build ARCHER:
+Create a folder to download and build Archer:
 
     export ARCHER_BUILD=$PWD/ArcherBuild
     mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
@@ -170,10 +169,10 @@ and build it with the following command:
     ninja -j8 -l8                             # or any number of available cores
     ninja install
 
-Obtain ARCHER:
+Obtain Archer:
 
     cd $ARCHER_BUILD
-    git clone git@github.com:PRUNERS/ARCHER.git archer
+    git clone git@github.com:PRUNERS/archer.git archer
 
 and build it with the following commands:
 
@@ -190,9 +189,9 @@ and build it with the following commands:
     ninja install
     cd ../..
 
-## Build ARCHER within Clang/LLVM<a id="sec-4-5" name="sec-4-5"></a>
+## Build Archer within Clang/LLVM<a id="sec-4-5" name="sec-4-5"></a>
 
-Create a folder to download and build Clang/LLVM and ARCHER:
+Create a folder to download and build Clang/LLVM and Archer:
 
     export ARCHER_BUILD=$PWD/ArcherBuild
     mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
@@ -211,10 +210,10 @@ Obtain Clang:
     git checkout release_39
     cd ..
 
-Obtain ARCHER:
+Obtain Archer:
 
     cd tools
-    git clone git@github.com:PRUNERS/ARCHER.git archer
+    git clone git@github.com:PRUNERS/archer.git archer
     cd ..
 
 Obtain the LLVM compiler-rt:
@@ -266,7 +265,7 @@ or obtain LLVM OpenMP Runtime with OMPT support:
     cd ../..
 
 Now that we obtained the source code, the following command
-will build LLVM/Clang infrastructure with ARCHER support.
+will build LLVM/Clang infrastructure with Archer support.
 
 First we boostrap clang:
 
@@ -283,7 +282,7 @@ First we boostrap clang:
     export LD_LIBRARY_PATH="$ARCHER_BUILD/llvm_bootstrap/lib:${LD_LIBRARY_PATH}"
     export PATH="$ARCHER_BUILD/llvm_bootstrap/bin:${PATH}"
 
-Then, we can actually build LLVM/Clang with ARCHER support.
+Then, we can actually build LLVM/Clang with Archer support.
 
 In case of official LLVM OpenMP Runtime run:
 
@@ -330,7 +329,7 @@ Otherwise, in case of LLVM OpenMP Runtime with OMPT support run:
     ninja install
 
 Once the installation completes, you need to setup your environement
-to allow ARCHER to work correctly.
+to allow Archer to work correctly.
 
 Please set the following path variables:
 
@@ -344,19 +343,19 @@ equivalents to your shell start-up script such as "~/.bashrc".
 
 ## How to compile<a id="sec-5-1" name="sec-5-1"></a>
 
-ARCHER provides a command to compile your programs with Clang/LLVM
+Archer provides a command to compile your programs with Clang/LLVM
 OpenMP and hide all the mechanisms necessary to detect data races
 automatically in your OpenMP programs.
 
-The ARCHER compile command is called *clang-archer*, and this can be
+The Archer compile command is called *clang-archer*, and this can be
 used as a drop-in replacement of your compiler command (e.g., clang,
 gcc, etc.).
 
 The following are some of the examples of how one can integrate
 *clang-archer* into his/her build system.
 
-If you are using ARCHER and the LLVM OpenMP Runtime with OMPT support,
-it is necessary to link your executable against the ARCHER runtime
+If you are using Archer and the LLVM OpenMP Runtime with OMPT support,
+it is necessary to link your executable against the Archer runtime
 library *libarcher.so*. (In the example below the runtime library will
 be shown in square brackets).
 
@@ -416,7 +415,7 @@ separate flags are separated with spaces, e.g.:
 <td class="left">flush&#95;shadow</td>
 <td class="right">0</td>
 <td class="left">>= 4.0</td>
-<td class="left">Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory and may cause an "out of memory" exception when checked by ARCHER.</td>
+<td class="left">Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory and may cause an "out of memory" exception when checked by Archer.</td>
 </tr>
 </tbody>
 </table>
@@ -442,12 +441,12 @@ Suppose our program is called *myprogram.c*:
     12    }
     13  }
 
-In case we installed ARCHER with the official LLVM OpenMP runtime and
+In case we installed Archer with the official LLVM OpenMP runtime and
 ThreadSanitizer support we compile the program as follow:
 
     clang-archer myprogram.c -o myprogram
 
-otherwise, if we installed ARCHER with the LLVM OpenMP runtime and
+otherwise, if we installed Archer with the LLVM OpenMP runtime and
 ThreadSanitizer OMPT support our compile command will look like:
 
     clang-archer myprogram.c -o myprogram -larcher
@@ -457,7 +456,7 @@ Now we can run the program with the following commands:
     export OMP_NUM_THREADS=2
     ./myprogram
 
-ARCHER will output a report in case it finds data races. In our case
+Archer will output a report in case it finds data races. In our case
 the report will look as follow:
 
     ==================
@@ -482,22 +481,7 @@ the report will look as follow:
     ==================
     ThreadSanitizer: reported 1 warnings
 
-# Publications<a id="sec-7" name="sec-7"></a>
-
--   S. Atzeni, G. Gopalakrishnan, Z. Rakamaric, D. H. Ahn, I. Laguna,
-    M. Schulz, G. L. Lee, J. Protze, and M. S. Müller. 2016. "ARCHER:
-    Effectively Spotting Data Races in Large Openmp Applications." In
-    2016 IEEE International Parallel and Distributed Processing
-    Symposium (IPDPS),
-    53–62. <http://ieeexplore.ieee.org/document/7516001/>
--   J. Protze, S. Atzeni, D. H. Ahn, M. Schulz, G.  Gopalakrishnan,
-    M. S. Müller, I. Laguna, Z.  Rakamarić, and
-    G. L. Lee. 2014. "Towards Providing Low-Overhead Data Race Detection
-    for Large Openmp Applications." In Proceedings of the 2014 LLVM
-    Compiler Infrastructure in HPC,
-    40–47. <http://dl.acm.org/citation.cfm?id=2688369>
-
-# Contacts and Support<a id="sec-8" name="sec-8"></a>
+# Contacts and Support<a id="sec-7" name="sec-7"></a>
 
 -   [Google group](https://groups.google.com/forum/#!forum/archer-pruner)
 -   [Slack Channel](https://pruners.slack.com)
@@ -507,6 +491,6 @@ the report will look as follow:
     
     <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
 
-# Members<a id="sec-9" name="sec-9"></a>
+# Members<a id="sec-8" name="sec-8"></a>
 
 <img src="resources/images/uofu_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="UofU Logo" title="University of Utah" style="float:left" /> <img src="resources/images/llnl_logo.png" hspace="70" vspace="5" height="30%" width="30%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" style="float:center" /> <img src="resources/images/rwthaachen_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" style="float:left" />
