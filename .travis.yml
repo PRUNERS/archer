@@ -71,7 +71,7 @@ script:
   - cd $HOME/build/PRUNERS/ARCHER
   - rm -rf build
   - mkdir -p build && cd build
-  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
+  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D OMP_PREFIX:PATH=$OPENMP_INSTALL -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
   - ninja -j4 -l4
   - ninja install
   - ninja check-libarcher
