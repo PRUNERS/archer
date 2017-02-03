@@ -60,7 +60,7 @@ script:
   # Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support
   - cd $HOME/build/PRUNERS
   - rm -rf openmp
-  - git clone -b align-to-tr https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
+  - git clone -b align-to-tr-rebased https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
   - export OPENMP_INSTALL=$HOME/usr
   - cd openmp/runtime
   - mkdir build && cd build
