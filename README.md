@@ -56,7 +56,7 @@ OMPT to provide portability.
 
 # Prerequisites<a id="sec-3" name="sec-3"></a>
 
-To compile Archer you need an host Clang/LLVM version >= 3.9, a
+To compile Archer you need a host Clang/LLVM version >= 3.9, a
 CMake version >= 3.4.3.
 
 Ninja build system is preferred. For more information how to obtain
@@ -90,7 +90,7 @@ build system, and the LLVM OpenMP Runtime with OMPT support).
 Note: Using the LLVM OpenMP Runtime version >= 3.9 may results in some
 false positives during the data race detection process. Please, notice
 that the full building of Clang/LLVM with Archer support depends on
-the version of LLVM OpenMP runtime. In the configuration section there
+the version of LLVM OpenMP runtime. In the configuration section, there
 will be two different commands depending on the type of runtime
 chosen.
 
@@ -385,7 +385,7 @@ options available for clang are also available for *clang-archer*.
 ## Runtime Flags<a id="sec-5-3" name="sec-5-3"></a>
 
 Runtime flags are passed via **ARCHER&#95;OPTIONS** environment variable,
-separate flags are separated with spaces, e.g.:
+separate flags are separated by spaces, e.g.:
 
     ARCHER_OPTIONS="flush_shadow=1" ./myprogram
 
