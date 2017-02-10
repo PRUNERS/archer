@@ -29,7 +29,7 @@ To compile Archer you need a host Clang/LLVM version >= 3.9, a
 CMake version >= 3.4.3.
 
 Ninja build system is preferred. For more information how to obtain
-Ninja visit https://martine.github.io/ninja.
+Ninja visit https://github.com/ninja-build/ninja.
 
 Archer has been tested with the LLVM OpenMP Runtime version >= 3.9,
 and with the LLVM OpenMP Runtime with OMPT support currently under
