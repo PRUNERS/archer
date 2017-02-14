@@ -168,7 +168,7 @@ ompt_tsan_parallel_begin(
   const ompt_frame_t *parent_task_frame,
   ompt_data_t* parallel_data,
   uint32_t requested_team_size,
-  uint32_t actual_team_size,
+//  uint32_t actual_team_size,
   ompt_invoker_t invoker,
   const void *codeptr_ra)
 {
