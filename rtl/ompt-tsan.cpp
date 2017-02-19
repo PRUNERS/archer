@@ -6,12 +6,36 @@
 #include <atomic>
 #include <cassert>
 #include <mutex>
+//#include <shared_mutex>
 #include <unordered_map>
 
+#define OMPT_TSAN_MANAGE_CLOCK
+
+#ifndef OMPT_TSAN_MANAGE_CLOCK
 #define __SANITIZE_THREAD__
 #include "llvm/Support/Compiler.h"
+#endif
 
 #include <ompt.h>
+
+#if defined(OMPT_TSAN_CLEANUP_ATOMIC) && ! defined(OMPT_TSAN_CLEANUP)
+  #define OMPT_TSAN_CLEANUP
+#endif
+
+#if defined(OMPT_TSAN_CLEANUP_ATOMIC) || defined(OMPT_TSAN_CLEANUP)
+#include <set>
+extern "C" {
+void AnnotateDeleteClock(const char *file, int line, const volatile void *cv);
+//void AnnotateRWLockDestroy(const char *file, int line, const volatile void *cv);
+
+#define TsanDeleteClock(cv) AnnotateDeleteClock(__FILE__, __LINE__, cv)
+//#define TsanDeleteClock(cv) AnnotateRWLockDestroy(__FILE__, __LINE__, cv)
+}
+#endif
+
+#if defined(OMPT_TSAN_MANAGE_CLOCK) && ! defined(OMPT_TSAN_CLEANUP)
+  #define OMPT_TSAN_CLEANUP
+#endif
 
 /// Required OMPT inquiry functions.
 static ompt_get_parallel_info_t ompt_get_parallel_info;
@@ -24,22 +48,110 @@ static uint64_t my_next_id()
   return ret;
 }
         
+#ifdef OMPT_TSAN_MANAGE_CLOCK
+#include <set>
+ typedef struct SyncClock ompt_tsan_clockid;
+extern "C" {
+ #define TsanHappensBefore(clock) ((SyncClock*)clock)->HappensBefore()
+ #define TsanHappensAfter(clock) ((SyncClock*)clock)->HappensAfter()
+ #define TsanDeleteClock(clock) 
+
+void AnnotateIgnoreWritesBegin(const char *file, int line);
+void AnnotateIgnoreWritesEnd(const char *file, int line);
+// Ignore any races on writes between here and the next TsanIgnoreWritesEnd.
+# define TsanIgnoreWritesBegin() AnnotateIgnoreWritesBegin(__FILE__, __LINE__)
+
+// Resume checking for racy writes.
+# define TsanIgnoreWritesEnd() AnnotateIgnoreWritesEnd(__FILE__, __LINE__)
+
+void AnnotateBeforeClock(const char *file, int line, volatile void **cv);
+#define TsanBeforeClock(cv) AnnotateBeforeClock(__FILE__, __LINE__, cv)
+void AnnotateAfterClock(const char *file, int line, volatile void **cv);
+#define TsanAfterClock(cv) AnnotateAfterClock(__FILE__, __LINE__, cv)
+void AnnotateDeleteClock(const char *file, int line, volatile void **cv);
+#define TsanDestroyClock(cv) AnnotateDeleteClock(__FILE__, __LINE__, cv)
+}//extern C
+#elif defined(OMPT_TSAN_CLEANUP_ATOMIC)
+ typedef std::atomic_char ompt_tsan_clockid;
+#else
+ typedef char ompt_tsan_clockid;
+#endif
+
+static inline void *ToInAddr(void* OutAddr) {
+  // FIXME: This will give false negatives when a second variable lays directly
+  //        behind a variable that only has a width of 1 byte.
+  //        Another approach would be to "negate" the address or to flip the
+  //        first bit...
+  return reinterpret_cast<char*>(OutAddr) + 1;
+}
+
+struct SyncClock {
+  volatile void * clock;
+  mutable std::mutex mutex_;
+  
+  void HappensAfter() {
+//    std::shared_lock<std::shared_mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (clock)
+      TsanAfterClock(&clock);
+  }
+  
+  void HappensBefore() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    TsanBeforeClock(&clock);
+  }
+  
+  SyncClock () : clock(nullptr), mutex_() {}
+  SyncClock (int) : clock(nullptr), mutex_() {}
+  ~SyncClock() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (clock)
+      TsanDestroyClock(&clock);
+  }
+};
 
 /// Data structure to store additional information for parallel regions.
 struct ParallelData {
   /// Its address is used for relationships between the parallel region and
   /// its implicit tasks.
-  char Parallel;
+  ompt_tsan_clockid Parallel;
 
   /// Two addresses for relationships with barriers.
-  char Barrier[2];
+  ompt_tsan_clockid Barrier[2];
 
   void *GetParallelPtr() {
+#ifdef OMPT_TSAN_CLEANUP_ATOMIC
+    Parallel=1;
+#endif
     return &Parallel;
   }
 
   void *GetBarrierPtr(unsigned Index) {
+#ifdef OMPT_TSAN_CLEANUP_ATOMIC
+    Barrier[Index]=1;
+#endif
     return &Barrier[Index];
+  }
+  
+  ParallelData() : Parallel(0) {
+#ifdef OMPT_TSAN_CLEANUP_ATOMIC
+    Barrier[0] = Barrier[1] = 0;
+#endif
+  }
+
+  ~ParallelData() {
+#ifdef OMPT_TSAN_CLEANUP_ATOMIC
+    if (Parallel)
+      TsanDeleteClock(&Parallel);
+    if (Barrier[0])
+      TsanDeleteClock(Barrier);
+    if (Barrier[1])
+      TsanDeleteClock(Barrier+1);
+#elif defined(OMPT_TSAN_CLEANUP)
+    TsanDeleteClock(&Parallel);
+    TsanDeleteClock(Barrier);
+    TsanDeleteClock(Barrier+1);
+#endif
   }
 };
 
@@ -51,26 +163,37 @@ static inline ParallelData *ToParallelData(ompt_data_t* parallel_data) {
 /// Data structure to support stacking of taskgroups and allow synchronization.
 struct Taskgroup {
   /// Its address is used for relationships of the taskgroup's task set.
-  char Ptr;
+  ompt_tsan_clockid Ptr;
 
   /// Reference to the parent taskgroup.
   Taskgroup* Parent;
 
-  Taskgroup(Taskgroup* Parent) : Parent(Parent) { }
+  Taskgroup(Taskgroup* Parent) : Ptr(0), Parent(Parent) { }
 
   void *GetPtr() {
+#ifdef OMPT_TSAN_CLEANUP_ATOMIC
+    Ptr=1;
+#endif
     return &Ptr;
+  }
+  ~Taskgroup() {
+#ifdef OMPT_TSAN_CLEANUP_ATOMIC
+    if (Ptr)
+      TsanDeleteClock(&Ptr);
+#elif defined(OMPT_TSAN_CLEANUP)
+    TsanDeleteClock(&Ptr);
+#endif
   }
 };
 
 /// Data structure to store additional information for tasks.
 struct TaskData {
   /// Its address is used for relationships of this task.
-  char Task;
+  ompt_tsan_clockid Task;
 
   /// Child tasks use its address to declare a relationship to a taskwait in
   /// this task.
-  char Taskwait;
+  ompt_tsan_clockid Taskwait;
 
   /// Whether this task is currently executing a barrier.
   bool InBarrier;
@@ -87,6 +210,9 @@ struct TaskData {
   /// Reference to the task that scheduled this task.
   TaskData* ScheduleParent;
 
+  /// Reference to the task that scheduled this task.
+  TaskData* ImplicitTask;
+
   /// Reference to the team of this task.
   ParallelData* Team;
 
@@ -99,9 +225,14 @@ struct TaskData {
 
   /// Number of dependency entries.
   unsigned DependencyCount;
+  
+#ifdef OMPT_TSAN_CLEANUP
+  /// Set of all dependencies used by child tasks, used to cleanup the clocks
+  std::set<void *> DependencySet;
+#endif
 
-  TaskData(TaskData* Parent) : InBarrier(false), BarrierIndex(0),
-    RefCount(1), Parent(Parent), Team(Parent->Team), Taskgroup(nullptr), DependencyCount(0) {
+  TaskData(TaskData* Parent) : Task(0), Taskwait(0), InBarrier(false), BarrierIndex(0), 
+    RefCount(1), Parent(Parent), ScheduleParent(nullptr), ImplicitTask(nullptr), Team(Parent->Team), Taskgroup(nullptr), DependencyCount(0) {
     if (Parent != nullptr) {
       Parent->RefCount++;
       // Copy over pointer to taskgroup. This task may set up its own stack
@@ -110,35 +241,47 @@ struct TaskData {
     }
   }
 
-  TaskData(ParallelData* Team = nullptr) : InBarrier(false), BarrierIndex(0),
-    RefCount(1), Parent(nullptr), Team(Team), Taskgroup(nullptr), DependencyCount(0) {
-    if (Parent != nullptr) {
-      Parent->RefCount++;
-      // Copy over pointer to taskgroup. This task may set up its own stack
-      // but for now belongs to its parent's taskgroup.
-      Taskgroup = Parent->Taskgroup;
-    }
-  }
+  TaskData(ParallelData* Team = nullptr) : Task(0), Taskwait(0), InBarrier(false), BarrierIndex(0), 
+    RefCount(1), Parent(nullptr), ScheduleParent(nullptr), ImplicitTask(this), Team(Team), Taskgroup(nullptr), DependencyCount(0) {}
 
   void *GetTaskPtr() {
+#ifdef OMPT_TSAN_CLEANUP_ATOMIC
+    Task=1;
+#endif
     return &Task;
   }
 
   void *GetTaskwaitPtr() {
+#ifdef OMPT_TSAN_CLEANUP_ATOMIC
+    Taskwait=1;
+#endif
     return &Taskwait;
+  }
+  
+  ~TaskData() {
+#ifdef OMPT_TSAN_CLEANUP_ATOMIC
+    if (Task)
+      TsanDeleteClock(&Task);
+    if (Taskwait)
+      TsanDeleteClock(&Taskwait);
+#elif defined(OMPT_TSAN_CLEANUP)
+    TsanDeleteClock(&Task);
+    TsanDeleteClock(&Taskwait);
+#endif
+#ifdef OMPT_TSAN_CLEANUP
+    for (auto i : DependencySet) {
+      TsanDeleteClock(i);
+      TsanDeleteClock(ToInAddr(i));
+    }
+#endif
+    if (DependencyCount > 0) {
+      delete[] Dependencies;
+    }
   }
 };
 
 static inline TaskData *ToTaskData(ompt_data_t *task_data) {
   return reinterpret_cast<TaskData*>(task_data->ptr);
-}
-
-static inline void *ToInAddr(void* OutAddr) {
-  // FIXME: This will give false negatives when a second variable lays directly
-  //        behind a variable that only has a width of 1 byte.
-  //        Another approach would be to "negate" the address or to flip the
-  //        first bit...
-  return reinterpret_cast<char*>(OutAddr) + 1;
 }
 
 
@@ -186,8 +329,8 @@ ompt_tsan_parallel_end(
   const void *codeptr_ra)
 {
   ParallelData* Data = ToParallelData(parallel_data);
-  TsanHappensAfter(Data->GetBarrierPtr(0));
-  TsanHappensAfter(Data->GetBarrierPtr(1));
+//  TsanHappensAfter(Data->GetBarrierPtr(0));
+//  TsanHappensAfter(Data->GetBarrierPtr(1));
 
   delete Data;
 }
@@ -362,32 +505,27 @@ ompt_tsan_task_schedule(
 
 
     TaskData* FromTask = ToTaskData(first_task_data);
-    if (FromTask != nullptr) {
-      ToTask->ScheduleParent = FromTask;
-      // Task may be resumed at a later point in time.
-      TsanHappensBefore(FromTask->GetTaskPtr());
+    assert(FromTask != nullptr);
+    assert(FromTask != ToTask);
+    assert(FromTask->ImplicitTask != nullptr);
+    ToTask->ScheduleParent = FromTask;
+    ToTask->ImplicitTask = FromTask->ImplicitTask;
+    // Task may be resumed at a later point in time.
+    TsanHappensBefore(FromTask->GetTaskPtr());
 
-      if (FromTask->InBarrier) {
-        // We want to ignore writes in the runtime code during barriers,
-        // but not when executing tasks with user code!
-        TsanIgnoreWritesEnd();
-      }
+    if (FromTask->InBarrier) {
+      // We want to ignore writes in the runtime code during barriers,
+      // but not when executing tasks with user code!
+      TsanIgnoreWritesEnd();
     }
   } else { // task finished
     TaskData* Data = ToTaskData(first_task_data);
     // Task ends after it has been switched away.
     TsanHappensAfter(Data->GetTaskPtr());
 
-    // Find implicit task with no parent to get the BarrierIndex
-//    assert(Data->Parent != nullptr && "Should have at least an implicit task as parent!");
-    TaskData* ImplicitTask = Data->ScheduleParent;
-    while (ImplicitTask->Parent != nullptr) {
-        ImplicitTask = ImplicitTask->ScheduleParent;
-    }
-    
     // Task will finish before a barrier in the surrounding parallel region ...
     ParallelData* PData = Data->Team;
-    TsanHappensBefore(PData->GetBarrierPtr(ImplicitTask->BarrierIndex));
+    TsanHappensBefore(PData->GetBarrierPtr(Data->ImplicitTask->BarrierIndex));
 
     // ... and before an eventual taskwait by the parent thread.
     TsanHappensBefore(Data->Parent->GetTaskwaitPtr());
@@ -408,9 +546,6 @@ ompt_tsan_task_schedule(
     }
     while (Data != nullptr && --Data->RefCount == 0) {
         TaskData* Parent = Data->Parent;
-        if (Data->DependencyCount > 0) {
-            delete[] Data->Dependencies;
-        }
         delete Data;
         Data = Parent;
     }
@@ -434,6 +569,11 @@ static void ompt_tsan_task_dependences(
     std::memcpy(Data->Dependencies, deps, sizeof(ompt_task_dependence_t) * ndeps);
     Data->DependencyCount = ndeps;
 
+#ifdef OMPT_TSAN_CLEANUP
+    for (unsigned i = 0; i < Data->DependencyCount; i++) {
+      Data->Parent->DependencySet.insert(Data->Dependencies[i].variable_addr);
+    }
+#endif
     // This callback is executed before this task is first started.
     TsanHappensBefore(Data->GetTaskPtr());
   }
