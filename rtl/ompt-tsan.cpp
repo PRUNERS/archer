@@ -7,15 +7,57 @@
 #include <cassert>
 #include <mutex>
 #include <unordered_map>
-
-#define __SANITIZE_THREAD__
-#include "llvm/Support/Compiler.h"
+#include <stack>
+#include <cstdlib>
 
 #include <ompt.h>
+
+// The following definitions are pasted from "llvm/Support/Compiler.h" to allow the code 
+// to be compiled with other compilers like gcc:
+
+#ifndef TsanHappensBefore
+// Thread Sanitizer is a tool that finds races in code.
+// See http://code.google.com/p/data-race-test/wiki/DynamicAnnotations .
+// tsan detects these exact functions by name.
+extern "C" {
+void AnnotateHappensAfter(const char *file, int line, const volatile void *cv);
+void AnnotateHappensBefore(const char *file, int line, const volatile void *cv);
+void AnnotateIgnoreWritesBegin(const char *file, int line);
+void AnnotateIgnoreWritesEnd(const char *file, int line);
+//void AnnotateRWLockDestroy(const char *file, int line, const volatile void *cv);
+}
+
+// This marker is used to define a happens-before arc. The race detector will
+// infer an arc from the begin to the end when they share the same pointer
+// argument.
+# define TsanHappensBefore(cv) AnnotateHappensBefore(__FILE__, __LINE__, cv)
+
+// This marker defines the destination of a happens-before arc.
+# define TsanHappensAfter(cv) AnnotateHappensAfter(__FILE__, __LINE__, cv)
+
+// Ignore any races on writes between here and the next TsanIgnoreWritesEnd.
+# define TsanIgnoreWritesBegin() AnnotateIgnoreWritesBegin(__FILE__, __LINE__)
+
+// Resume checking for racy writes.
+# define TsanIgnoreWritesEnd() AnnotateIgnoreWritesEnd(__FILE__, __LINE__)
+
+// Reset the sync clock:
+# define TsanDeleteClock(cv) //AnnotateRWLockDestroy(__FILE__, __LINE__, cv)
+// using AnnotateRWLockDestroy announces races between allocation and LockDestroy
+// Without reseting the SyncClock, we might introduce "artificial synchronization"
+
+// Probably we might want to add some annotation to initialize the SyncClock with 
+// current VC instead of updating with current VC:
+// SC <- VC instead of  SC <- max(SC,VC)
+
+#endif
+
 
 /// Required OMPT inquiry functions.
 static ompt_get_parallel_info_t ompt_get_parallel_info;
 static ompt_get_thread_data_t ompt_get_thread_data;
+
+typedef uint64_t ompt_tsan_clockid;
 
 static uint64_t my_next_id()
 {
@@ -24,22 +66,111 @@ static uint64_t my_next_id()
   return ret;
 }
         
+// Data structure to provide a threadsafe pool of reusable objects.
+// DataPool<Type of objects, Size of blockalloc>
+template <typename T, int N>
+struct DataPool {
+  std::mutex DPMutex;
+  std::stack<T *> DataPointer;
+  int total;
+  
+  
+  void newDatas(){
+    // prefix the Data with a pointer to 'this', allows to return memory to 'this', 
+    // without explicitly knowing the source.
+    //
+    // To reduce lock contention, we use thread local DataPools, but Data objects move to other threads.
+    // The strategy is to get objects from local pool. Only if the object moved to another
+    // thread, we might see a penalty on release (returnData). 
+    // For "single producer" pattern, a single thread creates tasks, these are executed by other threads.
+    // The master will have a high demand on TaskData, so return after use.
+    struct pooldata {DataPool<T,N>* dp; T data;};
+    // We alloc without initialize the memory. We cannot call constructors. Therfore use malloc!
+    pooldata* datas = (pooldata*) malloc(sizeof(pooldata) * N);
+    for (int i = 0; i<N; i++) {
+      datas[i].dp = this;
+      DataPointer.push(&(datas[i].data));
+    }
+    total+=N;
+  }
+
+  T * getData() {
+    T * ret;
+    DPMutex.lock();
+    if (DataPointer.empty())
+      newDatas();
+    ret=DataPointer.top();
+    DataPointer.pop();
+    DPMutex.unlock();
+    return ret;
+  }
+  
+  void returnData(T * data) {
+    DPMutex.lock();
+    DataPointer.push(data);
+    DPMutex.unlock();
+  }
+  
+  void getDatas(int n, T** datas) {
+    DPMutex.lock();
+    for (int i=0; i<n; i++) {
+      if (DataPointer.empty())
+        newDatas();
+      datas[i]=DataPointer.top();
+      DataPointer.pop();
+    }
+    DPMutex.unlock();
+  }
+  
+  void returnDatas(int n, T** datas) {
+    DPMutex.lock();
+    for (int i=0; i<n; i++) {
+      DataPointer.push(datas[i]);
+    }
+    DPMutex.unlock();
+  }
+  
+  DataPool() : DataPointer(), DPMutex(), total(0)
+  {}  
+  
+};
+
+// This function takes care to return the data to the originating DataPool
+// A pointer to the originating DataPool is stored just before the actual data.
+template <typename T, int N>
+  static void retData(void * data) {
+    ((DataPool<T,N>**)data)[-1]->returnData((T*)data);
+  }
+
+struct ParallelData;
+__thread DataPool<ParallelData,4> *pdp;
 
 /// Data structure to store additional information for parallel regions.
 struct ParallelData {
-  /// Its address is used for relationships between the parallel region and
-  /// its implicit tasks.
-  char Parallel;
+
+// Parallel fork is just another barrier, use Barrier[1]
 
   /// Two addresses for relationships with barriers.
-  char Barrier[2];
+  ompt_tsan_clockid Barrier[2];
 
   void *GetParallelPtr() {
-    return &Parallel;
+    return &(Barrier[1]);
   }
 
   void *GetBarrierPtr(unsigned Index) {
-    return &Barrier[Index];
+    return &(Barrier[Index]);
+  }
+  
+  ~ParallelData(){
+    TsanDeleteClock(&(Barrier[0]));
+    TsanDeleteClock(&(Barrier[1]));
+  }
+  // overload new/delete to use DataPool for memory management.
+  void * operator new(size_t size){
+    return pdp->getData();
+  }
+  void operator delete(void* p, size_t){
+    retData<ParallelData,4>(p);
   }
 };
 
@@ -47,30 +178,46 @@ static inline ParallelData *ToParallelData(ompt_data_t* parallel_data) {
   return reinterpret_cast<ParallelData*>(parallel_data->ptr);
 }
 
+struct Taskgroup;
+__thread DataPool<Taskgroup,4> *tgp;
 
 /// Data structure to support stacking of taskgroups and allow synchronization.
 struct Taskgroup {
   /// Its address is used for relationships of the taskgroup's task set.
-  char Ptr;
+  ompt_tsan_clockid Ptr;
 
   /// Reference to the parent taskgroup.
   Taskgroup* Parent;
 
-  Taskgroup(Taskgroup* Parent) : Parent(Parent) { }
+  Taskgroup(Taskgroup* Parent) : Parent(Parent) { 
+  }
+  ~Taskgroup() {
+    TsanDeleteClock(&Ptr);
+  }
 
   void *GetPtr() {
     return &Ptr;
   }
+  // overload new/delete to use DataPool for memory management.
+  void * operator new(size_t size){
+    return tgp->getData();
+  }
+  void operator delete(void* p, size_t){
+    retData<Taskgroup,4>(p);
+  }
 };
+
+struct TaskData;
+__thread DataPool<TaskData,4> *tdp;
 
 /// Data structure to store additional information for tasks.
 struct TaskData {
   /// Its address is used for relationships of this task.
-  char Task;
+  ompt_tsan_clockid Task;
 
   /// Child tasks use its address to declare a relationship to a taskwait in
   /// this task.
-  char Taskwait;
+  ompt_tsan_clockid Taskwait;
 
   /// Whether this task is currently executing a barrier.
   bool InBarrier;
@@ -84,15 +231,15 @@ struct TaskData {
   /// Reference to the parent that created this task.
   TaskData* Parent;
 
-  /// Reference to the task that scheduled this task.
-  TaskData* ScheduleParent;
+  /// Reference to the implicit task in the stack above this task.
+  TaskData* ImplicitTask;
 
   /// Reference to the team of this task.
   ParallelData* Team;
 
   /// Reference to the current taskgroup that this task either belongs to or
   /// that it just created.
-  Taskgroup* Taskgroup;
+  Taskgroup* TaskGroup;
 
   /// Dependency information for this task.
   ompt_task_dependence_t* Dependencies;
@@ -101,23 +248,22 @@ struct TaskData {
   unsigned DependencyCount;
 
   TaskData(TaskData* Parent) : InBarrier(false), BarrierIndex(0),
-    RefCount(1), Parent(Parent), Team(Parent->Team), Taskgroup(nullptr), DependencyCount(0) {
+    RefCount(1), Parent(Parent), ImplicitTask(nullptr), Team(Parent->Team), TaskGroup(nullptr), DependencyCount(0) {
     if (Parent != nullptr) {
       Parent->RefCount++;
       // Copy over pointer to taskgroup. This task may set up its own stack
       // but for now belongs to its parent's taskgroup.
-      Taskgroup = Parent->Taskgroup;
+      TaskGroup = Parent->TaskGroup;
     }
   }
 
   TaskData(ParallelData* Team = nullptr) : InBarrier(false), BarrierIndex(0),
-    RefCount(1), Parent(nullptr), Team(Team), Taskgroup(nullptr), DependencyCount(0) {
-    if (Parent != nullptr) {
-      Parent->RefCount++;
-      // Copy over pointer to taskgroup. This task may set up its own stack
-      // but for now belongs to its parent's taskgroup.
-      Taskgroup = Parent->Taskgroup;
-    }
+    RefCount(1), Parent(nullptr), ImplicitTask(this), Team(Team), TaskGroup(nullptr), DependencyCount(0) {
+  }
+  
+  ~TaskData() {
+    TsanDeleteClock(&Task);
+    TsanDeleteClock(&Taskwait);
   }
 
   void *GetTaskPtr() {
@@ -127,6 +273,22 @@ struct TaskData {
   void *GetTaskwaitPtr() {
     return &Taskwait;
   }
+  // overload new/delete to use DataPool for memory management.
+  void * operator new(size_t size){
+    return tdp->getData();
+  }
+  void operator delete(void* p, size_t){
+    retData<TaskData,4>(p);
+  }
+};
+
+struct TaskData;
+struct ParallelData;
+struct Taskgroup;
+union OMPTData{
+  ParallelData pd;
+  Taskgroup tg;
+  TaskData td;
 };
 
 static inline TaskData *ToTaskData(ompt_data_t *task_data) {
@@ -157,7 +319,18 @@ ompt_tsan_thread_begin(
   ompt_thread_type_t thread_type,
   ompt_data_t *thread_data)
 {
+  pdp = new DataPool<ParallelData,4>;
+  tgp = new DataPool<Taskgroup,4>;
+  tdp = new DataPool<TaskData,4>;
   thread_data->value = my_next_id();
+}
+            
+static void
+ompt_tsan_thread_end(
+  ompt_data_t *thread_data)
+{
+  printf("%lu: total PD: %lu / %i TD: %lu / %i TG: %lu / %i\n", thread_data->value, pdp->total - pdp->DataPointer.size(), pdp->total, tdp->total - tdp->DataPointer.size(), 
+    tdp->total, tgp->total - tgp->DataPointer.size(), tgp->total);
 }
             
 /// OMPT event callbacks for handling parallel regions.
@@ -245,7 +418,7 @@ ompt_tsan_sync_region(
             
             break;
         case ompt_sync_region_taskgroup:
-            Data->Taskgroup = new Taskgroup(Data->Taskgroup);
+            Data->TaskGroup = new Taskgroup(Data->TaskGroup);
             break;
       }
       break;
@@ -275,14 +448,14 @@ ompt_tsan_sync_region(
             break;
         case ompt_sync_region_taskgroup:
           {
-            assert(Data->Taskgroup != nullptr && "Should have at least one taskgroup!");
+            assert(Data->TaskGroup != nullptr && "Should have at least one taskgroup!");
 
-            TsanHappensAfter(Data->Taskgroup->GetPtr());
+            TsanHappensAfter(Data->TaskGroup->GetPtr());
 
             // Delete this allocated taskgroup, all descendent task are finished by now.
-            Taskgroup* Parent = Data->Taskgroup->Parent;
-            delete Data->Taskgroup;
-            Data->Taskgroup = Parent;
+            Taskgroup* Parent = Data->TaskGroup->Parent;
+            delete Data->TaskGroup;
+            Data->TaskGroup = Parent;
             break;
           }
       }
@@ -363,7 +536,7 @@ ompt_tsan_task_schedule(
 
     TaskData* FromTask = ToTaskData(first_task_data);
     if (FromTask != nullptr) {
-      ToTask->ScheduleParent = FromTask;
+      ToTask->ImplicitTask = FromTask->ImplicitTask;
       // Task may be resumed at a later point in time.
       TsanHappensBefore(FromTask->GetTaskPtr());
 
@@ -378,24 +551,18 @@ ompt_tsan_task_schedule(
     // Task ends after it has been switched away.
     TsanHappensAfter(Data->GetTaskPtr());
 
-    // Find implicit task with no parent to get the BarrierIndex
-//    assert(Data->Parent != nullptr && "Should have at least an implicit task as parent!");
-    TaskData* ImplicitTask = Data->ScheduleParent;
-    while (ImplicitTask->Parent != nullptr) {
-        ImplicitTask = ImplicitTask->ScheduleParent;
-    }
     
     // Task will finish before a barrier in the surrounding parallel region ...
     ParallelData* PData = Data->Team;
-    TsanHappensBefore(PData->GetBarrierPtr(ImplicitTask->BarrierIndex));
+    TsanHappensBefore(PData->GetBarrierPtr(Data->ImplicitTask->BarrierIndex));
 
     // ... and before an eventual taskwait by the parent thread.
     TsanHappensBefore(Data->Parent->GetTaskwaitPtr());
 
-    if (Data->Taskgroup != nullptr) {
+    if (Data->TaskGroup != nullptr) {
         // This task is part of a taskgroup, so it will finish before the
         // corresponding taskgroup_end.
-        TsanHappensBefore(Data->Taskgroup->GetPtr());
+        TsanHappensBefore(Data->TaskGroup->GetPtr());
     }
     for (unsigned i = 0; i < Data->DependencyCount; i++) {
         ompt_task_dependence_t* Dependency = &Data->Dependencies[i];
@@ -500,6 +667,7 @@ static int ompt_tsan_initialize(
   }
 
   SET_CALLBACK(thread_begin);
+//  SET_CALLBACK(thread_end);
   SET_CALLBACK(parallel_begin);
   SET_CALLBACK(implicit_task);
   SET_CALLBACK(sync_region);
@@ -518,6 +686,8 @@ static int ompt_tsan_initialize(
 static void ompt_tsan_finalize(ompt_fns_t* fns)
 {
 //   printf("%d: ompt_event_runtime_shutdown\n", omp_get_thread_num());
+//printf("total clocks: %i\n", cp->total);
+//printf("total data: %i\n", dp->total);
 }
 
 
