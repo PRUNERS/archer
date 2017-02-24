@@ -13,7 +13,7 @@
 Please see LICENSE for usage terms.
 
 * Introduction
-#+HTML: <img src="resources/images/archer_logo.png" hspace="5" vspace="5" height="45%" width="45%" alt="Archer Logo" title="Archer" align="right" />
+#+HTML: <img src="resources/images/archer_logo.svg" hspace="5" vspace="5" height="45%" width="45%" alt="Archer Logo" title="Archer" align="right" />
 
 *Archer* is a data race detector for OpenMP programs.
 # <span style="font-weight: bold; font-variant: small-caps">archer</span>
