@@ -43,7 +43,7 @@ Please see LICENSE for usage terms.
 
 # Introduction<a id="sec-2" name="sec-2"></a>
 
-<img src="resources/images/archer_logo.png" hspace="5" vspace="5" height="45%" width="45%" alt="Archer Logo" title="Archer" align="right" />
+<img src="resources/images/archer_logo.svg" hspace="5" vspace="5" height="45%" width="45%" alt="Archer Logo" title="Archer" align="right" />
 
 **Archer** is a data race detector for OpenMP programs.
 
