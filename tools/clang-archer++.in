@@ -45,4 +45,19 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-@LLVM_ROOT@/bin/clang++ -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread -g -L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib $@
+linking=yes
+for arg in "$@" ; do
+  case "$arg" in
+  -c|-S|-E|-M|-MM|MMD)
+    linking=no
+  ;;
+  esac
+done
+
+if [ $linking == yes ] ; then
+  link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib"
+else
+  link_flags=""
+fi
+
+@LLVM_ROOT@/bin/clang++ -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"
