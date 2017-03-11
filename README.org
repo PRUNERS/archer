@@ -72,7 +72,7 @@ Create a folder to download and build Archer:
 Obtain the LLVM OpenMP Runtime:
 
 #+BEGIN_SRC bash :exports code
-  git clone git@github.com:llvm-mirror/openmp.git openmp
+  git clone https://github.com/llvm-mirror/openmp.git openmp
 #+END_SRC
 
 and build it with the following command:
@@ -96,7 +96,7 @@ Obtain Archer:
 
 #+BEGIN_SRC bash :exports code
   cd $ARCHER_BUILD
-  git clone git@github.com:PRUNERS/archer.git archer
+  git clone https://github.com/PRUNERS/archer.git archer
 #+END_SRC
 
 and build it with the following commands:
@@ -129,7 +129,7 @@ Create a folder to download and build Archer:
 Obtain the LLVM OpenMP Runtime with OMPT support:
 
 #+BEGIN_SRC bash :exports code
-  git clone -b align-to-tr-rebased git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
+  git clone -b align-to-tr-rebased https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
 #+END_SRC
 
 and build it with the following command:
@@ -155,7 +155,7 @@ Obtain Archer:
 
 #+BEGIN_SRC bash :exports code
   cd $ARCHER_BUILD
-  git clone git@github.com:PRUNERS/archer.git archer
+  git clone https://github.com/PRUNERS/archer.git archer
 #+END_SRC
 
 and build it with the following commands:
@@ -187,7 +187,7 @@ Create a folder to download and build Clang/LLVM and Archer:
 Obtain LLVM:
 
 #+BEGIN_SRC bash :exports code
-  git clone git@github.com:llvm-mirror/llvm.git llvm_src
+  git clone https://github.com/llvm-mirror/llvm.git llvm_src
   cd llvm_src
   git checkout release_39
 #+END_SRC
@@ -196,7 +196,7 @@ Obtain Clang:
 
 #+BEGIN_SRC bash :exports code
   cd tools
-  git clone git@github.com:llvm-mirror/clang.git clang
+  git clone https://github.com/llvm-mirror/clang.git clang
   cd clang
   git checkout release_39
   cd ..
@@ -206,7 +206,7 @@ Obtain Archer:
 
 #+BEGIN_SRC bash :exports code
   cd tools
-  git clone git@github.com:PRUNERS/archer.git archer
+  git clone https://github.com/PRUNERS/archer.git archer
   cd ..
 #+END_SRC
 
@@ -214,7 +214,7 @@ Obtain the LLVM compiler-rt:
 
 #+BEGIN_SRC bash :exports code
   cd projects
-  git clone git@github.com:llvm-mirror/compiler-rt.git compiler-rt
+  git clone https://github.com/llvm-mirror/compiler-rt.git compiler-rt
   cd compiler-rt
   git checkout release_39
   cd ../..
@@ -224,7 +224,7 @@ Obtain LLVM libc++:
 
 #+BEGIN_SRC bash :exports cod
   cd projects
-  git clone git@github.com:llvm-mirror/libcxx.git
+  git clone https://github.com/llvm-mirror/libcxx.git
   cd libcxx
   git checkout release_39
   cd ../..
@@ -234,7 +234,7 @@ Obtain LLVM libc++abi:
 
 #+BEGIN_SRC bash :exports code
   cd projects
-  git clone git@github.com:llvm-mirror/libcxxabi.git
+  git clone https://github.com/llvm-mirror/libcxxabi.git
   cd libcxxabi
   git checkout release_39
   cd ../..
@@ -244,7 +244,7 @@ Obtain LLVM libunwind:
 
 #+BEGIN_SRC bash :exports code
   cd projects
-  git clone git@github.com:llvm-mirror/libunwind.git
+  git clone https://github.com/llvm-mirror/libunwind.git
   cd libunwind
   git checkout release_39
   cd ../..
@@ -254,7 +254,7 @@ Obtain official LLVM OpenMP Runtime:
 
 #+BEGIN_SRC bash :exports code
   cd projects
-  git clone git@github.com:llvm-mirror/openmp.git openmp
+  git clone https://github.com/llvm-mirror/openmp.git openmp
   cd openmp
   git checkout release_39
   cd ../..
@@ -264,7 +264,7 @@ or obtain LLVM OpenMP Runtime with OMPT support:
 
 #+BEGIN_SRC bash :exports code
   cd projects
-  git clone git@github.com:OpenMPToolsInterface/LLVM-openmp.git openmp
+  git clone https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
   cd openmp
   git checkout align-to-tr-rebased
   cd ../..
