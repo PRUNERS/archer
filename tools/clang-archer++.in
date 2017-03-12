@@ -55,15 +55,13 @@ for arg in "$@" ; do
 done
 
 if [ $linking == yes ] ; then
-  	include_flags=""
-	if [ @LIBOMP_TSAN_SUPPORT@ == FALSE ] ; then
-  		link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib -L@CMAKE_INSTALL_PREFIX@/lib -Wl,-rpath=@CMAKE_INSTALL_PREFIX@/lib -larcher -Wl,--whole-archive @CMAKE_INSTALL_PREFIX@/lib/libarcher_static_report.a -Wl,--no-whole-archive"
-  	else
-  		link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib -Wl,--whole-archive @CMAKE_INSTALL_PREFIX@/lib/libarcher_static_report.a -Wl,--no-whole-archive"
-  	fi
+    if [ @LIBOMP_TSAN_SUPPORT@ == FALSE ] ; then
+  	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib -L@CMAKE_INSTALL_PREFIX@/lib -Wl,-rpath=@CMAKE_INSTALL_PREFIX@/lib -larcher -Wl,--whole-archive @CMAKE_INSTALL_PREFIX@/lib/libarcher_static_report.a -Wl,--no-whole-archive"
+    else
+  	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib -Wl,--whole-archive @CMAKE_INSTALL_PREFIX@/lib/libarcher_static_report.a -Wl,--no-whole-archive"
+    fi
 else
-  include_flags="-I@OMP_PREFIX@/include"
   link_flags=""
 fi
 
-@LLVM_ROOT@/bin/clang $include_flags -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"
+@LLVM_ROOT@/bin/clang++ -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"
