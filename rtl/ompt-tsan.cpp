@@ -13,6 +13,9 @@
 #include <cstdlib>
 
 #include <ompt.h>
+#include <sys/resource.h>
+
+#include "counter.h"
 
 // The following definitions are pasted from "llvm/Support/Compiler.h" to allow the code 
 // to be compiled with other compilers like gcc:
@@ -58,6 +61,11 @@ void AnnotateIgnoreWritesEnd(const char *file, int line);
 /// Required OMPT inquiry functions.
 static ompt_get_parallel_info_t ompt_get_parallel_info;
 static ompt_get_thread_data_t ompt_get_thread_data;
+
+// do we run in benchmark mode?
+static bool benchmark;
+callback_counter_t *all_counter;
+__thread callback_counter_t* this_event_counter;
 
 typedef uint64_t ompt_tsan_clockid;
 
@@ -325,6 +333,11 @@ ompt_tsan_thread_begin(
   tgp = new DataPool<Taskgroup,4>;
   tdp = new DataPool<TaskData,4>;
   thread_data->value = my_next_id();
+  if(benchmark && thread_data->value<MAX_THREADS)
+    this_event_counter = &(all_counter[thread_data->value]);
+  else
+    this_event_counter=NULL;
+  COUNT_EVENT1(thread_begin);
 }
             
 static void
@@ -333,6 +346,7 @@ ompt_tsan_thread_end(
 {
   printf("%lu: total PD: %lu / %i TD: %lu / %i TG: %lu / %i\n", thread_data->value, pdp->total - pdp->DataPointer.size(), pdp->total, tdp->total - tdp->DataPointer.size(), 
     tdp->total, tgp->total - tgp->DataPointer.size(), tgp->total);
+  COUNT_EVENT1(thread_end);
 }
             
 /// OMPT event callbacks for handling parallel regions.
@@ -351,6 +365,7 @@ ompt_tsan_parallel_begin(
   parallel_data->ptr = Data;
 
   TsanHappensBefore(Data->GetParallelPtr());
+  COUNT_EVENT1(parallel_begin);
 }
 
 static void
@@ -365,6 +380,7 @@ ompt_tsan_parallel_end(
   TsanHappensAfter(Data->GetBarrierPtr(1));
 
   delete Data;
+  COUNT_EVENT1(parallel_end);
 }
 
 static void
@@ -380,11 +396,13 @@ ompt_tsan_implicit_task(
      case ompt_scope_begin:
         task_data->ptr = new TaskData(ToParallelData(parallel_data));
         TsanHappensAfter(ToParallelData(parallel_data)->GetParallelPtr());
+        COUNT_EVENT2(implicit_task,scope_begin);
         break;
      case ompt_scope_end:
         TaskData* Data = ToTaskData(task_data);
         assert(Data->RefCount == 1 && "All tasks should have finished at the implicit barrier!");
         delete Data;
+        COUNT_EVENT2(implicit_task,scope_end);
         break;
   }
 }
@@ -414,13 +432,16 @@ ompt_tsan_sync_region(
             // For the latter case we will re-enable tracking in task_switch.
             Data->InBarrier = true;
             TsanIgnoreWritesBegin();
+            COUNT_EVENT3(sync_region,scope_begin,barrier);
             break;
           }
         case ompt_sync_region_taskwait:
             
+            COUNT_EVENT3(sync_region,scope_begin,taskwait);
             break;
         case ompt_sync_region_taskgroup:
             Data->TaskGroup = new Taskgroup(Data->TaskGroup);
+            COUNT_EVENT3(sync_region,scope_begin,taskgroup);
             break;
       }
       break;
@@ -443,10 +464,12 @@ ompt_tsan_sync_region(
             // We are however guaranteed that this current barrier is finished
             // by the time we exit the next one. So we can then reuse the first address.
             Data->BarrierIndex = (BarrierIndex + 1) % 2;
+            COUNT_EVENT3(sync_region,scope_end,barrier);
             break;
           }
         case ompt_sync_region_taskwait:
             TsanHappensAfter(Data->GetTaskwaitPtr());
+            COUNT_EVENT3(sync_region,scope_end,taskwait);
             break;
         case ompt_sync_region_taskgroup:
           {
@@ -458,6 +481,7 @@ ompt_tsan_sync_region(
             Taskgroup* Parent = Data->TaskGroup->Parent;
             delete Data->TaskGroup;
             Data->TaskGroup = Parent;
+            COUNT_EVENT3(sync_region,scope_end,taskgroup);
             break;
           }
       }
@@ -491,6 +515,7 @@ ompt_tsan_task_create(
       // parent because that would declare wrong relationships with other
       // sibling tasks that may be created before this task is started!
       TsanHappensBefore(Data->GetTaskPtr());
+      COUNT_EVENT2(task_create,explicit);
       break;
     }
     case ompt_task_initial:
@@ -502,6 +527,7 @@ ompt_tsan_task_create(
 
       Data = new TaskData(PData);
       new_task_data->ptr = Data;
+      COUNT_EVENT2(task_create,initial);
 
       break;
     }
@@ -516,6 +542,7 @@ ompt_tsan_task_schedule(
     ompt_task_status_t prior_task_status,
     ompt_data_t *second_task_data)
 {
+  COUNT_EVENT1(task_schedule);
   TaskData* ToTask = ToTaskData(second_task_data);
   if (prior_task_status != ompt_task_complete) // start execution of a task
   {  
@@ -550,9 +577,6 @@ ompt_tsan_task_schedule(
     }
   } else { // task finished
     TaskData* Data = ToTaskData(first_task_data);
-    // Task ends after it has been switched away.
-    TsanHappensAfter(Data->GetTaskPtr());
-
     
     // Task will finish before a barrier in the surrounding parallel region ...
     ParallelData* PData = Data->Team;
@@ -596,6 +620,7 @@ static void ompt_tsan_task_dependences(
   const ompt_task_dependence_t *deps, 
   int ndeps) 
 {
+  COUNT_EVENT1(task_dependences);
   if (ndeps > 0) {
     // Copy the data to use it in task_switch and task_end.
     TaskData* Data = ToTaskData(task_data);
@@ -614,6 +639,29 @@ static void ompt_tsan_mutex_acquired(
   ompt_wait_id_t wait_id,
   const void *codeptr_ra)
 {
+  if(benchmark)
+    switch(kind)
+    {
+      case ompt_mutex_lock:
+        COUNT_EVENT2(mutex_acquired, lock);
+        break;
+      case ompt_mutex_nest_lock:
+        COUNT_EVENT2(mutex_acquired, nest_lock);
+        break;
+      case ompt_mutex_critical:
+        COUNT_EVENT2(mutex_acquired, critical);
+        break;
+      case ompt_mutex_atomic:
+        COUNT_EVENT2(mutex_acquired, atomic);
+        break;
+      case ompt_mutex_ordered:
+        COUNT_EVENT2(mutex_acquired, ordered);
+        break;
+      default:
+        COUNT_EVENT2(mutex_acquired, default);
+        break;
+    }
+    
   // Acquire our own lock to make sure that
   // 1. the previous release has finished.
   // 2. the next acquire doesn't start before we have finished our release.
@@ -633,6 +681,28 @@ static void ompt_tsan_mutex_released(
   ompt_wait_id_t wait_id,
   const void *codeptr_ra)
 {
+  if(benchmark)
+    switch(kind)
+    {
+      case ompt_mutex_lock:
+        COUNT_EVENT2(mutex_released, lock);
+        break;
+      case ompt_mutex_nest_lock:
+        COUNT_EVENT2(mutex_released, nest_lock);
+        break;
+      case ompt_mutex_critical:
+        COUNT_EVENT2(mutex_released, critical);
+        break;
+      case ompt_mutex_atomic:
+        COUNT_EVENT2(mutex_released, atomic);
+        break;
+      case ompt_mutex_ordered:
+        COUNT_EVENT2(mutex_released, ordered);
+        break;
+      default:
+        COUNT_EVENT2(mutex_released, default);
+        break;
+    }
   TsanHappensBefore(ToWaitPtr(wait_id));
 
   {
@@ -655,6 +725,14 @@ static int ompt_tsan_initialize(
   ompt_function_lookup_t lookup,
   ompt_fns_t* fns
   ) {
+  
+  const char* env = getenv("OMPT_TSAN_PROFILE");
+  if(env && strcmp(env, "on")==0)
+  {
+    benchmark=true;
+    all_counter = new callback_counter_t[MAX_THREADS];
+  }
+  
   ompt_set_callback_t ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
   if (ompt_set_callback == NULL) {
     std::cerr << "Could not set callback, exiting..." << std::endl;
@@ -687,9 +765,13 @@ static int ompt_tsan_initialize(
 
 static void ompt_tsan_finalize(ompt_fns_t* fns)
 {
-//   printf("%d: ompt_event_runtime_shutdown\n", omp_get_thread_num());
-//printf("total clocks: %i\n", cp->total);
-//printf("total data: %i\n", dp->total);
+  if(benchmark) {
+    print_callbacks(all_counter);
+    struct rusage end;
+    getrusage(RUSAGE_SELF, &end);
+    printf("MAX RSS[KBytes] during execution: %ld\n", end.ru_maxrss);
+    delete[] all_counter;
+  }
 }
 
 
