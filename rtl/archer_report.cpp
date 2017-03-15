@@ -20,7 +20,11 @@ extern "C"
 	                             unsigned long trace_size);
 }
 
+void reductionOnMemloc(void* addr);
+void reductionOnLineNum(void* linenum);
+
 std::map<void*, void*> addr_map;
+std::map<void*, void*> line_map;
 
 void __tsan_on_report(void *report) 
 {
@@ -36,23 +40,46 @@ void __tsan_on_report(void *report)
                          &unique_tid_count, sleep_trace, 16);
 
 	int tid;
-  	void *addr;
-  	int size, write, atomic;
-  	void *trace[16] = {0};
+	void *addr;
+	int size, write, atomic;
+	void *trace[16] = {0};
 
 	__tsan_get_report_mop(report, 0, &tid, &addr, &size, &write, &atomic, trace,
                         16);
-	
+
+	reductionOnMemloc(addr);
+
+	reductionOnLineNum(trace[0]);
+
+}
+
+void reductionOnMemloc(void* addr)
+{
 	auto it = addr_map.find(addr);
-	
-	if(it->first==NULL)
+	void* temp;
+	if(it->first!=addr)
 	{
 		addr_map.insert(std::pair<void*, void*>(addr, __tsan_get_current_report()));
-		fprintf(stderr, "current_report = %p : Unique\n", __tsan_get_current_report());
+		fprintf(stderr, "current_report = %p : Unique memory location\n", __tsan_get_current_report());
 	}
 	else
 	{
-  	fprintf(stderr, "current_report = %p : Duplicate of %p\n", __tsan_get_current_report(), it->second);
+  	fprintf(stderr, "current_report = %p : Duplicate of report %p on basis of memory location\n", __tsan_get_current_report(), it->second);
+	}		
+}
 
+void reductionOnLineNum(void* linenum)
+{
+	auto it = line_map.find(linenum);
+	
+	if(it->first==NULL)
+	{
+		line_map.insert(std::pair<void*, void*>(linenum, __tsan_get_current_report()));
+		fprintf(stderr, "current_report = %p : Unique line number\n", __tsan_get_current_report());
+	}
+	else
+	{
+  	fprintf(stderr, "current_report = %p : Duplicate of report %p on basis of line number\n",
+  			__tsan_get_current_report(), it->second);
 	}		
 }
