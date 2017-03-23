@@ -1,14 +1,3 @@
-#
-#//===----------------------------------------------------------------------===//
-#//
-#//                     The LLVM Compiler Infrastructure
-#//
-#// This file is dual licensed under the MIT and the University of Illinois Open
-#// Source Licenses. See LICENSE.txt for details.
-#//
-#//===----------------------------------------------------------------------===//
-#
-
 # void libarcher_say(string message_to_user);
 # - prints out message_to_user
 macro(libarcher_say message_to_user)
