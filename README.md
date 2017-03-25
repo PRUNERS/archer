@@ -428,13 +428,13 @@ check the program for data races.
 Suppose our program is called *myprogram.c*:
 
      1  #include <stdio.h>
-     2  
+     2
      3  #define N 1000
-     4  
+     4
      5  int main (int argc, char **argv)
      6  {
      7    int a[N];
-     8  
+     8
      9  #pragma omp parallel for
     10    for (int i = 0; i < N - 1; i++) {
     11      a[i] = a[i + 1];
@@ -465,18 +465,18 @@ the report will look as follow:
         #0 .omp_outlined. myprogram.c:11:12 (myprogram+0x00000049b5a2)
         #1 __kmp_invoke_microtask <null> (libomp.so+0x000000077842)
         #2 __libc_start_main /build/glibc-t3gR2i/glibc-2.23/csu/../csu/libc-start.c:291 (libc.so.6+0x00000002082f)
-    
+
       Previous write of size 4 at 0x7fff79a01170 by thread T1:
         #0 .omp_outlined. myprogram.c:11:10 (myprogram+0x00000049b5d6)
         #1 __kmp_invoke_microtask <null> (libomp.so+0x000000077842)
-    
+
       Location is stack of main thread.
-    
+
       Thread T1 (tid=13643, running) created by main thread at:
         #0 pthread_create tsan_interceptors.cc:902:3 (myprogram+0x00000043db75)
         #1 __kmp_create_worker <null> (libomp.so+0x00000006c364)
         #2 __libc_start_main /build/glibc-t3gR2i/glibc-2.23/csu/../csu/libc-start.c:291 (libc.so.6+0x00000002082f)
-    
+
     SUMMARY: ThreadSanitizer: data race myprogram.c:11:12 in .omp_outlined.
     ==================
     ThreadSanitizer: reported 1 warnings
@@ -485,10 +485,10 @@ the report will look as follow:
 
 -   [Google group](https://groups.google.com/forum/#!forum/archer-pruner)
 -   [Slack Channel](https://pruners.slack.com)
-    
+
     <ul style="list-style-type:circle"> <li> For an invitation please write an email to <a href="mailto:simone@cs.utah.edu?Subject=[archer-slack] Slack Invitation" target="_top">Simone Atzeni</a> with a reason why you want to be part of the PRUNERS Slack Team. </li> </ul>
 -   E-Mail Contacts:
-    
+
     <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
 
 # Members<a id="sec-8" name="sec-8"></a>

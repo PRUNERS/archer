@@ -1,3 +1,52 @@
+/*
+Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
+
+Produced at the Lawrence Livermore National Laboratory
+
+Written by Simone Atzeni (simone@cs.utah.edu), Joachim Protze
+(joachim.protze@tu-dresden.de), Jonas Hahnfeld
+(hahnfeld@itc.rwth-aachen.de), Ganesh Gopalakrishnan, Zvonimir
+Rakamaric, Dong H. Ahn, Gregory L. Lee, Ignacio Laguna, and Martin
+Schulz.
+
+LLNL-CODE-727057
+
+All rights reserved.
+
+This file is part of Archer. For details, see
+https://pruners.github.io/archer. Please also read
+https://github.com/PRUNERS/archer/blob/master/LICENSE.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the disclaimer below.
+
+   Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the disclaimer (as noted below)
+   in the documentation and/or other materials provided with the
+   distribution.
+
+   Neither the name of the LLNS/LLNL nor the names of its contributors
+   may be used to endorse or promote products derived from this
+   software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL LAWRENCE
+LIVERMORE NATIONAL SECURITY, LLC, THE U.S. DEPARTMENT OF ENERGY OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #include <iostream>
 #include <cstring>
 #ifndef __STDC_FORMAT_MACROS
@@ -17,7 +66,7 @@
 
 #include "counter.h"
 
-// The following definitions are pasted from "llvm/Support/Compiler.h" to allow the code 
+// The following definitions are pasted from "llvm/Support/Compiler.h" to allow the code
 // to be compiled with other compilers like gcc:
 
 #ifndef TsanHappensBefore
@@ -76,7 +125,7 @@ static uint64_t my_next_id()
   uint64_t ret = __sync_fetch_and_add(&ID,1);
   return ret;
 }
-        
+
 // Data structure to provide a threadsafe pool of reusable objects.
 // DataPool<Type of objects, Size of blockalloc>
 template <typename T, int N>
@@ -84,15 +133,15 @@ struct DataPool {
   std::mutex DPMutex;
   std::stack<T *> DataPointer;
   int total;
-  
-  
+
+
   void newDatas(){
-    // prefix the Data with a pointer to 'this', allows to return memory to 'this', 
+    // prefix the Data with a pointer to 'this', allows to return memory to 'this',
     // without explicitly knowing the source.
     //
     // To reduce lock contention, we use thread local DataPools, but Data objects move to other threads.
     // The strategy is to get objects from local pool. Only if the object moved to another
-    // thread, we might see a penalty on release (returnData). 
+    // thread, we might see a penalty on release (returnData).
     // For "single producer" pattern, a single thread creates tasks, these are executed by other threads.
     // The master will have a high demand on TaskData, so return after use.
     struct pooldata {DataPool<T,N>* dp; T data;};
@@ -115,13 +164,13 @@ struct DataPool {
     DPMutex.unlock();
     return ret;
   }
-  
+
   void returnData(T * data) {
     DPMutex.lock();
     DataPointer.push(data);
     DPMutex.unlock();
   }
-  
+
   void getDatas(int n, T** datas) {
     DPMutex.lock();
     for (int i=0; i<n; i++) {
@@ -132,7 +181,7 @@ struct DataPool {
     }
     DPMutex.unlock();
   }
-  
+
   void returnDatas(int n, T** datas) {
     DPMutex.lock();
     for (int i=0; i<n; i++) {
@@ -140,10 +189,10 @@ struct DataPool {
     }
     DPMutex.unlock();
   }
-  
+
   DataPool() : DataPointer(), DPMutex(), total(0)
-  {}  
-  
+  {}
+
 };
 
 // This function takes care to return the data to the originating DataPool
@@ -171,7 +220,7 @@ struct ParallelData {
   void *GetBarrierPtr(unsigned Index) {
     return &(Barrier[Index]);
   }
-  
+
   ~ParallelData(){
     TsanDeleteClock(&(Barrier[0]));
     TsanDeleteClock(&(Barrier[1]));
@@ -200,7 +249,7 @@ struct Taskgroup {
   /// Reference to the parent taskgroup.
   Taskgroup* Parent;
 
-  Taskgroup(Taskgroup* Parent) : Parent(Parent) { 
+  Taskgroup(Taskgroup* Parent) : Parent(Parent) {
   }
   ~Taskgroup() {
     TsanDeleteClock(&Ptr);
@@ -260,10 +309,10 @@ struct TaskData {
 
   /// Number of dependency entries.
   unsigned DependencyCount;
-  
+
   void* PrivateData;
   size_t PrivateDataSize;
-  
+
   int execution;
   int freed;
 
@@ -280,7 +329,7 @@ struct TaskData {
   TaskData(ParallelData* Team = nullptr) : InBarrier(false), Included(false), BarrierIndex(0),
     RefCount(1), Parent(nullptr), ImplicitTask(this), Team(Team), TaskGroup(nullptr), DependencyCount(0), execution(1), freed(0) {
   }
-  
+
   ~TaskData() {
     TsanDeleteClock(&Task);
     TsanDeleteClock(&Taskwait);
@@ -352,16 +401,16 @@ ompt_tsan_thread_begin(
     this_event_counter=NULL;
   COUNT_EVENT1(thread_begin);
 }
-            
+
 static void
 ompt_tsan_thread_end(
   ompt_data_t *thread_data)
 {
-  printf("%lu: total PD: %lu / %i TD: %lu / %i TG: %lu / %i\n", thread_data->value, pdp->total - pdp->DataPointer.size(), pdp->total, tdp->total - tdp->DataPointer.size(), 
+  printf("%lu: total PD: %lu / %i TD: %lu / %i TG: %lu / %i\n", thread_data->value, pdp->total - pdp->DataPointer.size(), pdp->total, tdp->total - tdp->DataPointer.size(),
     tdp->total, tgp->total - tgp->DataPointer.size(), tgp->total);
   COUNT_EVENT1(thread_end);
 }
-            
+
 /// OMPT event callbacks for handling parallel regions.
 
 static void
@@ -451,7 +500,7 @@ ompt_tsan_sync_region(
             break;
           }
         case ompt_sync_region_taskwait:
-            
+
             COUNT_EVENT3(sync_region,scope_begin,taskwait);
             break;
         case ompt_sync_region_taskgroup:
@@ -473,7 +522,7 @@ ompt_tsan_sync_region(
             // Barrier will end after it has been entered by all threads.
             if (parallel_data)
               TsanHappensAfter(Data->Team->GetBarrierPtr(BarrierIndex));
-        
+
             // It is not guaranteed that all threads have exited this barrier before
             // we enter the next one. So we will use a different address.
             // We are however guaranteed that this current barrier is finished
@@ -574,7 +623,7 @@ ompt_tsan_task_schedule(
     }
     return;
   }
-  
+
   // we will use new stack, assume growing down
   // TsanNewMemory((char*)&FromTask-1024, 1024);
   if (ToTask->execution==0) {
@@ -607,7 +656,7 @@ ompt_tsan_task_schedule(
     ToTask->ImplicitTask = FromTask->ImplicitTask;
     assert(ToTask->ImplicitTask != NULL && "A task belongs to a team and has an implicit task on the stack");
   }
-    
+
   // Task may be resumed at a later point in time.
   //TsanHappensBeforeUC(FromTask->GetTaskPtr());
   TsanHappensBefore(FromTask->GetTaskPtr());
@@ -658,13 +707,13 @@ ompt_tsan_task_schedule(
     // We re-enter runtime code which currently performs a barrier.
     TsanIgnoreWritesBegin();
   }
-  
+
 }
 
 static void ompt_tsan_task_dependences(
   ompt_data_t* task_data,
-  const ompt_task_dependence_t *deps, 
-  int ndeps) 
+  const ompt_task_dependence_t *deps,
+  int ndeps)
 {
   COUNT_EVENT1(task_dependences);
   if (ndeps > 0) {
@@ -707,7 +756,7 @@ static void ompt_tsan_mutex_acquired(
         COUNT_EVENT2(mutex_acquired, default);
         break;
     }
-    
+
   // Acquire our own lock to make sure that
   // 1. the previous release has finished.
   // 2. the next acquire doesn't start before we have finished our release.
@@ -771,14 +820,14 @@ static int ompt_tsan_initialize(
   ompt_function_lookup_t lookup,
   ompt_fns_t* fns
   ) {
-  
+
   const char* env = getenv("OMPT_TSAN_PROFILE");
   if(env && strcmp(env, "on")==0)
   {
     benchmark=true;
     all_counter = new callback_counter_t[MAX_THREADS];
   }
-  
+
   ompt_set_callback_t ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
   if (ompt_set_callback == NULL) {
     std::cerr << "Could not set callback, exiting..." << std::endl;
@@ -788,7 +837,7 @@ static int ompt_tsan_initialize(
   ompt_get_thread_data = (ompt_get_thread_data_t) lookup("ompt_get_thread_data");
   ompt_get_task_memory_info = nullptr;
   ompt_get_task_memory_info = (ompt_get_task_memory_t) lookup("ompt_get_task_memory_info");
-  
+
   if (ompt_get_parallel_info == NULL) {
     fprintf(stderr, "Could not get inquiry function 'ompt_get_parallel_info', exiting...\n");
     exit(1);
@@ -830,4 +879,3 @@ ompt_fns_t* ompt_start_tool(
   static ompt_fns_t ompt_fns = {&ompt_tsan_initialize,&ompt_tsan_finalize};
   return &ompt_fns;
 }
-
