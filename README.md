@@ -65,7 +65,7 @@ Ninja visit <https://github.com/ninja-build/ninja>.
 Archer has been tested with the LLVM OpenMP Runtime version >= 3.9,
 and with the LLVM OpenMP Runtime with OMPT support currently under
 development at <https://github.com/OpenMPToolsInterface/LLVM-openmp>
-(under the branch "towards_tr4").
+(under the branch "tr4-stable").
 
 # Installation<a id="sec-4" name="sec-4"></a>
 
@@ -150,7 +150,7 @@ Create a folder to download and build Archer:
 
 Obtain the LLVM OpenMP Runtime with OMPT support:
 
-    git clone -b towards_tr4 https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
+    git clone -b tr4-stable https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
 
 and build it with the following command:
 
@@ -261,7 +261,7 @@ or obtain LLVM OpenMP Runtime with OMPT support:
     cd projects
     git clone https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
     cd openmp
-    git checkout towards_tr4
+    git checkout tr4-stable
     cd ../..
 
 Now that we obtained the source code, the following command
