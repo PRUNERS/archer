@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
     #pragma omp taskgroup
     {
-      #pragma omp task
+      #pragma omp task if(0)
       {
         // Dummy task.
       }
