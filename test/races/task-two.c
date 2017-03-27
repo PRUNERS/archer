@@ -57,17 +57,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 int main(int argc, char* argv[])
 {
   int var = 0;
-
-  #pragma omp parallel num_threads(NUM_THREADS) shared(var)
-  #pragma omp master
-  {
     int i;
+
+  #pragma omp parallel for num_threads(NUM_THREADS) shared(var) schedule(static,1)
+  {
     for (i = 0; i < NUM_THREADS; i++) {
-      #pragma omp task shared(var)
+      #pragma omp task shared(var) if(0)
       {
         var++;
         // Sleep so that each thread executes one single task.
-        sleep(1);
+//        sleep(1);
       }
     }
   }
