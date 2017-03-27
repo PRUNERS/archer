@@ -474,8 +474,8 @@ on_ompt_callback_work(
 static void
 on_ompt_callback_master(
   ompt_scope_endpoint_t endpoint,
-  ompt_parallel_data_t *parallel_data,
-  ompt_task_data_t *task_data,
+  ompt_data_t *parallel_data,
+  ompt_data_t *task_data,
   const void *codeptr_ra)
 {
   switch(endpoint)
@@ -506,7 +506,7 @@ on_ompt_callback_parallel_begin(
 static void
 on_ompt_callback_parallel_end(
   ompt_data_t *parallel_data,
-  ompt_task_data_t *task_data,
+  ompt_data_t *task_data,
   ompt_invoker_t invoker,
   const void *codeptr_ra)
 {
@@ -515,9 +515,9 @@ on_ompt_callback_parallel_end(
 
 static void
 on_ompt_callback_task_create(
-    ompt_task_data_t *parent_task_data,    /* id of parent task            */
+    ompt_data_t *parent_task_data,    /* id of parent task            */
     const ompt_frame_t *parent_frame,  /* frame data for parent task   */
-    ompt_task_data_t* new_task_data,      /* id of created task           */
+    ompt_data_t* new_task_data,      /* id of created task           */
     ompt_task_type_t type,
     int has_dependences,
     const void *codeptr_ra)               /* pointer to outlined function */
@@ -528,9 +528,9 @@ on_ompt_callback_task_create(
 
 static void
 on_ompt_callback_task_schedule(
-    ompt_task_data_t *first_task_data,
+    ompt_data_t *first_task_data,
     ompt_task_status_t prior_task_status,
-    ompt_task_data_t *second_task_data)
+    ompt_data_t *second_task_data)
 {
   printf("%" PRIu64 ": ompt_event_task_schedule: first_task_id=%" PRIu64 ", second_task_id=%" PRIu64 ", prior_task_status=%s=%d\n", ompt_get_thread_data()->value, first_task_data->value, second_task_data->value, ompt_task_status_t_values[prior_task_status], prior_task_status);
   if(prior_task_status == ompt_task_complete)
@@ -541,7 +541,7 @@ on_ompt_callback_task_schedule(
 
 static void
 on_ompt_callback_task_dependences(
-  ompt_task_data_t *task_data,
+  ompt_data_t *task_data,
   const ompt_task_dependence_t *deps,
   int ndeps)
 {
@@ -550,8 +550,8 @@ on_ompt_callback_task_dependences(
 
 static void
 on_ompt_callback_task_dependence(
-  ompt_task_data_t *first_task_data,
-  ompt_task_data_t *second_task_data)
+  ompt_data_t *first_task_data,
+  ompt_data_t *second_task_data)
 {
   printf("%" PRIu64 ": ompt_event_task_dependence_pair: first_task_id=%" PRIu64 ", second_task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, first_task_data->value, second_task_data->value);
 }
