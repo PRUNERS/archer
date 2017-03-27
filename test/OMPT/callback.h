@@ -335,8 +335,8 @@ on_ompt_callback_thread_end(
 #define register_callback_t(name, type)                       \
 do{                                                           \
   type f_##name = &on_##name;                                 \
-  if (ompt_set_callback(name, (ompt_callback_t)f_##name) ==   \
-      ompt_set_never)                                         \
+  if (ompt_set_callback(name, (ompt_callback_t)f_##name) <   \
+      2)                                         \
     printf("0: Could not register callback '" #name "'\n");   \
 }while(0)
 
