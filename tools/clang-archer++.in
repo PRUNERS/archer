@@ -68,4 +68,4 @@ else
   link_flags=""
 fi
 
-@LLVM_ROOT@/bin/clang++ -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"
+@LLVM_ROOT@/bin/clang++ -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -std=c++11 -fopenmp -fsanitize=thread $link_flags -g "$@"
