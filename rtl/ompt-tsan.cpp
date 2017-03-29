@@ -47,24 +47,74 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <iostream>
-#include <cstring>
+#include "counter.h"
+
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif
-#include <inttypes.h>
 
 #include <atomic>
 #include <cassert>
-#include <mutex>
-#include <unordered_map>
-#include <stack>
 #include <cstdlib>
+#include <cstring>
+#include <inttypes.h>
+#include <iostream>
+#include <mutex>
+#include <sstream>
+#include <stack>
+#include <string>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
 
-#include <ompt.h>
 #include <sys/resource.h>
+#include <ompt.h>
 
-#include "counter.h"
+callback_counter_t *all_counter;
+__thread callback_counter_t* this_event_counter;
+
+class ArcherFlags {
+public:
+#if (LLVM_VERSION) >= 40
+  int flush_shadow;
+#endif
+  int print_ompt_counters;
+  int print_max_rss;
+
+  ArcherFlags(const char *env) :
+#if (LLVM_VERSION) >= 40
+    flush_shadow(0),
+#endif
+    print_ompt_counters(0),
+    print_max_rss(0) {
+    if(env) {
+      std::vector<std::string> tokens;
+      std::string token;
+      std::string str(env);
+      std::istringstream iss(str);
+      while(std::getline(iss, token, ' '))
+        tokens.push_back(token);
+
+      int ret;
+      for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+#if (LLVM_VERSION) >= 40
+        ret = sscanf(it->c_str(), "flush_shadow=%d", &flush_shadow);
+#endif
+        ret = sscanf(it->c_str(), "print_ompt_counters=%d", &print_ompt_counters);
+        ret = sscanf(it->c_str(), "print_max_rss=%d", &print_max_rss);
+        if(ret) {
+          std::cerr << "Illegal values for ARCHER_OPTIONS variable: " << token << std::endl;
+        }
+      }
+    }
+  }
+};
+
+#if (LLVM_VERSION) >= 40
+extern "C" int __attribute__((weak)) __swordomp__get_omp_status();
+extern "C" void __tsan_flush_memory();
+#endif
+ArcherFlags *archer_flags;
 
 // The following definitions are pasted from "llvm/Support/Compiler.h" to allow the code
 // to be compiled with other compilers like gcc:
@@ -111,11 +161,6 @@ static ompt_get_thread_data_t ompt_get_thread_data;
 
 typedef int (* ompt_get_task_memory_t) (void** addr, size_t* size, int blocknum);
 static ompt_get_task_memory_t ompt_get_task_memory_info;
-
-// do we run in benchmark mode?
-static bool benchmark;
-callback_counter_t *all_counter;
-__thread callback_counter_t* this_event_counter;
 
 typedef uint64_t ompt_tsan_clockid;
 
@@ -395,7 +440,7 @@ ompt_tsan_thread_begin(
   tdp = new DataPool<TaskData,4>;
   TsanNewMemory(tdp, sizeof(tdp));
   thread_data->value = my_next_id();
-  if(benchmark && thread_data->value<MAX_THREADS)
+  if(archer_flags->print_ompt_counters && thread_data->value<MAX_THREADS)
     this_event_counter = &(all_counter[thread_data->value]);
   else
     this_event_counter=NULL;
@@ -442,6 +487,14 @@ ompt_tsan_parallel_end(
   TsanHappensAfter(Data->GetBarrierPtr(1));
 
   delete Data;
+
+#if (LLVM_VERSION >= 40)
+  if(&__swordomp__get_omp_status) {
+    if(__swordomp__get_omp_status() == 0 && archer_flags->flush_shadow)
+      __tsan_flush_memory();
+  }
+#endif
+
   COUNT_EVENT1(parallel_end);
 }
 
@@ -734,7 +787,7 @@ static void ompt_tsan_mutex_acquired(
   ompt_wait_id_t wait_id,
   const void *codeptr_ra)
 {
-  if(benchmark)
+  if(archer_flags->print_ompt_counters)
     switch(kind)
     {
       case ompt_mutex_lock:
@@ -776,7 +829,7 @@ static void ompt_tsan_mutex_released(
   ompt_wait_id_t wait_id,
   const void *codeptr_ra)
 {
-  if(benchmark)
+  if(archer_flags->print_ompt_counters)
     switch(kind)
     {
       case ompt_mutex_lock:
@@ -821,12 +874,11 @@ static int ompt_tsan_initialize(
   ompt_fns_t* fns
   ) {
 
-  const char* env = getenv("OMPT_TSAN_PROFILE");
-  if(env && strcmp(env, "on")==0)
-  {
-    benchmark=true;
+  const char *options = getenv("ARCHER_OPTIONS");
+  archer_flags = new ArcherFlags(options);
+
+  if(archer_flags->print_ompt_counters)
     all_counter = new callback_counter_t[MAX_THREADS];
-  }
 
   ompt_set_callback_t ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
   if (ompt_set_callback == NULL) {
@@ -862,12 +914,15 @@ static int ompt_tsan_initialize(
 
 static void ompt_tsan_finalize(ompt_fns_t* fns)
 {
-  if(benchmark) {
+  if(archer_flags->print_ompt_counters) {
     print_callbacks(all_counter);
+    delete[] all_counter;
+  }
+
+  if(archer_flags->print_max_rss) {
     struct rusage end;
     getrusage(RUSAGE_SELF, &end);
     printf("MAX RSS[KBytes] during execution: %ld\n", end.ru_maxrss);
-    delete[] all_counter;
   }
 }
 
