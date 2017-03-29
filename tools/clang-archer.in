@@ -59,9 +59,13 @@ for arg in "$@" ; do
 done
 
 if [ $linking == yes ] ; then
-  link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib"
+    if [ @LIBOMP_TSAN_SUPPORT@ == FALSE ] ; then
+  	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib -L@CMAKE_INSTALL_PREFIX@/lib -Wl,-rpath=@CMAKE_INSTALL_PREFIX@/lib -larcher"
+    else
+  	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib"
+    fi
 else
   link_flags=""
 fi
 
-@LLVM_ROOT@/bin/clang -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"
+@LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"

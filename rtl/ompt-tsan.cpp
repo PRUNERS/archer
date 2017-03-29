@@ -47,141 +47,376 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
+#include "counter.h"
+
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
 
 #include <atomic>
 #include <cassert>
+#include <cstdlib>
+#include <cstring>
+#include <inttypes.h>
+#include <iostream>
 #include <mutex>
+#include <sstream>
+#include <stack>
+#include <string>
+#include <iostream>
 #include <unordered_map>
+#include <vector>
 
-#define __SANITIZE_THREAD__
-#include "llvm/Support/Compiler.h"
-
+#include <sys/resource.h>
 #include <ompt.h>
 
-#if LLVM_VERSION >= 40
+callback_counter_t *all_counter;
+__thread callback_counter_t* this_event_counter;
+
 class ArcherFlags {
 public:
-	int flush_shadow;
+#if (LLVM_VERSION) >= 40
+  int flush_shadow;
+#endif
+  int print_ompt_counters;
+  int print_max_rss;
 
-	ArcherFlags(const char *env) : flush_shadow(0) {
-		if(env) {
-			int ret = sscanf(env, "flush_shadow=%d", &flush_shadow);
-			if(!ret) {
-				std::cerr << "Illegal values for ARCHER_OPTIONS variable, no option has been set." << std::endl;
-			}
-		}
-	}
+  ArcherFlags(const char *env) :
+#if (LLVM_VERSION) >= 40
+    flush_shadow(0),
+#endif
+    print_ompt_counters(0),
+    print_max_rss(0) {
+    if(env) {
+      std::vector<std::string> tokens;
+      std::string token;
+      std::string str(env);
+      std::istringstream iss(str);
+      while(std::getline(iss, token, ' '))
+        tokens.push_back(token);
+
+      int ret;
+      for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
+#if (LLVM_VERSION) >= 40
+        ret = sscanf(it->c_str(), "flush_shadow=%d", &flush_shadow);
+#endif
+        ret = sscanf(it->c_str(), "print_ompt_counters=%d", &print_ompt_counters);
+        ret = sscanf(it->c_str(), "print_max_rss=%d", &print_max_rss);
+        if(ret) {
+          std::cerr << "Illegal values for ARCHER_OPTIONS variable: " << token << std::endl;
+        }
+      }
+    }
+  }
 };
 
-extern "C" int __attribute__((weak)) __swordomp__get_omp_status();
-extern "C" void __tsan_flush_memory();
+#if (LLVM_VERSION) >= 40
+extern "C" {
+  int __attribute__((weak)) __swordomp__get_omp_status();
+  void __attribute__((weak)) __tsan_flush_memory() {}
+}
+#endif
 ArcherFlags *archer_flags;
+
+// The following definitions are pasted from "llvm/Support/Compiler.h" to allow the code
+// to be compiled with other compilers like gcc:
+
+#ifndef TsanHappensBefore
+// Thread Sanitizer is a tool that finds races in code.
+// See http://code.google.com/p/data-race-test/wiki/DynamicAnnotations .
+// tsan detects these exact functions by name.
+extern "C" {
+void __attribute__((weak)) AnnotateHappensAfter(const char *file, int line, const volatile void *cv){}
+void __attribute__((weak)) AnnotateHappensBefore(const char *file, int line, const volatile void *cv){}
+void __attribute__((weak)) AnnotateIgnoreWritesBegin(const char *file, int line){}
+void __attribute__((weak)) AnnotateIgnoreWritesEnd(const char *file, int line){}
+
+void __attribute__((weak)) AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){}
+}
+
+// This marker is used to define a happens-before arc. The race detector will
+// infer an arc from the begin to the end when they share the same pointer
+// argument.
+# define TsanHappensBefore(cv) AnnotateHappensBefore(__FILE__, __LINE__, cv)
+
+// This marker defines the destination of a happens-before arc.
+# define TsanHappensAfter(cv) AnnotateHappensAfter(__FILE__, __LINE__, cv)
+
+// Ignore any races on writes between here and the next TsanIgnoreWritesEnd.
+# define TsanIgnoreWritesBegin() AnnotateIgnoreWritesBegin(__FILE__, __LINE__)
+
+// Resume checking for racy writes.
+# define TsanIgnoreWritesEnd() AnnotateIgnoreWritesEnd(__FILE__, __LINE__)
+
+// We don't really delete the clock for now
+# define TsanDeleteClock(cv)
+
+// newMemory
+# define TsanNewMemory(addr, size) AnnotateNewMemory(__FILE__, __LINE__, addr, size)
+# define TsanFreeMemory(addr, size) AnnotateNewMemory(__FILE__, __LINE__, addr, size)
 #endif
 
+
 /// Required OMPT inquiry functions.
-ompt_get_parallel_data_t ompt_get_parallel_data;
+static ompt_get_parallel_info_t ompt_get_parallel_info;
+static ompt_get_thread_data_t ompt_get_thread_data;
+
+typedef int (* ompt_get_task_memory_t) (void** addr, size_t* size, int blocknum);
+static ompt_get_task_memory_t ompt_get_task_memory_info;
+
+typedef uint64_t ompt_tsan_clockid;
+
+static uint64_t my_next_id()
+{
+  static uint64_t ID=0;
+  uint64_t ret = __sync_fetch_and_add(&ID,1);
+  return ret;
+}
+
+// Data structure to provide a threadsafe pool of reusable objects.
+// DataPool<Type of objects, Size of blockalloc>
+template <typename T, int N>
+struct DataPool {
+  std::mutex DPMutex;
+  std::stack<T *> DataPointer;
+  int total;
+
+
+  void newDatas(){
+    // prefix the Data with a pointer to 'this', allows to return memory to 'this',
+    // without explicitly knowing the source.
+    //
+    // To reduce lock contention, we use thread local DataPools, but Data objects move to other threads.
+    // The strategy is to get objects from local pool. Only if the object moved to another
+    // thread, we might see a penalty on release (returnData).
+    // For "single producer" pattern, a single thread creates tasks, these are executed by other threads.
+    // The master will have a high demand on TaskData, so return after use.
+    struct pooldata {DataPool<T,N>* dp; T data;};
+    // We alloc without initialize the memory. We cannot call constructors. Therfore use malloc!
+    pooldata* datas = (pooldata*) malloc(sizeof(pooldata) * N);
+    for (int i = 0; i<N; i++) {
+      datas[i].dp = this;
+      DataPointer.push(&(datas[i].data));
+    }
+    total+=N;
+  }
+
+  T * getData() {
+    T * ret;
+    DPMutex.lock();
+    if (DataPointer.empty())
+      newDatas();
+    ret=DataPointer.top();
+    DataPointer.pop();
+    DPMutex.unlock();
+    return ret;
+  }
+
+  void returnData(T * data) {
+    DPMutex.lock();
+    DataPointer.push(data);
+    DPMutex.unlock();
+  }
+
+  void getDatas(int n, T** datas) {
+    DPMutex.lock();
+    for (int i=0; i<n; i++) {
+      if (DataPointer.empty())
+        newDatas();
+      datas[i]=DataPointer.top();
+      DataPointer.pop();
+    }
+    DPMutex.unlock();
+  }
+
+  void returnDatas(int n, T** datas) {
+    DPMutex.lock();
+    for (int i=0; i<n; i++) {
+      DataPointer.push(datas[i]);
+    }
+    DPMutex.unlock();
+  }
+
+  DataPool() : DataPointer(), DPMutex(), total(0)
+  {}
+
+};
+
+// This function takes care to return the data to the originating DataPool
+// A pointer to the originating DataPool is stored just before the actual data.
+template <typename T, int N>
+  static void retData(void * data) {
+    ((DataPool<T,N>**)data)[-1]->returnData((T*)data);
+  }
+
+struct ParallelData;
+__thread DataPool<ParallelData,4> *pdp;
 
 /// Data structure to store additional information for parallel regions.
 struct ParallelData {
-	/// Its address is used for relationships between the parallel region and
-	/// its implicit tasks.
-	char Parallel;
 
-	/// Two addresses for relationships with barriers.
-	char Barrier[2];
+// Parallel fork is just another barrier, use Barrier[1]
 
-	void *GetParallelPtr() {
-		return &Parallel;
-	}
+  /// Two addresses for relationships with barriers.
+  ompt_tsan_clockid Barrier[2];
 
-	void *GetBarrierPtr(unsigned Index) {
-		return &Barrier[Index];
-	}
+  void *GetParallelPtr() {
+    return &(Barrier[1]);
+  }
+
+  void *GetBarrierPtr(unsigned Index) {
+    return &(Barrier[Index]);
+  }
+
+  ~ParallelData(){
+    TsanDeleteClock(&(Barrier[0]));
+    TsanDeleteClock(&(Barrier[1]));
+  }
+  // overload new/delete to use DataPool for memory management.
+  void * operator new(size_t size){
+    return pdp->getData();
+  }
+  void operator delete(void* p, size_t){
+    retData<ParallelData,4>(p);
+  }
 };
 
-static inline ParallelData *ToParallelData(ompt_parallel_data_t parallel_data) {
-	return reinterpret_cast<ParallelData*>(parallel_data.ptr);
+static inline ParallelData *ToParallelData(ompt_data_t* parallel_data) {
+  return reinterpret_cast<ParallelData*>(parallel_data->ptr);
 }
 
+struct Taskgroup;
+__thread DataPool<Taskgroup,4> *tgp;
 
 /// Data structure to support stacking of taskgroups and allow synchronization.
 struct Taskgroup {
-	/// Its address is used for relationships of the taskgroup's task set.
-	char Ptr;
+  /// Its address is used for relationships of the taskgroup's task set.
+  ompt_tsan_clockid Ptr;
 
-	/// Reference to the parent taskgroup.
-	Taskgroup* Parent;
+  /// Reference to the parent taskgroup.
+  Taskgroup* Parent;
 
-	Taskgroup(Taskgroup* Parent) : Parent(Parent) { }
+  Taskgroup(Taskgroup* Parent) : Parent(Parent) {
+  }
+  ~Taskgroup() {
+    TsanDeleteClock(&Ptr);
+  }
 
-	void *GetPtr() {
-		return &Ptr;
-	}
+  void *GetPtr() {
+    return &Ptr;
+  }
+  // overload new/delete to use DataPool for memory management.
+  void * operator new(size_t size){
+    return tgp->getData();
+  }
+  void operator delete(void* p, size_t){
+    retData<Taskgroup,4>(p);
+  }
 };
+
+struct TaskData;
+__thread DataPool<TaskData,4> *tdp;
 
 /// Data structure to store additional information for tasks.
 struct TaskData {
-	/// Its address is used for relationships of this task.
-	char Task;
+  /// Its address is used for relationships of this task.
+  ompt_tsan_clockid Task;
 
-	/// Child tasks use its address to declare a relationship to a taskwait in
-	/// this task.
-	char Taskwait;
+  /// Child tasks use its address to declare a relationship to a taskwait in
+  /// this task.
+  ompt_tsan_clockid Taskwait;
 
-	/// Whether this task is currently executing a barrier.
-	bool InBarrier;
+  /// Whether this task is currently executing a barrier.
+  bool InBarrier;
 
-	/// Index of which barrier to use next.
-	char BarrierIndex;
+  /// Whether this task is currently executing a barrier.
+  bool Included;
 
-	/// Count how often this structure has been put into child tasks + 1.
-	std::atomic_int RefCount;
+  /// Index of which barrier to use next.
+  char BarrierIndex;
 
-	/// Reference to the parent that created this task.
-	TaskData* Parent;
+  /// Count how often this structure has been put into child tasks + 1.
+  std::atomic_int RefCount;
 
-	/// Reference to the current taskgroup that this task either belongs to or
-	/// that it just created.
-	Taskgroup* Taskgroup;
+  /// Reference to the parent that created this task.
+  TaskData* Parent;
 
-	/// Dependency information for this task.
-	ompt_task_dependence_t* Dependencies;
+  /// Reference to the implicit task in the stack above this task.
+  TaskData* ImplicitTask;
 
-	/// Number of dependency entries.
-	unsigned DependencyCount;
+  /// Reference to the team of this task.
+  ParallelData* Team;
 
-	TaskData(TaskData* Parent = nullptr) : InBarrier(false), BarrierIndex(0),
-			RefCount(1), Parent(Parent), Taskgroup(nullptr), DependencyCount(0) {
-		if (Parent != nullptr) {
-			Parent->RefCount++;
-			// Copy over pointer to taskgroup. This task may set up its own stack
-			// but for now belongs to its parent's taskgroup.
-			Taskgroup = Parent->Taskgroup;
-		}
-	}
+  /// Reference to the current taskgroup that this task either belongs to or
+  /// that it just created.
+  Taskgroup* TaskGroup;
 
-	void *GetTaskPtr() {
-		return &Task;
-	}
+  /// Dependency information for this task.
+  ompt_task_dependence_t* Dependencies;
 
-	void *GetTaskwaitPtr() {
-		return &Taskwait;
-	}
+  /// Number of dependency entries.
+  unsigned DependencyCount;
+
+  void* PrivateData;
+  size_t PrivateDataSize;
+
+  int execution;
+  int freed;
+
+  TaskData(TaskData* Parent) : InBarrier(false), Included(false), BarrierIndex(0),
+    RefCount(1), Parent(Parent), ImplicitTask(nullptr), Team(Parent->Team), TaskGroup(nullptr), DependencyCount(0), execution(0), freed(0) {
+    if (Parent != nullptr) {
+      Parent->RefCount++;
+      // Copy over pointer to taskgroup. This task may set up its own stack
+      // but for now belongs to its parent's taskgroup.
+      TaskGroup = Parent->TaskGroup;
+    }
+  }
+
+  TaskData(ParallelData* Team = nullptr) : InBarrier(false), Included(false), BarrierIndex(0),
+    RefCount(1), Parent(nullptr), ImplicitTask(this), Team(Team), TaskGroup(nullptr), DependencyCount(0), execution(1), freed(0) {
+  }
+
+  ~TaskData() {
+    TsanDeleteClock(&Task);
+    TsanDeleteClock(&Taskwait);
+  }
+
+  void *GetTaskPtr() {
+    return &Task;
+  }
+
+  void *GetTaskwaitPtr() {
+    return &Taskwait;
+  }
+  // overload new/delete to use DataPool for memory management.
+  void * operator new(size_t size){
+    return tdp->getData();
+  }
+  void operator delete(void* p, size_t){
+    retData<TaskData,4>(p);
+  }
 };
 
-static inline TaskData *ToTaskData(ompt_task_data_t task_data) {
-	return reinterpret_cast<TaskData*>(task_data.ptr);
+struct TaskData;
+struct ParallelData;
+struct Taskgroup;
+union OMPTData{
+  ParallelData pd;
+  Taskgroup tg;
+  TaskData td;
+};
+
+static inline TaskData *ToTaskData(ompt_data_t *task_data) {
+  return reinterpret_cast<TaskData*>(task_data->ptr);
 }
 
 static inline void *ToInAddr(void* OutAddr) {
-	// FIXME: This will give false negatives when a second variable lays directly
-	//        behind a variable that only has a width of 1 byte.
-	//        Another approach would be to "negate" the address or to flip the
-	//        first bit...
-	return reinterpret_cast<char*>(OutAddr) + 1;
+  // FIXME: This will give false negatives when a second variable lays directly
+  //        behind a variable that only has a width of 1 byte.
+  //        Another approach would be to "negate" the address or to flip the
+  //        first bit...
+  return reinterpret_cast<char*>(OutAddr) + 1;
 }
 
 
@@ -190,306 +425,517 @@ std::unordered_map<ompt_wait_id_t, std::mutex> Locks;
 std::mutex LocksMutex;
 
 static inline void* ToWaitPtr(ompt_wait_id_t wait_id) {
-	// FIXME: wait_ids may be in the same range as "normal" addresses are...
-	return reinterpret_cast<void*>(wait_id);
+  // FIXME: wait_ids may be in the same range as "normal" addresses are...
+  return reinterpret_cast<void*>(wait_id);
 }
 
+
+static void
+ompt_tsan_thread_begin(
+  ompt_thread_type_t thread_type,
+  ompt_data_t *thread_data)
+{
+  pdp = new DataPool<ParallelData,4>;
+  TsanNewMemory(pdp, sizeof(pdp));
+  tgp = new DataPool<Taskgroup,4>;
+  TsanNewMemory(tgp, sizeof(tgp));
+  tdp = new DataPool<TaskData,4>;
+  TsanNewMemory(tdp, sizeof(tdp));
+  thread_data->value = my_next_id();
+  if(archer_flags->print_ompt_counters && thread_data->value<MAX_THREADS)
+    this_event_counter = &(all_counter[thread_data->value]);
+  else
+    this_event_counter=NULL;
+  COUNT_EVENT1(thread_begin);
+}
+
+static void
+ompt_tsan_thread_end(
+  ompt_data_t *thread_data)
+{
+  printf("%lu: total PD: %lu / %i TD: %lu / %i TG: %lu / %i\n", thread_data->value, pdp->total - pdp->DataPointer.size(), pdp->total, tdp->total - tdp->DataPointer.size(),
+    tdp->total, tgp->total - tgp->DataPointer.size(), tgp->total);
+  COUNT_EVENT1(thread_end);
+}
 
 /// OMPT event callbacks for handling parallel regions.
 
-static void ompt_tsan_parallel_begin(ompt_task_data_t parent_task_data,
-		ompt_frame_t *parent_task_frame, ompt_parallel_data_t *parallel_data,
-		uint32_t requested_team_size, void *parallel_function,
-		ompt_invoker_t invoker) {
+static void
+ompt_tsan_parallel_begin(
+  ompt_data_t *parent_task_data,
+  const ompt_frame_t *parent_task_frame,
+  ompt_data_t* parallel_data,
+  uint32_t requested_team_size,
+//  uint32_t actual_team_size,
+  ompt_invoker_t invoker,
+  const void *codeptr_ra)
+{
+  ParallelData* Data = new ParallelData;
+  parallel_data->ptr = Data;
 
-	ParallelData* Data = new ParallelData;
-
-	parallel_data->ptr = Data;
-
-	TsanHappensBefore(Data->GetParallelPtr());
+  TsanHappensBefore(Data->GetParallelPtr());
+  COUNT_EVENT1(parallel_begin);
 }
 
-static void ompt_tsan_implicit_task_begin(ompt_parallel_data_t parallel_data,
-		ompt_task_data_t *task_data) {
-	task_data->ptr = new TaskData;
+static void
+ompt_tsan_parallel_end(
+  ompt_data_t *parallel_data,
+  ompt_data_t *task_data,
+  ompt_invoker_t invoker,
+  const void *codeptr_ra)
+{
+  ParallelData* Data = ToParallelData(parallel_data);
+  TsanHappensAfter(Data->GetBarrierPtr(0));
+  TsanHappensAfter(Data->GetBarrierPtr(1));
 
-	// Implicit task will begin after the parallel region has started.
-	TsanHappensAfter(ToParallelData(parallel_data)->GetParallelPtr());
-}
+  delete Data;
 
-static void ompt_tsan_barrier_begin(ompt_parallel_data_t parallel_data,
-		ompt_task_data_t task_data) {
-	TaskData* Data = ToTaskData(task_data);
-	char BarrierIndex = Data->BarrierIndex;
-	TsanHappensBefore(ToParallelData(parallel_data)->GetBarrierPtr(BarrierIndex));
-
-	// We ignore writes inside the barrier. These would either occur during
-	// 1. reductions performed by the runtime which are guaranteed to be race-free.
-	// 2. execution of another task.
-	// For the latter case we will re-enable tracking in task_switch.
-	Data->InBarrier = true;
-	TsanIgnoreWritesBegin();
-}
-
-static void ompt_tsan_barrier_end(ompt_parallel_data_t parallel_data,
-		ompt_task_data_t task_data) {
-	TaskData* Data = ToTaskData(task_data);
-
-	// We want to track writes after the barrier again.
-	Data->InBarrier = false;
-	TsanIgnoreWritesEnd();
-
-	char BarrierIndex = Data->BarrierIndex;
-	// Barrier will end after it has been entered by all threads.
-	TsanHappensAfter(ToParallelData(parallel_data)->GetBarrierPtr(BarrierIndex));
-
-	// It is not guaranteed that all threads have exited this barrier before
-	// we enter the next one. So we will use a different address.
-	// We are however guaranteed that this current barrier is finished
-	// by the time we exit the next one. So we can then reuse the first address.
-	Data->BarrierIndex = (BarrierIndex + 1) % 2;
-}
-
-static void ompt_tsan_implicit_task_end(ompt_parallel_data_t parallel_data,
-		ompt_task_data_t task_data) {
-	TaskData* Data = ToTaskData(task_data);
-	assert(Data->RefCount == 1 && "All tasks should have finished at the implicit barrier!");
-	delete Data;
-}
-
-static void ompt_tsan_parallel_end(ompt_parallel_data_t parallel_data,
-		ompt_task_data_t task_data, ompt_invoker_t invoker) {
-	ParallelData* Data = ToParallelData(parallel_data);
-
-	delete Data;
-
-#if LLVM_VERSION >= 40
-	if(&__swordomp__get_omp_status) {
-		if(__swordomp__get_omp_status() == 0 && archer_flags->flush_shadow)
-			__tsan_flush_memory();
-	}
+#if (LLVM_VERSION >= 40)
+  if(&__swordomp__get_omp_status) {
+    if(__swordomp__get_omp_status() == 0 && archer_flags->flush_shadow)
+      __tsan_flush_memory();
+  }
 #endif
+
+  COUNT_EVENT1(parallel_end);
 }
+
+static void
+ompt_tsan_implicit_task(
+    ompt_scope_endpoint_t endpoint,
+    ompt_data_t *parallel_data,
+    ompt_data_t *task_data,
+    unsigned int team_size,
+    unsigned int thread_num)
+{
+  switch(endpoint)
+  {
+     case ompt_scope_begin:
+        task_data->ptr = new TaskData(ToParallelData(parallel_data));
+        TsanHappensAfter(ToParallelData(parallel_data)->GetParallelPtr());
+        COUNT_EVENT2(implicit_task,scope_begin);
+        break;
+     case ompt_scope_end:
+        TaskData* Data = ToTaskData(task_data);
+        assert(Data->freed == 0 && "Implicit task end should only be called once!");
+        Data->freed=1;
+        assert(Data->RefCount == 1 && "All tasks should have finished at the implicit barrier!");
+        delete Data;
+        COUNT_EVENT2(implicit_task,scope_end);
+        break;
+  }
+}
+
+static void
+ompt_tsan_sync_region(
+  ompt_sync_region_kind_t kind,
+  ompt_scope_endpoint_t endpoint,
+  ompt_data_t *parallel_data,
+  ompt_data_t *task_data,
+  const void *codeptr_ra)
+{
+  TaskData* Data = ToTaskData(task_data);
+  switch(endpoint)
+  {
+    case ompt_scope_begin:
+      switch(kind)
+      {
+        case ompt_sync_region_barrier:
+          {
+            char BarrierIndex = Data->BarrierIndex;
+            TsanHappensBefore(Data->Team->GetBarrierPtr(BarrierIndex));
+
+            // We ignore writes inside the barrier. These would either occur during
+            // 1. reductions performed by the runtime which are guaranteed to be race-free.
+            // 2. execution of another task.
+            // For the latter case we will re-enable tracking in task_switch.
+            Data->InBarrier = true;
+            TsanIgnoreWritesBegin();
+            COUNT_EVENT3(sync_region,scope_begin,barrier);
+            break;
+          }
+        case ompt_sync_region_taskwait:
+
+            COUNT_EVENT3(sync_region,scope_begin,taskwait);
+            break;
+        case ompt_sync_region_taskgroup:
+            Data->TaskGroup = new Taskgroup(Data->TaskGroup);
+            COUNT_EVENT3(sync_region,scope_begin,taskgroup);
+            break;
+      }
+      break;
+    case ompt_scope_end:
+      switch(kind)
+      {
+        case ompt_sync_region_barrier:
+          {
+            // We want to track writes after the barrier again.
+            Data->InBarrier = false;
+            TsanIgnoreWritesEnd();
+
+            char BarrierIndex = Data->BarrierIndex;
+            // Barrier will end after it has been entered by all threads.
+            if (parallel_data)
+              TsanHappensAfter(Data->Team->GetBarrierPtr(BarrierIndex));
+
+            // It is not guaranteed that all threads have exited this barrier before
+            // we enter the next one. So we will use a different address.
+            // We are however guaranteed that this current barrier is finished
+            // by the time we exit the next one. So we can then reuse the first address.
+            Data->BarrierIndex = (BarrierIndex + 1) % 2;
+            COUNT_EVENT3(sync_region,scope_end,barrier);
+            break;
+          }
+        case ompt_sync_region_taskwait:
+          {
+            COUNT_EVENT3(sync_region,scope_end,taskwait);
+            if(Data->execution>1)
+              TsanHappensAfter(Data->GetTaskwaitPtr());
+            break;
+          }
+        case ompt_sync_region_taskgroup:
+          {
+            assert(Data->TaskGroup != nullptr && "Should have at least one taskgroup!");
+
+            TsanHappensAfter(Data->TaskGroup->GetPtr());
+
+            // Delete this allocated taskgroup, all descendent task are finished by now.
+            Taskgroup* Parent = Data->TaskGroup->Parent;
+            delete Data->TaskGroup;
+            Data->TaskGroup = Parent;
+            COUNT_EVENT3(sync_region,scope_end,taskgroup);
+            break;
+          }
+      }
+      break;
+  }
+}
+
 
 
 /// OMPT event callbacks for handling tasks.
 
-static void ompt_tsan_task_begin(ompt_task_data_t parent_task_data,
-		ompt_frame_t *parent_task_frame, ompt_task_data_t *new_task_data,
-		void *task_function) {
-	TaskData* Data = new TaskData(ToTaskData(parent_task_data));
-	new_task_data->ptr = Data;
+static void
+ompt_tsan_task_create(
+    ompt_data_t *parent_task_data,    /* id of parent task            */
+    const ompt_frame_t *parent_frame,  /* frame data for parent task   */
+    ompt_data_t* new_task_data,      /* id of created task           */
+    ompt_task_type_t type,
+    int has_dependences,
+    const void *codeptr_ra)               /* pointer to outlined function */
+{
+  TaskData* Data;
+  assert(new_task_data->ptr == NULL && "Task data should be initialized to NULL");
+  if (type == ompt_task_initial)
+  {
+    ompt_data_t* parallel_data;
+    ompt_get_parallel_info(0, &parallel_data, NULL);
+    ParallelData* PData = new ParallelData;
+    parallel_data->ptr = PData;
 
-	// Use the newly created address. We cannot use a single address from the
-	// parent because that would declare wrong relationships with other
-	// sibling tasks that may be created before this task is started!
-	TsanHappensBefore(Data->GetTaskPtr());
+    Data = new TaskData(PData);
+    new_task_data->ptr = Data;
+    COUNT_EVENT2(task_create,initial);
+  } else if (type == 5 /*ompt_task_included*/) {
+    Data = new TaskData(ToTaskData(parent_task_data));
+    new_task_data->ptr = Data;
+    Data->Included=true;
+    COUNT_EVENT2(task_create,included);
+  } else {
+    Data = new TaskData(ToTaskData(parent_task_data));
+    new_task_data->ptr = Data;
+
+    // Use the newly created address. We cannot use a single address from the
+    // parent because that would declare wrong relationships with other
+    // sibling tasks that may be created before this task is started!
+    TsanHappensBefore(Data->GetTaskPtr());
+    ToTaskData(parent_task_data)->execution++;
+    COUNT_EVENT2(task_create,explicit);
+  }
 }
 
-static void ompt_tsan_task_switch(ompt_task_data_t first_task_data,
-		ompt_task_data_t second_task_data) {
-	TaskData* ToTask = ToTaskData(second_task_data);
-	if (ToTask != nullptr) {
-		// 1. Task will begin execution after it has been created.
-		// 2. Task will resume after it has been switched away.
-		TsanHappensAfter(ToTask->GetTaskPtr());
+static void
+ompt_tsan_task_schedule(
+    ompt_data_t *first_task_data,
+    ompt_task_status_t prior_task_status,
+    ompt_data_t *second_task_data)
+{
+  COUNT_EVENT1(task_schedule);
+  TaskData* FromTask = ToTaskData(first_task_data);
+  TaskData* ToTask = ToTaskData(second_task_data);
 
-		for (unsigned i = 0; i < ToTask->DependencyCount; i++) {
-			ompt_task_dependence_t* Dependency = &ToTask->Dependencies[i];
+  if (ToTask->Included && prior_task_status != ompt_task_complete)
+    return; // No further synchronization for begin included tasks
+  if (FromTask->Included && prior_task_status == ompt_task_complete) {
+    // Just delete the task:
+    while (FromTask != nullptr && --FromTask->RefCount == 0) {
+      TaskData* Parent = FromTask->Parent;
+      if (FromTask->DependencyCount > 0) {
+        delete[] FromTask->Dependencies;
+      }
+      delete FromTask;
+      FromTask = Parent;
+    }
+    return;
+  }
 
-			TsanHappensAfter(Dependency->variable_addr);
-			// in and inout dependencies are also blocked by prior in dependencies!
-			if (Dependency->dependence_flags & ompt_task_dependence_type_out) {
-				TsanHappensAfter(ToInAddr(Dependency->variable_addr));
-			}
-		}
+  // we will use new stack, assume growing down
+  // TsanNewMemory((char*)&FromTask-1024, 1024);
+  if (ToTask->execution==0) {
+    ToTask->execution++;
+  // 1. Task will begin execution after it has been created.
+    TsanHappensAfter(ToTask->GetTaskPtr());
+    if ( ompt_get_task_memory_info ) {
+      if ( !ompt_get_task_memory_info( &(ToTask->PrivateData), &(ToTask->PrivateDataSize), 0) ) {
+        ToTask->PrivateData=nullptr; ToTask->PrivateDataSize=0;
+      } else {
+//        printf("TsanNewMemory(%p, %lu)\n", ToTask->PrivateData, ToTask->PrivateDataSize);
+        TsanNewMemory(ToTask->PrivateData, ToTask->PrivateDataSize);
+      }
+    }
+    for (unsigned i = 0; i < ToTask->DependencyCount; i++) {
+      ompt_task_dependence_t* Dependency = &ToTask->Dependencies[i];
 
-		if (ToTask->InBarrier) {
-			// We re-enter runtime code which currently performs a barrier.
-			TsanIgnoreWritesBegin();
-		}
-	}
+      TsanHappensAfter(Dependency->variable_addr);
+      // in and inout dependencies are also blocked by prior in dependencies!
+      if (Dependency->dependence_flags & ompt_task_dependence_type_out) {
+        TsanHappensAfter(ToInAddr(Dependency->variable_addr));
+      }
+    }
+  } else {
+  // 2. Task will resume after it has been switched away.
+    TsanHappensAfter(ToTask->GetTaskPtr());
+  }
 
-	TaskData* FromTask = ToTaskData(first_task_data);
-	if (FromTask != nullptr) {
-		// Task may be resumed at a later point in time.
-		TsanHappensBefore(FromTask->GetTaskPtr());
+  if (prior_task_status != ompt_task_complete) {
+    ToTask->ImplicitTask = FromTask->ImplicitTask;
+    assert(ToTask->ImplicitTask != NULL && "A task belongs to a team and has an implicit task on the stack");
+  }
 
-		if (FromTask->InBarrier) {
-			// We want to ignore writes in the runtime code during barriers,
-			// but not when executing tasks with user code!
-			TsanIgnoreWritesEnd();
-		}
-	}
+  // Task may be resumed at a later point in time.
+  //TsanHappensBeforeUC(FromTask->GetTaskPtr());
+  TsanHappensBefore(FromTask->GetTaskPtr());
+
+  if (FromTask->InBarrier) {
+    // We want to ignore writes in the runtime code during barriers,
+    // but not when executing tasks with user code!
+    TsanIgnoreWritesEnd();
+  }
+
+  if (prior_task_status == ompt_task_complete) { // task finished
+    if ( ompt_get_task_memory_info && FromTask->PrivateDataSize) {
+//          printf("TsanFreeMemory(%p, %p, %lu)\n", FromTask->PrivateData, (char*)FromTask->PrivateData+FromTask->PrivateDataSize, FromTask->PrivateDataSize);
+      TsanFreeMemory(FromTask->PrivateData, FromTask->PrivateDataSize);
+    }
+
+    // Task will finish before a barrier in the surrounding parallel region ...
+    ParallelData* PData = FromTask->Team;
+    TsanHappensBefore(PData->GetBarrierPtr(FromTask->ImplicitTask->BarrierIndex));
+
+    // ... and before an eventual taskwait by the parent thread.
+    TsanHappensBefore(FromTask->Parent->GetTaskwaitPtr());
+
+    if (FromTask->TaskGroup != nullptr) {
+        // This task is part of a taskgroup, so it will finish before the
+        // corresponding taskgroup_end.
+        TsanHappensBefore(FromTask->TaskGroup->GetPtr());
+    }
+    for (unsigned i = 0; i < FromTask->DependencyCount; i++) {
+        ompt_task_dependence_t* Dependency = &FromTask->Dependencies[i];
+
+        // in dependencies block following inout and out dependencies!
+        TsanHappensBefore(ToInAddr(Dependency->variable_addr));
+        if (Dependency->dependence_flags & ompt_task_dependence_type_out) {
+            TsanHappensBefore(Dependency->variable_addr);
+        }
+    }
+    while (FromTask != nullptr && --FromTask->RefCount == 0) {
+        TaskData* Parent = FromTask->Parent;
+        if (FromTask->DependencyCount > 0) {
+            delete[] FromTask->Dependencies;
+        }
+        delete FromTask;
+        FromTask = Parent;
+    }
+  }
+  if (ToTask->InBarrier) {
+    // We re-enter runtime code which currently performs a barrier.
+    TsanIgnoreWritesBegin();
+  }
+
 }
 
-static void ompt_tsan_task_end(ompt_task_data_t task_data) {
-	TaskData* Data = ToTaskData(task_data);
-	// Task ends after it has been switched away.
-	TsanHappensAfter(Data->GetTaskPtr());
+static void ompt_tsan_task_dependences(
+  ompt_data_t* task_data,
+  const ompt_task_dependence_t *deps,
+  int ndeps)
+{
+  COUNT_EVENT1(task_dependences);
+  if (ndeps > 0) {
+    // Copy the data to use it in task_switch and task_end.
+    TaskData* Data = ToTaskData(task_data);
+    Data->Dependencies = new ompt_task_dependence_t[ndeps];
+    std::memcpy(Data->Dependencies, deps, sizeof(ompt_task_dependence_t) * ndeps);
+    Data->DependencyCount = ndeps;
 
-	// Find implicit task with no parent to get the BarrierIndex.
-	assert(Data->Parent != nullptr && "Should have at least an implicit task as parent!");
-	TaskData* ImplicitTask = Data->Parent;
-	while (ImplicitTask->Parent != nullptr) {
-		ImplicitTask = ImplicitTask->Parent;
-	}
-
-	// Task will finish before a barrier in the surrounding parallel region ...
-	ParallelData* PData = ToParallelData(ompt_get_parallel_data(0));
-	TsanHappensBefore(PData->GetBarrierPtr(ImplicitTask->BarrierIndex));
-
-	// ... and before an eventual taskwait by the parent thread.
-	TsanHappensBefore(Data->Parent->GetTaskwaitPtr());
-
-	if (Data->Taskgroup != nullptr) {
-		// This task is part of a taskgroup, so it will finish before the
-		// corresponding taskgroup_end.
-		TsanHappensBefore(Data->Taskgroup->GetPtr());
-	}
-
-	for (unsigned i = 0; i < Data->DependencyCount; i++) {
-		ompt_task_dependence_t* Dependency = &Data->Dependencies[i];
-
-		// in dependencies block following inout and out dependencies!
-		TsanHappensBefore(ToInAddr(Dependency->variable_addr));
-		if (Dependency->dependence_flags & ompt_task_dependence_type_out) {
-			TsanHappensBefore(Dependency->variable_addr);
-		}
-	}
-
-	while (Data != nullptr && --Data->RefCount == 0) {
-		TaskData* Parent = Data->Parent;
-		if (Data->DependencyCount > 0) {
-			delete[] Data->Dependencies;
-		}
-		delete Data;
-		Data = Parent;
-	}
+    // This callback is executed before this task is first started.
+    TsanHappensBefore(Data->GetTaskPtr());
+  }
 }
-
-static void ompt_tsan_taskwait_end(ompt_parallel_data_t parallel_data,
-		ompt_task_data_t task_data) {
-	TsanHappensAfter(ToTaskData(task_data)->GetTaskwaitPtr());
-}
-
-static void ompt_tsan_taskgroup_begin(ompt_parallel_data_t parallel_data,
-		ompt_task_data_t task_data) {
-	TaskData* Data = ToTaskData(task_data);
-	Data->Taskgroup = new Taskgroup(Data->Taskgroup);
-}
-
-static void ompt_tsan_taskgroup_end(ompt_parallel_data_t parallel_data,
-		ompt_task_data_t task_data) {
-	TaskData* Data = ToTaskData(task_data);
-	assert(Data->Taskgroup != nullptr && "Should have at least one taskgroup!");
-
-	TsanHappensAfter(Data->Taskgroup->GetPtr());
-
-	// Delete this allocated taskgroup, all descendent task are finished by now.
-	Taskgroup* Parent = Data->Taskgroup->Parent;
-	delete Data->Taskgroup;
-	Data->Taskgroup = Parent;
-}
-
-static void ompt_tsan_task_dependences(ompt_task_data_t task_data,
-		const ompt_task_dependence_t *deps, int ndeps) {
-	if (ndeps > 0) {
-		// Copy the data to use it in task_switch and task_end.
-		TaskData* Data = ToTaskData(task_data);
-		Data->Dependencies = new ompt_task_dependence_t[ndeps];
-		std::memcpy(Data->Dependencies, deps, sizeof(ompt_task_dependence_t) * ndeps);
-		Data->DependencyCount = ndeps;
-
-		// This callback is executed before this task is first started.
-		TsanHappensBefore(Data->GetTaskPtr());
-	}
-}
-
 
 /// OMPT event callbacks for handling locking.
-static void ompt_tsan_lock_acquired(ompt_wait_id_t wait_id) {
-	// Acquire our own lock to make sure that
-	// 1. the previous release has finished.
-	// 2. the next acquire doesn't start before we have finished our release.
-	{
-		LocksMutex.lock();
-		std::mutex& Lock = Locks[wait_id];
-		LocksMutex.unlock();
+static void ompt_tsan_mutex_acquired(
+  ompt_mutex_kind_t kind,
+  ompt_wait_id_t wait_id,
+  const void *codeptr_ra)
+{
+  if(archer_flags->print_ompt_counters)
+    switch(kind)
+    {
+      case ompt_mutex_lock:
+        COUNT_EVENT2(mutex_acquired, lock);
+        break;
+      case ompt_mutex_nest_lock:
+        COUNT_EVENT2(mutex_acquired, nest_lock);
+        break;
+      case ompt_mutex_critical:
+        COUNT_EVENT2(mutex_acquired, critical);
+        break;
+      case ompt_mutex_atomic:
+        COUNT_EVENT2(mutex_acquired, atomic);
+        break;
+      case ompt_mutex_ordered:
+        COUNT_EVENT2(mutex_acquired, ordered);
+        break;
+      default:
+        COUNT_EVENT2(mutex_acquired, default);
+        break;
+    }
 
-		Lock.lock();
-	}
+  // Acquire our own lock to make sure that
+  // 1. the previous release has finished.
+  // 2. the next acquire doesn't start before we have finished our release.
+  {
+    LocksMutex.lock();
+    std::mutex& Lock = Locks[wait_id];
+    LocksMutex.unlock();
 
-	TsanHappensAfter(ToWaitPtr(wait_id));
+    Lock.lock();
+  }
+
+  TsanHappensAfter(ToWaitPtr(wait_id));
 }
 
-static void ompt_tsan_lock_release(ompt_wait_id_t wait_id) {
-	TsanHappensBefore(ToWaitPtr(wait_id));
+static void ompt_tsan_mutex_released(
+  ompt_mutex_kind_t kind,
+  ompt_wait_id_t wait_id,
+  const void *codeptr_ra)
+{
+  if(archer_flags->print_ompt_counters)
+    switch(kind)
+    {
+      case ompt_mutex_lock:
+        COUNT_EVENT2(mutex_released, lock);
+        break;
+      case ompt_mutex_nest_lock:
+        COUNT_EVENT2(mutex_released, nest_lock);
+        break;
+      case ompt_mutex_critical:
+        COUNT_EVENT2(mutex_released, critical);
+        break;
+      case ompt_mutex_atomic:
+        COUNT_EVENT2(mutex_released, atomic);
+        break;
+      case ompt_mutex_ordered:
+        COUNT_EVENT2(mutex_released, ordered);
+        break;
+      default:
+        COUNT_EVENT2(mutex_released, default);
+        break;
+    }
+  TsanHappensBefore(ToWaitPtr(wait_id));
 
-	{
-		LocksMutex.lock();
-		std::mutex& Lock = Locks[wait_id];
-		LocksMutex.unlock();
+  {
+    LocksMutex.lock();
+    std::mutex& Lock = Locks[wait_id];
+    LocksMutex.unlock();
 
-		Lock.unlock();
-	}
+    Lock.unlock();
+  }
+}
+
+#define SET_CALLBACK_T(event, type) \
+  ompt_callback_##type##_t tsan_##event = &ompt_tsan_##event; \
+  ompt_set_callback(ompt_callback_##event, (ompt_callback_t) tsan_##event)
+
+#define SET_CALLBACK(event) SET_CALLBACK_T(event, event)
+
+
+static int ompt_tsan_initialize(
+  ompt_function_lookup_t lookup,
+  ompt_fns_t* fns
+  ) {
+
+  const char *options = getenv("ARCHER_OPTIONS");
+  archer_flags = new ArcherFlags(options);
+
+  if(archer_flags->print_ompt_counters)
+    all_counter = new callback_counter_t[MAX_THREADS];
+
+  ompt_set_callback_t ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
+  if (ompt_set_callback == NULL) {
+    std::cerr << "Could not set callback, exiting..." << std::endl;
+    std::exit(1);
+  }
+  ompt_get_parallel_info = (ompt_get_parallel_info_t) lookup("ompt_get_parallel_info");
+  ompt_get_thread_data = (ompt_get_thread_data_t) lookup("ompt_get_thread_data");
+  ompt_get_task_memory_info = nullptr;
+  ompt_get_task_memory_info = (ompt_get_task_memory_t) lookup("ompt_get_task_memory_info");
+
+  if (ompt_get_parallel_info == NULL) {
+    fprintf(stderr, "Could not get inquiry function 'ompt_get_parallel_info', exiting...\n");
+    exit(1);
+  }
+
+  SET_CALLBACK(thread_begin);
+//  SET_CALLBACK(thread_end);
+  SET_CALLBACK(parallel_begin);
+  SET_CALLBACK(implicit_task);
+  SET_CALLBACK(sync_region);
+  SET_CALLBACK(parallel_end);
+
+  SET_CALLBACK(task_create);
+  SET_CALLBACK(task_schedule);
+  SET_CALLBACK(task_dependences);
+
+  SET_CALLBACK_T(mutex_acquired, mutex);
+  SET_CALLBACK_T(mutex_released, mutex);
+  return 1; // success
 }
 
 
-static void ompt_tsan_initialize(ompt_function_lookup_t lookup,
-		const char *runtime_version, unsigned int ompt_version) {
-	ompt_set_callback_t ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
-	if (ompt_set_callback == NULL) {
-		std::cerr << "Could not set callback, exiting..." << std::endl;
-		std::exit(1);
-	}
-	ompt_get_parallel_data = (ompt_get_parallel_data_t) lookup("ompt_get_parallel_data");
-	if (ompt_get_parallel_data == NULL) {
-		fprintf(stderr, "Could not get inquiry function 'ompt_get_parallel_data', exiting...\n");
-		exit(1);
-	}
+static void ompt_tsan_finalize(ompt_fns_t* fns)
+{
+  if(archer_flags->print_ompt_counters) {
+    print_callbacks(all_counter);
+    delete[] all_counter;
+  }
 
-#if LLVM_VERSION >= 40
-	const char *options = getenv("ARCHER_OPTIONS");
-	archer_flags = new ArcherFlags(options);
-#endif
+  if(archer_flags->print_max_rss) {
+    struct rusage end;
+    getrusage(RUSAGE_SELF, &end);
+    printf("MAX RSS[KBytes] during execution: %ld\n", end.ru_maxrss);
+  }
 
-	// Register parallel callbacks.
-	ompt_set_callback(ompt_event_parallel_begin, (ompt_callback_t) &ompt_tsan_parallel_begin);
-	ompt_set_callback(ompt_event_implicit_task_begin, (ompt_callback_t) &ompt_tsan_implicit_task_begin);
-	ompt_set_callback(ompt_event_barrier_begin, (ompt_callback_t) &ompt_tsan_barrier_begin);
-	ompt_set_callback(ompt_event_barrier_end, (ompt_callback_t) &ompt_tsan_barrier_end);
-	ompt_set_callback(ompt_event_implicit_task_end, (ompt_callback_t) &ompt_tsan_implicit_task_end);
-	ompt_set_callback(ompt_event_parallel_end, (ompt_callback_t) &ompt_tsan_parallel_end);
-
-	// Register task callbacks.
-	// FIXME: will be renamed to ompt_event_task_create!
-	ompt_set_callback(ompt_event_task_begin, (ompt_callback_t) &ompt_tsan_task_begin);
-	// FIXME: will be renamed to ompt_event_task_schedule!
-	ompt_set_callback(ompt_event_task_switch, (ompt_callback_t) &ompt_tsan_task_switch);
-	// FIXME: will only be implicitly given by task_schedule and prior_completed!
-	ompt_set_callback(ompt_event_task_end, (ompt_callback_t) &ompt_tsan_task_end);
-
-	ompt_set_callback(ompt_event_taskwait_end, (ompt_callback_t) &ompt_tsan_taskwait_end);
-	ompt_set_callback(ompt_event_taskgroup_begin, (ompt_callback_t) &ompt_tsan_taskgroup_begin);
-	ompt_set_callback(ompt_event_taskgroup_end, (ompt_callback_t) &ompt_tsan_taskgroup_end);
-
-	ompt_set_callback(ompt_event_task_dependences, (ompt_callback_t) &ompt_tsan_task_dependences);
-
-	// Register one single callback for acquiring locks and another one for
-	// releasing all kind of locks: We don't need to differentiate here.
-	ompt_set_callback(ompt_event_acquired_lock, (ompt_callback_t) &ompt_tsan_lock_acquired);
-	ompt_set_callback(ompt_event_acquired_nest_lock_first, (ompt_callback_t) &ompt_tsan_lock_acquired);
-	ompt_set_callback(ompt_event_acquired_critical, (ompt_callback_t) &ompt_tsan_lock_acquired);
-	ompt_set_callback(ompt_event_acquired_atomic, (ompt_callback_t) &ompt_tsan_lock_acquired);
-	ompt_set_callback(ompt_event_acquired_ordered, (ompt_callback_t) &ompt_tsan_lock_acquired);
-	ompt_set_callback(ompt_event_release_lock, (ompt_callback_t) &ompt_tsan_lock_release);
-	ompt_set_callback(ompt_event_release_nest_lock_last, (ompt_callback_t) &ompt_tsan_lock_release);
-	ompt_set_callback(ompt_event_release_critical, (ompt_callback_t) &ompt_tsan_lock_release);
-	ompt_set_callback(ompt_event_release_atomic, (ompt_callback_t) &ompt_tsan_lock_release);
-	ompt_set_callback(ompt_event_release_ordered, (ompt_callback_t) &ompt_tsan_lock_release);
+  if(archer_flags)
+    delete archer_flags;
 }
 
-ompt_initialize_t ompt_tool() {
-	return &ompt_tsan_initialize;
+
+ompt_fns_t* ompt_start_tool(
+  unsigned int omp_version,
+  const char *runtime_version)
+{
+  static ompt_fns_t ompt_fns = {&ompt_tsan_initialize,&ompt_tsan_finalize};
+  return &ompt_fns;
 }

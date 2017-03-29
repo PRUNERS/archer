@@ -65,30 +65,23 @@ set(ARCHER_STATIC_ANALYSIS_SUPPORT TRUE CACHE BOOL "StaticAnalysisSupport?")
 # Standalone build or part of LLVM?
 set(ARCHER_STANDALONE_BUILD FALSE)
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
-    project(archer C CXX)
+  project(archer C CXX)
 
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        # require at least clang 3.9
-        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.9)
-            message(FATAL_ERROR "Clang version must be at least 3.9!")
-        endif()
-    else()
-        message(FATAL_ERROR "You are using an unsupported compiler! The required compiler is Clang version >= 3.9.")
-    endif()
-
-    if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
-        # require at least clang 3.9
-        if (CMAKE_C_COMPILER_VERSION VERSION_LESS 3.9)
-            message(FATAL_ERROR "Clang version must be at least 3.9!")
-        endif()
-    else()
-        message(FATAL_ERROR "You are using an unsupported compiler! The required compiler is Clang version >= 3.9.")
-    endif()
   set(ARCHER_STANDALONE_BUILD TRUE)
-  string(SUBSTRING ${CMAKE_CXX_COMPILER_VERSION} 0 3 LLVM_VERSION)
-  string(REPLACE "." "" LLVM_VERSION ${LLVM_VERSION})
-  add_definitions(-DLLVM_VERSION=${LLVM_VERSION})
 endif()
+
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+  # require at least clang 3.9
+  if (CMAKE_C_COMPILER_VERSION VERSION_LESS 3.9)
+    message(FATAL_ERROR "Clang version must be at least 3.9!")
+  endif()
+else()
+  message(FATAL_ERROR "You are using an unsupported compiler! The required compiler is Clang version >= 3.9.")
+endif()
+
+string(SUBSTRING ${CMAKE_CXX_COMPILER_VERSION} 0 3 LLVM_VERSION)
+string(REPLACE "." "" LLVM_VERSION ${LLVM_VERSION})
+add_definitions(-DLLVM_VERSION=${LLVM_VERSION})
 
 # These include files are in the cmake/ subdirectory
 include(LibarcherUtils)

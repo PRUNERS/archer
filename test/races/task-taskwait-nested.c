@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
   #pragma omp parallel num_threads(2) shared(var)
   #pragma omp master
   {
-    #pragma omp task
+    #pragma omp task shared(var)
     {
       #pragma omp task shared(var)
       {

@@ -34,7 +34,7 @@ Ninja visit https://github.com/ninja-build/ninja.
 Archer has been tested with the LLVM OpenMP Runtime version >= 3.9,
 and with the LLVM OpenMP Runtime with OMPT support currently under
 development at https://github.com/OpenMPToolsInterface/LLVM-openmp
-(under the branch "align-to-tr-rebased").
+(under the branch "tr4-stable").
 
 * Installation
 Archer has been developed under LLVM 3.9 (for more information visit
@@ -129,7 +129,7 @@ Create a folder to download and build Archer:
 Obtain the LLVM OpenMP Runtime with OMPT support:
 
 #+BEGIN_SRC bash :exports code
-  git clone -b align-to-tr-rebased https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
+  git clone -b tr4-stable https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
 #+END_SRC
 
 and build it with the following command:
@@ -266,7 +266,7 @@ or obtain LLVM OpenMP Runtime with OMPT support:
   cd projects
   git clone https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
   cd openmp
-  git checkout align-to-tr-rebased
+  git checkout tr4-stable
   cd ../..
 #+END_SRC
 
@@ -411,11 +411,15 @@ separate flags are separated by spaces, e.g.:
 ARCHER_OPTIONS="flush_shadow=1" ./myprogram
 #+END_SRC
 
-|------------------+---------------+--------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Flag Name        | Default value | Clang/LLVM Version | Description                                                                                                                                                                                                                                                                                                                                    |
-|------------------+---------------+--------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| flush&#95;shadow |             0 | >= 4.0             | Flush shadow memory at the end of an outer OpenMP parallel region. Experiments show a memory overhead reduction of ~30%, and an increase of the runtime overhead of ~10%. This flag is useful for large OpenMP applications that normally requires a large amount of memory and may cause an "out of memory" exception when checked by Archer. |
-|------------------+---------------+--------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|-----------------------------+---------------+--------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Flag Name                   | Default value | Clang/LLVM Version | Description                                                                                                                                                                                                                                                                                                                   |
+|-----------------------------+---------------+--------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| flush&#95;shadow            |             0 | >= 4.0             | Flush shadow memory at the end of an outer OpenMP parallel region. Our experiments show that this can reduce memory overhead by ~30% and runtime overhead by ~10%. This flag is useful for large OpenMP applications that typically require large amounts of memory, causing out-of-memory exceptions when checked by Archer. |
+|-----------------------------+---------------+--------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| print&#95;ompt&#95;counters |             0 | >= 3.9             | Print the number of triggered OMPT events at the end of the execution.                                                                                                                                                                                                                                                        |
+|-----------------------------+---------------+--------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| print&#95;max&#95;rss       |             0 | >= 3.9             | Print the RSS memory peak at the end of the execution.                                                                                                                                                                                                                                                                        |
+|-----------------------------+---------------+--------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 * Example
 
@@ -441,7 +445,7 @@ int main (int argc, char **argv)
 #+END_SRC
 
 In case we installed Archer with the official LLVM OpenMP runtime and
-ThreadSanitizer support we compile the program as follow:
+ThreadSanitizer support, we compile the program as follow:
 
 #+BEGIN_SRC bash :exports code
 clang-archer myprogram.c -o myprogram

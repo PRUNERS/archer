@@ -47,38 +47,21 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// RUN: %raceomp-compile-and-run | FileCheck %s
-#include <omp.h>
-#include <stdio.h>
-#include <unistd.h>
+void __attribute__((weak)) AnnotateHappensAfter(const char *file, int line, const volatile void *cv){}
+void __attribute__((weak)) AnnotateHappensBefore(const char *file, int line, const volatile void *cv){}
+void __attribute__((weak)) AnnotateIgnoreWritesBegin(const char *file, int line){}
+void __attribute__((weak)) AnnotateIgnoreWritesEnd(const char *file, int line){}
 
-#define NUM_THREADS 2
+// This is a Fortran wrapper for TSan Annotation functions.
 
-int main(int argc, char* argv[])
+void annotatehappensafter_(const char *file, int* line, const volatile void *cv)
 {
-  int var = 0;
-    int i;
-
-  #pragma omp parallel for num_threads(NUM_THREADS) shared(var) schedule(static,1)
-  {
-    for (i = 0; i < NUM_THREADS; i++) {
-      #pragma omp task shared(var) if(0)
-      {
-        var++;
-        // Sleep so that each thread executes one single task.
-//        sleep(1);
-      }
-    }
-  }
-
-  int error = (var != 2);
-  fprintf(stderr, "DONE\n");
-  return error;
+ AnnotateHappensAfter(file, *line, cv);}
+void annotatehappensbefore_(const char *file, int *line, const volatile void *cv)
+{
+AnnotateHappensBefore(file, *line, cv);
 }
-
-// CHECK: WARNING: ThreadSanitizer: data race
-// CHECK:   Write of size 4
-// CHECK: #0 .omp_task_entry.
-// CHECK:   Previous write of size 4
-// CHECK: #0 .omp_task_entry.
-// CHECK: DONE
+void annotateignorewritesbegin_(const char *file, int line)
+{AnnotateIgnoreWritesBegin(file, line);}
+void annotateignorewritesend_(const char *file, int line)
+{AnnotateIgnoreWritesEnd(file, line);}
