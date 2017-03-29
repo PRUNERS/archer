@@ -924,6 +924,9 @@ static void ompt_tsan_finalize(ompt_fns_t* fns)
     getrusage(RUSAGE_SELF, &end);
     printf("MAX RSS[KBytes] during execution: %ld\n", end.ru_maxrss);
   }
+
+  if(archer_flags)
+    delete archer_flags;
 }
 
 
