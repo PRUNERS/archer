@@ -111,8 +111,10 @@ public:
 };
 
 #if (LLVM_VERSION) >= 40
-extern "C" int __attribute__((weak)) __swordomp__get_omp_status();
-extern "C" void __tsan_flush_memory();
+extern "C" {
+  int __attribute__((weak)) __swordomp__get_omp_status();
+  void __attribute__((weak)) __tsan_flush_memory() {}
+}
 #endif
 ArcherFlags *archer_flags;
 
