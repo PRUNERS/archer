@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <omp.h>
+#if !defined(__powerpc64__)
 #include <ompt.h>
+#endif
 #include <execinfo.h>
 #ifdef OMPT_USE_LIBUNWIND
 #define UNW_LOCAL_ONLY

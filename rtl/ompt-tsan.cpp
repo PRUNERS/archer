@@ -68,7 +68,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include <sys/resource.h>
+#define _OPENMP
+#include "omp.h"
+#if !defined(__powerpc64__)
 #include <ompt.h>
+#endif
 
 callback_counter_t *all_counter;
 __thread callback_counter_t* this_event_counter;
@@ -629,7 +633,8 @@ ompt_tsan_task_create(
   if (type == ompt_task_initial)
   {
     ompt_data_t* parallel_data;
-    ompt_get_parallel_info(0, &parallel_data, NULL);
+    int team_size = 1;
+    ompt_get_parallel_info(0, &parallel_data, &team_size);
     ParallelData* PData = new ParallelData;
     parallel_data->ptr = PData;
 

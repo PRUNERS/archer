@@ -50,7 +50,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <inttypes.h>
 #include <omp.h>
+#if !defined(__powerpc64__)
 #include <ompt.h>
+#endif
 
 // 240 should be enough for xeon-phi
 #define MAX_THREADS 240
