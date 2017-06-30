@@ -864,9 +864,15 @@ static void ompt_tsan_mutex_released(
   }
 }
 
-#define SET_CALLBACK_T(event, type) \
+#define SET_CALLBACK_T(event, type)                           \
+do{                                                           \
   ompt_callback_##type##_t tsan_##event = &ompt_tsan_##event; \
-  ompt_set_callback(ompt_callback_##event, (ompt_callback_t) tsan_##event)
+  int ret = ompt_set_callback(ompt_callback_##event,          \
+      (ompt_callback_t) tsan_##event);                        \
+  if (ret != ompt_set_always)                                 \
+      printf("Registered callback '" #event                   \
+            "' is not always invoked (%i)\n", ret);           \
+}while(0)
 
 #define SET_CALLBACK(event) SET_CALLBACK_T(event, event)
 
