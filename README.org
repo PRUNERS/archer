@@ -1,4 +1,4 @@
-#+DESCRIPTION: Archer, a data race detection tool for large OpenMP applications
+#+DESCRIPTION: Archer, a data race detection tool for large OpenMP applications.
 #+LANGUAGE: en
 #+OPTIONS:  H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
 #+OPTIONS:  skip:nil d:nil todo:t pri:nil tags:not-in-toc
@@ -428,7 +428,7 @@ check the program for data races.
 
 Suppose our program is called /myprogram.c/:
 
-#+BEGIN_SRC emacs-lisp -n 1 c :exports code
+#+BEGIN_SRC emacs-lisp -n 1 :exports code
 #include <stdio.h>
 
 #define N 1000
