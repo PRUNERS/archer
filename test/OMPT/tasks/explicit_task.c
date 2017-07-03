@@ -15,7 +15,7 @@ int main()
       {
         OMPT_SIGNAL(condition);
       }
-      // OMPT_WAIT(condition,1);
+      OMPT_WAIT(condition,1);
     }
     #pragma omp barrier
   }
