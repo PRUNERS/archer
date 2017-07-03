@@ -1,7 +1,7 @@
 // RUN: %libomp-compile-and-run | %sort-threads | FileCheck %s
 // REQUIRES: ompt
 #include "callback.h"
-#include <omp.h> 
+#include <omp.h>
 
 int main()
 {
@@ -15,7 +15,7 @@ int main()
       {
         OMPT_SIGNAL(condition);
       }
-      OMPT_WAIT(condition,1);
+      // OMPT_WAIT(condition,1);
     }
     #pragma omp barrier
   }
