@@ -18,7 +18,7 @@ env:
 
 before_install:
   - sudo pip install --upgrade pip
-  - pip install lit
+  - sudo pip install lit
 
 install:
   - cd $HOME/build
