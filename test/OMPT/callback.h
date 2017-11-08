@@ -378,7 +378,7 @@ void ompt_finalize(ompt_data_t *tool_data)
   printf("%d: ompt_event_runtime_shutdown\n", omp_get_thread_num());
 }
 
-ompt_fns_t* ompt_start_tool(
+ompt_start_tool_result_t* ompt_start_tool(
   unsigned int omp_version,
   const char *runtime_version)
 {
