@@ -61,7 +61,7 @@ script:
   # Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support
   - cd $HOME/build/PRUNERS
   - rm -rf openmp
-  - git clone -b towards_tr4 https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
+  - git clone https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
   - export OPENMP_INSTALL=$HOME/usr
   - cd openmp/runtime
   - mkdir build && cd build
