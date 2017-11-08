@@ -884,7 +884,7 @@ do{                                                           \
 
 static int ompt_tsan_initialize(
   ompt_function_lookup_t lookup,
-  ompt_fns_t* fns
+  ompt_data_t *tool_data
   ) {
 
   const char *options = getenv("ARCHER_OPTIONS");
