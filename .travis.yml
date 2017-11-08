@@ -41,38 +41,20 @@ install:
   - ninja && ninja install
 
 script:
-  # Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
-  - cd $HOME/build/PRUNERS
-  # - git clone https://github.com/llvm-mirror/openmp.git openmp
-  # - git clone -b annotations https://github.com/PRUNERS/openmp.git
-  # - export OPENMP_INSTALL=$HOME/usr
-  # - cd openmp/runtime
-  # - mkdir build && cd build
-  # - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL -D LIBOMP_TSAN_SUPPORT=TRUE ..
-  # - ninja -j4 -l4
-  # - ninja install
-  # - export ARCHER_INSTALL=$HOME/usr
-  # - cd $HOME/build/PRUNERS/archer
-  # - mkdir -p build && cd build
-  # - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D LIBOMP_TSAN_SUPPORT=TRUE -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
-  # - ninja -j4 -l4
-  # - ninja install
-  # - ninja check-libarcher
-  # Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support
   - cd $HOME/build/PRUNERS
   - rm -rf openmp
   - git clone https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
   - export OPENMP_INSTALL=$HOME/usr
   - cd openmp/runtime
   - mkdir build && cd build
-  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_CFLAGS="-fno-omit-frame-pointer" -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL -D LIBOMP_OMPT_SUPPORT=on -D LIBOMP_OMPT_OPTIONAL=on ..
+  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL -D LIBOMP_OMPT_SUPPORT=on -D LIBOMP_OMPT_OPTIONAL=on ..
   - ninja -j4 -l4
   - ninja install
   - export ARCHER_INSTALL=$HOME/usr
   - cd $HOME/build/PRUNERS/archer
   - rm -rf build
   - mkdir -p build && cd build
-  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_CFLAGS="-fno-omit-frame-pointer" -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D OMP_PREFIX:PATH=$OPENMP_INSTALL -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
+  - cmake -G Ninja -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} -D OMP_PREFIX:PATH=$OPENMP_INSTALL -D ARCHER_LLVM_LIT_EXECUTABLE=$HOME/usr/bin/llvm-lit -D ARCHER_LLVM_TOOLS_DIR=$HOME/usr/bin ..
   - ninja -j4 -l4
   - ninja install
   - ninja check-libarcher
