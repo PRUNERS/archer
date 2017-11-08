@@ -241,7 +241,7 @@ struct DataPool {
     DPMutex.unlock();
   }
 
-  DataPool() : DataPointer(), DPMutex(), total(0)
+  DataPool() : DPMutex(), DataPointer(), total(0)
   {}
 
 };
@@ -453,14 +453,14 @@ ompt_tsan_thread_begin(
   COUNT_EVENT1(thread_begin);
 }
 
-static void
+/*static void
 ompt_tsan_thread_end(
   ompt_data_t *thread_data)
 {
   printf("%lu: total PD: %lu / %i TD: %lu / %i TG: %lu / %i\n", thread_data->value, pdp->total - pdp->DataPointer.size(), pdp->total, tdp->total - tdp->DataPointer.size(),
     tdp->total, tgp->total - tgp->DataPointer.size(), tgp->total);
   COUNT_EVENT1(thread_end);
-}
+}*/
 
 /// OMPT event callbacks for handling parallel regions.
 
@@ -624,13 +624,13 @@ ompt_tsan_task_create(
     ompt_data_t *parent_task_data,    /* id of parent task            */
     const ompt_frame_t *parent_frame,  /* frame data for parent task   */
     ompt_data_t* new_task_data,      /* id of created task           */
-    ompt_task_type_t type,
+    int type,
     int has_dependences,
     const void *codeptr_ra)               /* pointer to outlined function */
 {
   TaskData* Data;
   assert(new_task_data->ptr == NULL && "Task data should be initialized to NULL");
-  if (type == ompt_task_initial)
+  if (type & ompt_task_initial)
   {
     ompt_data_t* parallel_data;
     int team_size = 1;
@@ -641,12 +641,12 @@ ompt_tsan_task_create(
     Data = new TaskData(PData);
     new_task_data->ptr = Data;
     COUNT_EVENT2(task_create,initial);
-  } else if (type == 5 /*ompt_task_included*/) {
+  } else if (type & ompt_task_undeferred) {
     Data = new TaskData(ToTaskData(parent_task_data));
     new_task_data->ptr = Data;
     Data->Included=true;
     COUNT_EVENT2(task_create,included);
-  } else {
+  } else if (type & ompt_task_explicit || type & ompt_task_target) {
     Data = new TaskData(ToTaskData(parent_task_data));
     new_task_data->ptr = Data;
 
