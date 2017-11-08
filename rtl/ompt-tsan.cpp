@@ -946,6 +946,6 @@ ompt_start_tool_result_t* ompt_start_tool(
   unsigned int omp_version,
   const char *runtime_version)
 {
-  static ompt_fns_t ompt_fns = {&ompt_tsan_initialize,&ompt_tsan_finalize};
-  return &ompt_fns;
+  static ompt_start_tool_result_t ompt_start_tool_result = {&ompt_initialize,&ompt_finalize, 0};
+  return &ompt_start_tool_result;
 }
