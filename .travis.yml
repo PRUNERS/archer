@@ -17,7 +17,8 @@ env:
     - export LD_LIBRARY_PATH=$HOME/usr/lib:$LD_LIBRARY_PATH
 
 before_install:
-  - pip install lit
+  - sudo pip install --upgrade pip
+  - sudo pip install lit
 
 install:
   - cd $HOME/build
