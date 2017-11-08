@@ -925,7 +925,7 @@ static int ompt_tsan_initialize(
 }
 
 
-static void ompt_tsan_finalize(ompt_fns_t* fns)
+static void ompt_tsan_finalize(ompt_data_t *tool_data)
 {
   if(archer_flags->print_ompt_counters) {
     print_callbacks(all_counter);
@@ -942,8 +942,7 @@ static void ompt_tsan_finalize(ompt_fns_t* fns)
     delete archer_flags;
 }
 
-
-ompt_fns_t* ompt_start_tool(
+ompt_start_tool_result_t* ompt_start_tool(
   unsigned int omp_version,
   const char *runtime_version)
 {
