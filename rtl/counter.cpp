@@ -53,12 +53,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void print_callbacks(callback_counter_t *counter){
     int* basecounter = (int*)counter;
-    int total_callbacks;
+    int total_callbacks=0;
     for(int i = 1; i<MAX_THREADS; i++){
         // if we have at least i threads, this thread should have a thread_begin event:
         if (counter[i].thread_begin==0) break;
         int* threadcounter = (int*)(counter+i);
-        for(int j=0; j<sizeof(callback_counter_t)/sizeof(int); j++)
+        for(int j=0; j<(int)sizeof(callback_counter_t)/sizeof(int); j++)
             basecounter[j] += threadcounter[j];
     }
 
