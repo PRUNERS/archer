@@ -186,7 +186,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
                                          NULL);
     Constant *suppression_str_const =
       ConstantDataArray::getString(M->getContext(),
-      "called_from_lib:libomp.so\nthread:^__kmp_create_worker$\n", true);
+      "called_from_lib:libomp.*\nthread:^__kmp_create_worker$\n", true);
     suppression_str->setInitializer(suppression_str_const);
     Function* __tsan_default_suppressions = cast<Function>(c);
     __tsan_default_suppressions->setCallingConv(CallingConv::C);
