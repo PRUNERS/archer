@@ -43,7 +43,8 @@ install:
 script:
   - cd $HOME/build/PRUNERS
   - rm -rf openmp
-  - git clone https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
+  # - git clone https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
+  - git clone https://github.com/llvm-mirror/openmp.git
   - export OPENMP_INSTALL=$HOME/usr
   - cd openmp/runtime
   - mkdir build && cd build
