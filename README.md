@@ -122,7 +122,7 @@ Create a folder to download and build Archer:
 
 Obtain the LLVM OpenMP Runtime with OMPT support:
 
-    git clone https://github.com/llvm-mirror/openmp.git
+    git clone https://github.com/llvm-mirror/openmp.git openmp
 
 and build it with the following command:
 
