@@ -129,7 +129,7 @@ chosen.
  Obtain the LLVM OpenMP Runtime with OMPT support:
 
  #+BEGIN_SRC bash :exports code
-   git clone https://github.com/llvm-mirror/openmp.git
+   git clone https://github.com/llvm-mirror/openmp.git openmp
  #+END_SRC
 
  and build it with the following command:
