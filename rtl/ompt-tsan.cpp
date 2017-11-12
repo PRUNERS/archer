@@ -67,6 +67,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
+#include <dlfcn.h>
+
 #include <sys/resource.h>
 #define _OPENMP
 #include "omp.h"
@@ -130,12 +132,11 @@ ArcherFlags *archer_flags;
 // See http://code.google.com/p/data-race-test/wiki/DynamicAnnotations .
 // tsan detects these exact functions by name.
 extern "C" {
-void __attribute__((weak)) AnnotateHappensAfter(const char *file, int line, const volatile void *cv){}
-void __attribute__((weak)) AnnotateHappensBefore(const char *file, int line, const volatile void *cv){}
-void __attribute__((weak)) AnnotateIgnoreWritesBegin(const char *file, int line){}
-void __attribute__((weak)) AnnotateIgnoreWritesEnd(const char *file, int line){}
-
-void __attribute__((weak)) AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){}
+  void __attribute__((weak)) AnnotateHappensAfter(const char *file, int line, const volatile void *cv){}
+  void __attribute__((weak)) AnnotateHappensBefore(const char *file, int line, const volatile void *cv){}
+  void __attribute__((weak)) AnnotateIgnoreWritesBegin(const char *file, int line){}
+  void __attribute__((weak)) AnnotateIgnoreWritesEnd(const char *file, int line){}
+  void __attribute__((weak)) AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){}
 }
 
 // This marker is used to define a happens-before arc. The race detector will
