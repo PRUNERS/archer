@@ -67,8 +67,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
-#include <dlfcn.h>
-
 #include <sys/resource.h>
 #define _OPENMP
 #include "omp.h"
