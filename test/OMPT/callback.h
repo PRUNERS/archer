@@ -76,6 +76,15 @@ ompt_label_##id:\
     /* "&& label" returns the address of the label (GNU extension); works with gcc, clang, icc */
     /* for void-type runtime function, the label is after the nop (-1), for functions with return value, there is a mov instruction before the label (-4) */
 
+#if (defined __APPLE__ && defined __MACH__)
+#define print_fuzzy_address(id)\
+{}              /* Empty block between "#pragma omp ..." and __asm__ statement as a workaround for icc bug */ \
+__asm__("nop"); /* provide an instruction as jump target (compiler would insert an instruction if label is target of a jmp ) */ \
+ompt_label_##id:\
+    printf("%" PRIu64 ": fuzzy_address=0x%llx or 0x%llx\n", ompt_get_thread_data()->value, ((uint64_t)(char*)(&& ompt_label_##id))/256-1, ((uint64_t)(char*)(&& ompt_label_##id))/256)
+    /* "&& label" returns the address of the label (GNU extension); works with gcc, clang, icc */
+    /* for void-type runtime function, the label is after the nop (-1), for functions with return value, there is a mov instruction before the label (-4) */
+#else
 #define print_fuzzy_address(id)\
 {}              /* Empty block between "#pragma omp ..." and __asm__ statement as a workaround for icc bug */ \
 __asm__("nop"); /* provide an instruction as jump target (compiler would insert an instruction if label is target of a jmp ) */ \
@@ -83,6 +92,7 @@ ompt_label_##id:\
     printf("%" PRIu64 ": fuzzy_address=0x%lx or 0x%lx\n", ompt_get_thread_data()->value, ((uint64_t)(char*)(&& ompt_label_##id))/256-1, ((uint64_t)(char*)(&& ompt_label_##id))/256)
     /* "&& label" returns the address of the label (GNU extension); works with gcc, clang, icc */
     /* for void-type runtime function, the label is after the nop (-1), for functions with return value, there is a mov instruction before the label (-4) */
+#endif
 
 static void format_task_type(int type, char* buffer)
 {
