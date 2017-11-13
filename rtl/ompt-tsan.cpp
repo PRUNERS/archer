@@ -67,6 +67,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
+#if (defined __APPLE__ && defined __MACH__)
+#include <dlfcn.h>
+#endif
+
 #include <sys/resource.h>
 #define _OPENMP
 #include "omp.h"
@@ -116,7 +120,7 @@ public:
 
 #if (LLVM_VERSION) >= 40
 extern "C" {
-  int __attribute__((weak)) __swordomp__get_omp_status();
+  int __attribute__((weak)) __archer__get_omp_status();
   void __attribute__((weak)) __tsan_flush_memory() {}
 }
 #endif
@@ -130,11 +134,44 @@ ArcherFlags *archer_flags;
 // See http://code.google.com/p/data-race-test/wiki/DynamicAnnotations .
 // tsan detects these exact functions by name.
 extern "C" {
+#if (defined __APPLE__ && defined __MACH__)
+  static void AnnotateHappensAfter(const char *file, int line, const volatile void *cv){
+    void (*fptr)(const char *, int, const volatile void *);
+
+    fptr = (void (*)(const char *, int, const volatile void *))dlsym(RTLD_DEFAULT, "AnnotateHappensAfter");
+    (*fptr)(file,line,cv);
+  }
+  static void AnnotateHappensBefore(const char *file, int line, const volatile void *cv){
+    void (*fptr)(const char *, int, const volatile void *);
+
+    fptr = (void (*)(const char *, int, const volatile void *))dlsym(RTLD_DEFAULT, "AnnotateHappensBefore");
+    (*fptr)(file,line,cv);
+  }
+  static void AnnotateIgnoreWritesBegin(const char *file, int line){
+    void (*fptr)(const char *, int);
+
+    fptr = (void (*)(const char *, int))dlsym(RTLD_DEFAULT, "AnnotateIgnoreWritesBegin");
+    (*fptr)(file,line);
+  }
+  static void AnnotateIgnoreWritesEnd(const char *file, int line){
+    void (*fptr)(const char *, int);
+
+    fptr = (void (*)(const char *, int))dlsym(RTLD_DEFAULT, "AnnotateIgnoreWritesEnd");
+    (*fptr)(file,line);
+  }
+  static void AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){
+    void (*fptr)(const char *, int, const volatile void *,size_t);
+
+    fptr = (void (*)(const char *, int, const volatile void *,size_t))dlsym(RTLD_DEFAULT, "AnnotateNewMemory");
+    (*fptr)(file,line,cv,size);
+  }
+#else
   void __attribute__((weak)) AnnotateHappensAfter(const char *file, int line, const volatile void *cv){}
   void __attribute__((weak)) AnnotateHappensBefore(const char *file, int line, const volatile void *cv){}
   void __attribute__((weak)) AnnotateIgnoreWritesBegin(const char *file, int line){}
   void __attribute__((weak)) AnnotateIgnoreWritesEnd(const char *file, int line){}
   void __attribute__((weak)) AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){}
+#endif
 }
 
 // This marker is used to define a happens-before arc. The race detector will
@@ -494,8 +531,8 @@ ompt_tsan_parallel_end(
   delete Data;
 
 #if (LLVM_VERSION >= 40)
-  if(&__swordomp__get_omp_status) {
-    if(__swordomp__get_omp_status() == 0 && archer_flags->flush_shadow)
+  if(&__archer__get_omp_status) {
+    if(__archer__get_omp_status() == 0 && archer_flags->flush_shadow)
       __tsan_flush_memory();
   }
 #endif
