@@ -1,52 +1,50 @@
-[![Build Status](https://travis-ci.org/PRUNERS/archer.svg?branch=master)](https://travis-ci.org/PRUNERS/archer)
-
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgd61ef8b">1. License</a></li>
-<li><a href="#org539f916">2. Introduction</a></li>
-<li><a href="#org3536ede">3. Prerequisites</a></li>
-<li><a href="#orgeb8270e">4. Installation</a>
+<li><a href="#org2865d61">1. License</a></li>
+<li><a href="#org1003608">2. Introduction</a></li>
+<li><a href="#org590fe65">3. Prerequisites</a></li>
+<li><a href="#org8e78e8c">4. Installation</a>
 <ul>
-<li><a href="#orgcea2fda">4.1. Automatic Building</a></li>
-<li><a href="#org3ef1687">4.2. Manual Building</a>
+<li><a href="#org0d101a1">4.1. Automatic Building</a></li>
+<li><a href="#orga232a16">4.2. Manual Building</a>
 <ul>
-<li><a href="#org969c388">4.2.1. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer OMPT Support</a></li>
+<li><a href="#org917d8f1">4.2.1. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer OMPT support</a></li>
 </ul>
 </li>
-<li><a href="#org5da613c">4.3. Build Archer within Clang/LLVM</a></li>
+<li><a href="#org9a98d21">4.3. Build Archer within Clang/LLVM</a></li>
 </ul>
 </li>
-<li><a href="#org513a9c1">5. Usage</a>
+<li><a href="#org3413881">5. Usage</a>
 <ul>
-<li><a href="#org17f57b1">5.1. How to compile</a>
+<li><a href="#orgcb03983">5.1. How to compile</a>
 <ul>
-<li><a href="#org94932f8">5.1.1. Single source</a></li>
-<li><a href="#org3a1beab">5.1.2. Makefile</a></li>
-<li><a href="#org0e67472">5.1.3. Hybrid MPI-OpenMP programs</a></li>
+<li><a href="#org32ece88">5.1.1. Single source</a></li>
+<li><a href="#orged2faf8">5.1.2. Makefile</a></li>
+<li><a href="#org9f7fea0">5.1.3. Hybrid MPI-OpenMP programs</a></li>
 </ul>
 </li>
-<li><a href="#orgeae3e3a">5.2. Options</a></li>
-<li><a href="#org875c5d3">5.3. Runtime Flags</a></li>
+<li><a href="#org12e190b">5.2. Options</a></li>
+<li><a href="#org20de1a2">5.3. Runtime Flags</a></li>
 </ul>
 </li>
-<li><a href="#orged440cc">6. Example</a></li>
-<li><a href="#org35740ea">7. Contacts and Support</a></li>
-<li><a href="#org42dda52">8. Members</a></li>
+<li><a href="#orge7e62cd">6. Example</a></li>
+<li><a href="#org3a28840">7. Contacts and Support</a></li>
+<li><a href="#org068da2e">8. Members</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="orgd61ef8b"></a>
+<a id="org2865d61"></a>
 
 # License
 
 Please see LICENSE for usage terms.
 
 
-<a id="org539f916"></a>
+<a id="org1003608"></a>
 
 # Introduction
 
@@ -61,7 +59,7 @@ on open-source tools infrastructure such as LLVM, ThreadSanitizer, and
 OMPT to provide portability.
 
 
-<a id="org3536ede"></a>
+<a id="org590fe65"></a>
 
 # Prerequisites
 
@@ -69,7 +67,7 @@ To compile Archer you need a host Clang/LLVM version >= 3.9, a
 CMake version >= 3.4.3.
 
 Ninja build system is preferred. For more information how to obtain
-Ninja visit <https://github.com/ninja-build/ninja>.
+Ninja visit <https://github.com/ninja-build/ninja>. (Note that this is different than PRUNERS NINJA tool.)
 
 Archer has been tested with the LLVM OpenMP Runtime version >= 3.9,
 and with the LLVM OpenMP Runtime with OMPT support currently under
@@ -77,7 +75,7 @@ development at <https://github.com/OpenMPToolsInterface/LLVM-openmp>
 (under the branch "tr4-stable").
 
 
-<a id="orgeb8270e"></a>
+<a id="org8e78e8c"></a>
 
 # Installation
 
@@ -85,7 +83,7 @@ Archer has been developed under LLVM 3.9 (for more information visit
 <http://llvm.org>).
 
 
-<a id="orgcea2fda"></a>
+<a id="org0d101a1"></a>
 
 ## Automatic Building
 
@@ -93,31 +91,31 @@ For an automatic building script (recommended) please visit the GitHub
 page <https://github.com/PRUNERS/llvm_archer>.
 
 
-<a id="org3ef1687"></a>
+<a id="orga232a16"></a>
 
 ## Manual Building
 
-Archer comes as an LLVM tool, it can be compiled both as stand-alone
+Archer comes as an LLVM tool, it can be compiled both as a stand-alone
 tool or within the Clang/LLVM infrastructure.
 
-In order to obtain and build Archer follow the instructions below for
+In order to obtain and build Archer, follow the instructions below for
 stand-alone or full Clang/LLVM with Archer support building
 (instructions are based on bash shell, Clang/LLVM 3.9 version, Ninja
 build system, and the LLVM OpenMP Runtime with OMPT support).
 
-Note: Using the LLVM OpenMP Runtime version >= 3.9 may results in some
-false positives during the data race detection process. Please, notice
+Note: Using the LLVM OpenMP Runtime version >= 3.9 may result in some
+false positives during the data race detection process. Notice
 that the full building of Clang/LLVM with Archer support depends on
 the version of LLVM OpenMP runtime. In the configuration section, there
 will be two different commands depending on the type of runtime
 chosen.
 
 
-<a id="org969c388"></a>
+<a id="org917d8f1"></a>
 
-### Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer OMPT Support
+### Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer OMPT support
 
-Create a folder to download and build Archer:
+Create a folder in which to download and build Archer:
 
     export ARCHER_BUILD=$PWD/ArcherBuild
     mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
@@ -164,11 +162,11 @@ and build it with the following commands:
     cd ../..
 
 
-<a id="org5da613c"></a>
+<a id="org9a98d21"></a>
 
 ## Build Archer within Clang/LLVM
 
-Create a folder to download and build Clang/LLVM and Archer:
+Create a folder in which to download and build Clang/LLVM and Archer:
 
     export ARCHER_BUILD=$PWD/ArcherBuild
     mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
@@ -294,7 +292,7 @@ Otherwise, in case of LLVM OpenMP Runtime with OMPT support run:
     ninja check-libarcher
     ninja install
 
-Once the installation completes, you need to setup your environement
+Once the installation completes, you need to setup your environment
 to allow Archer to work correctly.
 
 Please set the following path variables:
@@ -302,16 +300,16 @@ Please set the following path variables:
     export PATH=${LLVM_INSTALL}/bin:${PATH}"
     export LD_LIBRARY_PATH=${LLVM_INSTALL}/lib:${LD_LIBRARY_PATH}"
 
-To make the environment permanent add the previous lines or
+To make the environment permanent, add the previous lines or
 equivalents to your shell start-up script such as "~/.bashrc".
 
 
-<a id="org513a9c1"></a>
+<a id="org3413881"></a>
 
 # Usage
 
 
-<a id="org17f57b1"></a>
+<a id="orgcb03983"></a>
 
 ## How to compile
 
@@ -332,14 +330,14 @@ library *libarcher.so*. (In the example below the runtime library will
 be shown in square brackets).
 
 
-<a id="org94932f8"></a>
+<a id="org32ece88"></a>
 
 ### Single source
 
     clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="org3a1beab"></a>
+<a id="orged2faf8"></a>
 
 ### Makefile
 
@@ -349,7 +347,7 @@ In your Makefile, set the following variables:
     [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="org0e67472"></a>
+<a id="org9f7fea0"></a>
 
 ### Hybrid MPI-OpenMP programs
 
@@ -359,7 +357,7 @@ In your Makefile, set the following variables:
     [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="orgeae3e3a"></a>
+<a id="org12e190b"></a>
 
 ## Options
 
@@ -367,12 +365,12 @@ The command *clang-archer* works as a compiler wrapper, all the
 options available for clang are also available for *clang-archer*.
 
 
-<a id="org875c5d3"></a>
+<a id="org20de1a2"></a>
 
 ## Runtime Flags
 
 Runtime flags are passed via **ARCHER&#95;OPTIONS** environment variable,
-separate flags are separated by spaces, e.g.:
+different flags are separated by spaces, e.g.:
 
     ARCHER_OPTIONS="flush_shadow=1" ./myprogram
 
@@ -426,7 +424,7 @@ separate flags are separated by spaces, e.g.:
 </table>
 
 
-<a id="orged440cc"></a>
+<a id="orge7e62cd"></a>
 
 # Example
 
@@ -490,7 +488,7 @@ the report will look as follow:
     ThreadSanitizer: reported 1 warnings
 
 
-<a id="org35740ea"></a>
+<a id="org3a28840"></a>
 
 # Contacts and Support
 
@@ -503,8 +501,8 @@ the report will look as follow:
     <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
 
 
-<a id="org42dda52"></a>
+<a id="org068da2e"></a>
 
 # Members
 
-<img src="resources/images/uofu_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="UofU Logo" title="University of Utah" style="float:left" /> <img src="resources/images/llnl_logo.png" hspace="70" vspace="5" height="30%" width="30%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" style="float:center" /> <img src="resources/images/rwthaachen_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" style="float:left" />
+<img src="resources/images/uofu_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="UofU Logo" title="University of Utah" style="float:left"/> <img src="resources/images/llnl_logo.png" hspace="70" vspace="5" height="30%" width="30%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" style="float:center" /> <img src="resources/images/rwthaachen_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" style="float:left" />
