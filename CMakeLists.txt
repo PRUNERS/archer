@@ -105,6 +105,8 @@ if(${ARCHER_STANDALONE_BUILD})
 
   add_definitions(${LLVM_DEFINITIONS})
   include_directories(${LLVM_INCLUDE_DIRS})
+else()
+  set(LLVM_ROOT ${CMAKE_INSTALL_PREFIX} CACHE PATH "Root of LLVM install.")
 endif()
 
 # Look for OpenMP runtime
