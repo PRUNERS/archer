@@ -58,11 +58,11 @@ void print_callbacks(callback_counter_t *counter){
         // if we have at least i threads, this thread should have a thread_begin event:
         if (counter[i].thread_begin==0) break;
         int* threadcounter = (int*)(counter+i);
-        for(int j=0; j<(int)sizeof(callback_counter_t)/sizeof(int); j++)
+        for(int j=0; j<(int)(sizeof(callback_counter_t)/sizeof(int)); j++)
             basecounter[j] += threadcounter[j];
     }
 
-    for(int j=0; j<sizeof(callback_counter_t)/sizeof(int); j++)
+    for(int j=0; j<(int)(sizeof(callback_counter_t)/sizeof(int)); j++)
         total_callbacks += basecounter[j];
 
     printf("Total callbacks: %d\n", total_callbacks);
