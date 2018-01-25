@@ -70,3 +70,9 @@ add_llvm_loadable_module(LLVMArcher
   ${ARCHER_SOURCE_FILES}
   ${ARCHER_HEADER_FILES}
   )
+
+# after moving to a llvm-version, that has added this target, we can use this
+# dependency to declare the dependency to the generated Attributes.gen file, 
+# which is included by serveral indirections:
+
+#add_dependencies(LLVMArcher attributes_gen)
