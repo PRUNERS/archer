@@ -116,7 +116,7 @@ public:
 
 #if (LLVM_VERSION) >= 40
 extern "C" {
-  int __attribute__((weak)) __swordomp__get_omp_status();
+  int __attribute__((weak)) __archer_get_omp_status();
   void __attribute__((weak)) __tsan_flush_memory() {}
 }
 #endif
@@ -495,8 +495,8 @@ ompt_tsan_parallel_end(
   delete Data;
 
 #if (LLVM_VERSION >= 40)
-  if(&__swordomp__get_omp_status) {
-    if(__swordomp__get_omp_status() == 0 && archer_flags->flush_shadow)
+  if(&__archer_get_omp_status) {
+    if(__archer_get_omp_status() == 0 && archer_flags->flush_shadow)
       __tsan_flush_memory();
   }
 #endif
