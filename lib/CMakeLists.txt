@@ -71,8 +71,8 @@ add_llvm_loadable_module(LLVMArcher
   ${ARCHER_HEADER_FILES}
   )
 
-# after moving to a llvm-version, that has added this target, we can use this
-# dependency to declare the dependency to the generated Attributes.gen file, 
-# which is included by serveral indirections:
+# This declares the dependency to the generated Attributes.gen file, 
+# which is included by serveral indirections (target is provided by
+# LLVM-SRC/include/llvm/IR/CMakeLists.txt): 
 
 add_dependencies(LLVMArcher intrinsics_gen)
