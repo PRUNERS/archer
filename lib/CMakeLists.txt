@@ -75,4 +75,4 @@ add_llvm_loadable_module(LLVMArcher
 # dependency to declare the dependency to the generated Attributes.gen file, 
 # which is included by serveral indirections:
 
-#add_dependencies(LLVMArcher attributes_gen)
+add_dependencies(LLVMArcher intrinsics_gen)
