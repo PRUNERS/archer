@@ -53,8 +53,8 @@ linking=yes
 for arg in "$@" ; do
   case "$arg" in
   -c|-S|-E|-M|-MM|MMD)
-    linking=no
-  ;;
+      linking=no
+    ;;
   esac
 done
 
@@ -64,8 +64,11 @@ if [ $linking == yes ] ; then
     else
   	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib"
     fi
+    if [[ $@ = *"-ldedup"* ]]; then
+      link_flags="-Wl,--whole-archive  @CMAKE_INSTALL_PREFIX@/lib/libdedup.a -Wl,--no-whole-archive $link_flags"
+    fi
 else
   link_flags=""
 fi
 
-@LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"
+@LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp $link_flags -fsanitize=thread -g "$@"

@@ -52,7 +52,15 @@ add_library(archer_static STATIC ompt-tsan.cpp counter.cpp)
 add_library(farcher MODULE ftsan.c)
 add_library(farcher_static STATIC ftsan.c)
 
-install(TARGETS archer archer_static farcher farcher_static
+
+find_package(LLVM REQUIRED CONFIG)
+include_directories(${LLVM_CMAKE_DIR}/../../projects/compiler-rt/include/)
+include_directories(${LLVM_CMAKE_DIR}/../../projects/compiler-rt/lib/tsan/rtl/)
+include_directories(${LLVM_CMAKE_DIR}/../../projects/compiler-rt/lib/)
+set_source_files_properties(deduplicate.cpp PROPERTIES COMPILE_FLAGS -std=c99)
+add_library(dedup STATIC deduplicate_report.cpp)
+
+install(TARGETS archer archer_static farcher farcher_static dedup
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib)
 
