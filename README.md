@@ -131,14 +131,27 @@ and build it with the following command:
     export OPENMP_INSTALL=$HOME/usr           # or any other install path
     cd openmp
     mkdir build && cd build
+    cmake \
+     -D CMAKE_C_COMPILER=clang \
+     -D CMAKE_CXX_COMPILER=clang++ \
+     -D CMAKE_BUILD_TYPE=Release \
+     -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL \
+     -D LIBOMP_OMPT_SUPPORT=on \
+     ..
+    make -j8                                  # or any number of available cores
+    make install
+
+or build using Ninja with the following command:
+
+    export OPENMP_INSTALL=$HOME/usr           # or any other install path
+    cd openmp
+    mkdir build && cd build
     cmake -G Ninja \
      -D CMAKE_C_COMPILER=clang \
      -D CMAKE_CXX_COMPILER=clang++ \
      -D CMAKE_BUILD_TYPE=Release \
      -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL \
      -D LIBOMP_OMPT_SUPPORT=on \
-     -D LIBOMP_OMPT_BLAME=on \
-     -D LIBOMP_OMPT_TRACE=on \
      ..
     ninja -j8 -l8                             # or any number of available cores
     ninja install
