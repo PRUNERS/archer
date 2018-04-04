@@ -129,7 +129,7 @@ Obtain the LLVM OpenMP Runtime with OMPT support:
 and build it with the following command:
 
     export OPENMP_INSTALL=$HOME/usr           # or any other install path
-    cd openmp/runtime
+    cd openmp
     mkdir build && cd build
     cmake -G Ninja \
      -D CMAKE_C_COMPILER=clang \
