@@ -52,7 +52,7 @@ static_analysis=true
 linking=yes
 for arg in "$@" ; do
     case "$arg" in
-        -nosa=*)
+        --nosa)
             static_analysis=false
             shift
             ;;

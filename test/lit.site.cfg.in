@@ -2,6 +2,7 @@
 
 config.test_compiler = "@ARCHER_TEST_COMPILER@"
 config.ompt_test_compiler = "@OMPT_TEST_COMPILER@"
+config.test_c_compiler = "@OMPT_TEST_COMPILER@"
 config.test_filecheck = "@FILECHECK_EXECUTABLE@"
 config.test_extra_cflags = "@ARCHER_TEST_CFLAGS@"
 config.libarcher_obj_root = "@CMAKE_CURRENT_BINARY_DIR@"
