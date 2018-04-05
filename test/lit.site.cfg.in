@@ -1,25 +1,50 @@
 @AUTO_GEN_COMMENT@
 
-config.test_compiler = "@ARCHER_TEST_COMPILER@"
-config.ompt_test_compiler = "@OMPT_TEST_COMPILER@"
-config.test_c_compiler = "@OMPT_TEST_COMPILER@"
-config.test_filecheck = "@FILECHECK_EXECUTABLE@"
-config.test_extra_cflags = "@ARCHER_TEST_CFLAGS@"
+config.test_c_compiler = "@LIBARCHER_TEST_C_COMPILER@"
+config.test_cxx_compiler = "@LIBARCHER_TEST_CXX_COMPILER@"
+config.test_compiler_features = @LIBARCHER_TEST_COMPILER_FEATURES@
+config.test_filecheck = "@LIBARCHER_FILECHECK_EXECUTABLE@"
+config.test_archer_flags = "@LIBARCHER_TEST_ARCHER_FLAGS@"
+config.test_extra_flags = "@LIBARCHER_TEST_FLAGS@"
 config.libarcher_obj_root = "@CMAKE_CURRENT_BINARY_DIR@"
-config.library_dir = "@ARCHER_LIB_PATH@"
-config.omp_header_directory = "@OMP_INCLUDE_PATH@"
-config.omp_lib_directory = "@OMP_LIB_PATH@"
-config.archer_tools_dir = "@ARCHER_TOOLS_DIR@"
-config.archer_library_dir = "@ARCHER_LIB_PATH@"
-config.archer_runtime_dir = "@ARCHER_RUNTIME_PATH@"
-config.archer_library = "@ARCHER_LIB@"
-config.archer_runtime = "@ARCHER_RTL@"
-config.has_archer_library = @ARCHER_HAVE_ARCHER_LIBRARY@
-config.has_archer_runtime = @ARCHER_HAVE_ARCHER_RUNTIME@
-config.suppressions_archer_runtime_file = "@ARCHER_ARCHER_RUNTIME_SUPPRESSIONS_FILE@"
+config.omp_library_dir = "@OMP_LIB_PATH@"
+config.omp_header_dir = "@OMP_INCLUDE_PATH@"
 config.operating_system = "@CMAKE_SYSTEM_NAME@"
-config.has_libm = "@ARCHER_HAVE_LIBM@"
-config.has_race = True
+config.has_ompt = @LIBARCHER_OMPT_SUPPORT@
+config.has_libm = @LIBARCHER_HAVE_LIBM@
+config.has_libatomic = @LIBARCHER_HAVE_LIBATOMIC@
+config.archer_tools_dir = "@LIBARCHER_TOOLS_DIR@"
+config.archer_library_dir = "@LIBARCHER_LIB_PATH@"
+config.archer_runtime_dir = "@LIBARCHER_RUNTIME_PATH@"
+config.archer_library = "@LIBARCHER_LIB@"
+config.archer_runtime = "@LIBARCHER_RTL@"
+config.has_archer_library = @LIBARCHER_HAVE_ARCHER_LIBRARY@
+config.has_archer_runtime = @LIBARCHER_HAVE_ARCHER_RUNTIME@
+config.suppressions_archer_runtime_file = "@LIBARCHER_ARCHER_RUNTIME_SUPPRESSIONS_FILE@"
+
+# print("\nStart")
+# print("config.test_c_compiler: " + str(config.test_c_compiler))
+# print("config.test_cxx_compiler: " + str(config.test_cxx_compiler))
+# print("config.test_compiler_features: " + str(config.test_compiler_features))
+# print("config.test_filecheck: " + str(config.test_filecheck))
+# print("config.test_archer_flags: " + str(config.test_archer_flags))
+# print("config.test_extra_flags: " + str(config.test_extra_flags))
+# print("config.libarcher_obj_root: " + str(config.libarcher_obj_root))
+# print("config.omp_library_dir: " + str(config.omp_library_dir))
+# print("config.omp_header_dir: " + str(config.omp_header_dir))
+# print("config.operating_system: " + str(config.operating_system))
+# print("config.has_ompt:" + str(config.has_ompt))
+# print("config.has_libm:" + str(config.has_libm))
+# print("config.has_libatomic: " + str(config.has_libatomic))
+# print("config.archer_tools_dir" + str(config.archer_tools_dir))
+# print("config.archer_library_dir: " + str(config.archer_library_dir))
+# print("config.archer_runtime_dir: " + str(config.archer_runtime_dir))
+# print("config.archer_library: " + str(config.archer_library))
+# print("config.archer_runtime: " + str(config.archer_runtime))
+# print("config.has_archer_library: " + str(config.has_archer_library))
+# print("config.has_archer_runtime: " + str(config.has_archer_runtime))
+# print("config.suppressions_archer_runtime_file: " + str(config.suppressions_archer_runtime_file))
+# print("End\n")
 
 # Let the main config do the real work.
-lit_config.load_config(config, "@ARCHER_BASE_DIR@/test/lit.cfg")
+lit_config.load_config(config, "@LIBARCHER_BASE_DIR@/test/lit.cfg")

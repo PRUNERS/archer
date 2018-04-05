@@ -47,7 +47,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// RUN: %raceomp-compile-and-run | FileCheck %s
+// RUN: %libarcher-compile-and-run-race | FileCheck %s
 #include <omp.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -88,6 +88,8 @@ int main(int argc, char* argv[])
 // CHECK: WARNING: ThreadSanitizer: data race
 // CHECK:   Write of size 4
 // CHECK: #0 .omp_outlined.
+// CHECK: #1 .omp_task_entry.
 // CHECK:   Previous write of size 4
 // CHECK: #0 .omp_outlined.
+// CHECK: #1 .omp_task_entry.
 // CHECK: DONE

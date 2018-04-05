@@ -7,7 +7,7 @@
 #include "ompt-signal.h"
 
 // Used to detect architecture
-#include "../../src/kmp_platform.h"
+#include "kmp_platform.h"
 
 static const char* ompt_thread_type_t_values[] = {
   NULL,
