@@ -1,4 +1,4 @@
-sudo: required
+OBsudo: required
 language: cpp
 dist: trusty
 addons:
@@ -11,9 +11,9 @@ addons:
 
 env:
   global:
-    - CMAKE_VERSION_MAJOR=v3.10
-    - CMAKE_VERSION=3.10.2
-    - NINJA_VERSION=v1.8.2
+    - CMAKE_VERSION_MAJOR=v3.11
+    - CMAKE_VERSION=3.11.0
+    - NINJA_VERSION=v1.7.2
     - LLVM_VERSION=6.0.0
     - LLVM_ARCHIVE_PATH=$HOME/clang+llvm.tar.xz
     - export PATH=$HOME/usr/bin:$PATH
