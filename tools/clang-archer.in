@@ -48,27 +48,47 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-
+static_analysis=true
 linking=yes
+extra_lflags=
+
 for arg in "$@" ; do
-  case "$arg" in
-  -c|-S|-E|-M|-MM|MMD)
-      linking=no
-    ;;
-  esac
+    case "$arg" in
+        --nosa)
+            static_analysis=false
+            shift
+            ;;
+        --nodup)
+            extra_lflags="-Wl,--whole-archive @CMAKE_INSTALL_PREFIX@/lib/libdedup.a -Wl,--no-whole-archive $link_flags"
+            shift
+            ;;
+        --help)
+            echo "Archer Options"
+            echo
+            echo "  -nosa     Disable Archer static analysis to avoid sequential code blacklisting."
+            echo
+            shift
+            @LLVM_ROOT@/bin/clang --help
+            exit
+            ;;
+        -c|-S|-E|-M|-MM|MMD)
+            linking=no
+            ;;
+    esac
 done
 
 if [ $linking == yes ] ; then
     if [ @LIBOMP_TSAN_SUPPORT@ == FALSE ] ; then
-  	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib -L@CMAKE_INSTALL_PREFIX@/lib -Wl,-rpath=@CMAKE_INSTALL_PREFIX@/lib -larcher"
+  	link_flags="$extra_lflags -L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib -L@CMAKE_INSTALL_PREFIX@/lib -Wl,-rpath=@CMAKE_INSTALL_PREFIX@/lib -larcher"
     else
   	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib"
-    fi
-    if [[ $@ = *"-ldedup"* ]]; then
-      link_flags="-Wl,--whole-archive  @CMAKE_INSTALL_PREFIX@/lib/libdedup.a -Wl,--no-whole-archive $link_flags"
     fi
 else
   link_flags=""
 fi
 
-@LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp $link_flags -fsanitize=thread -g "$@"
+if [ "$static_analysis" == "true" ]; then
+    @LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp $link_flags -fsanitize=thread -g "$@"
+else
+    @LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -fopenmp $link_flags -fsanitize=thread -g "$@"
+fi

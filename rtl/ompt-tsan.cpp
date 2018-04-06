@@ -67,6 +67,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
+#if (defined __APPLE__ && defined __MACH__)
+#include <dlfcn.h>
+#endif
+
 #include <sys/resource.h>
 #define _OPENMP
 #include "omp.h"
@@ -116,7 +120,7 @@ public:
 
 #if (LLVM_VERSION) >= 40
 extern "C" {
-  int __attribute__((weak)) __swordomp__get_omp_status();
+  int __attribute__((weak)) __archer_get_omp_status();
   void __attribute__((weak)) __tsan_flush_memory() {}
 }
 #endif
@@ -130,12 +134,44 @@ ArcherFlags *archer_flags;
 // See http://code.google.com/p/data-race-test/wiki/DynamicAnnotations .
 // tsan detects these exact functions by name.
 extern "C" {
-void __attribute__((weak)) AnnotateHappensAfter(const char *file, int line, const volatile void *cv){}
-void __attribute__((weak)) AnnotateHappensBefore(const char *file, int line, const volatile void *cv){}
-void __attribute__((weak)) AnnotateIgnoreWritesBegin(const char *file, int line){}
-void __attribute__((weak)) AnnotateIgnoreWritesEnd(const char *file, int line){}
+#if (defined __APPLE__ && defined __MACH__)
+  static void AnnotateHappensAfter(const char *file, int line, const volatile void *cv){
+    void (*fptr)(const char *, int, const volatile void *);
 
-void __attribute__((weak)) AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){}
+    fptr = (void (*)(const char *, int, const volatile void *))dlsym(RTLD_DEFAULT, "AnnotateHappensAfter");
+    (*fptr)(file,line,cv);
+  }
+  static void AnnotateHappensBefore(const char *file, int line, const volatile void *cv){
+    void (*fptr)(const char *, int, const volatile void *);
+
+    fptr = (void (*)(const char *, int, const volatile void *))dlsym(RTLD_DEFAULT, "AnnotateHappensBefore");
+    (*fptr)(file,line,cv);
+  }
+  static void AnnotateIgnoreWritesBegin(const char *file, int line){
+    void (*fptr)(const char *, int);
+
+    fptr = (void (*)(const char *, int))dlsym(RTLD_DEFAULT, "AnnotateIgnoreWritesBegin");
+    (*fptr)(file,line);
+  }
+  static void AnnotateIgnoreWritesEnd(const char *file, int line){
+    void (*fptr)(const char *, int);
+
+    fptr = (void (*)(const char *, int))dlsym(RTLD_DEFAULT, "AnnotateIgnoreWritesEnd");
+    (*fptr)(file,line);
+  }
+  static void AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){
+    void (*fptr)(const char *, int, const volatile void *,size_t);
+
+    fptr = (void (*)(const char *, int, const volatile void *,size_t))dlsym(RTLD_DEFAULT, "AnnotateNewMemory");
+    (*fptr)(file,line,cv,size);
+  }
+#else
+  void __attribute__((weak)) AnnotateHappensAfter(const char *file, int line, const volatile void *cv){}
+  void __attribute__((weak)) AnnotateHappensBefore(const char *file, int line, const volatile void *cv){}
+  void __attribute__((weak)) AnnotateIgnoreWritesBegin(const char *file, int line){}
+  void __attribute__((weak)) AnnotateIgnoreWritesEnd(const char *file, int line){}
+  void __attribute__((weak)) AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){}
+#endif
 }
 
 // This marker is used to define a happens-before arc. The race detector will
@@ -241,7 +277,7 @@ struct DataPool {
     DPMutex.unlock();
   }
 
-  DataPool() : DataPointer(), DPMutex(), total(0)
+  DataPool() : DPMutex(), DataPointer(), total(0)
   {}
 
 };
@@ -453,14 +489,14 @@ ompt_tsan_thread_begin(
   COUNT_EVENT1(thread_begin);
 }
 
-static void
+/*static void
 ompt_tsan_thread_end(
   ompt_data_t *thread_data)
 {
   printf("%lu: total PD: %lu / %i TD: %lu / %i TG: %lu / %i\n", thread_data->value, pdp->total - pdp->DataPointer.size(), pdp->total, tdp->total - tdp->DataPointer.size(),
     tdp->total, tgp->total - tgp->DataPointer.size(), tgp->total);
   COUNT_EVENT1(thread_end);
-}
+}*/
 
 /// OMPT event callbacks for handling parallel regions.
 
@@ -495,8 +531,8 @@ ompt_tsan_parallel_end(
   delete Data;
 
 #if (LLVM_VERSION >= 40)
-  if(&__swordomp__get_omp_status) {
-    if(__swordomp__get_omp_status() == 0 && archer_flags->flush_shadow)
+  if(&__archer_get_omp_status) {
+    if(__archer_get_omp_status() == 0 && archer_flags->flush_shadow)
       __tsan_flush_memory();
   }
 #endif
@@ -624,13 +660,13 @@ ompt_tsan_task_create(
     ompt_data_t *parent_task_data,    /* id of parent task            */
     const ompt_frame_t *parent_frame,  /* frame data for parent task   */
     ompt_data_t* new_task_data,      /* id of created task           */
-    ompt_task_type_t type,
+    int type,
     int has_dependences,
     const void *codeptr_ra)               /* pointer to outlined function */
 {
   TaskData* Data;
   assert(new_task_data->ptr == NULL && "Task data should be initialized to NULL");
-  if (type == ompt_task_initial)
+  if (type & ompt_task_initial)
   {
     ompt_data_t* parallel_data;
     int team_size = 1;
@@ -641,12 +677,12 @@ ompt_tsan_task_create(
     Data = new TaskData(PData);
     new_task_data->ptr = Data;
     COUNT_EVENT2(task_create,initial);
-  } else if (type == 5 /*ompt_task_included*/) {
+  } else if (type & ompt_task_undeferred) {
     Data = new TaskData(ToTaskData(parent_task_data));
     new_task_data->ptr = Data;
     Data->Included=true;
     COUNT_EVENT2(task_create,included);
-  } else {
+  } else if (type & ompt_task_explicit || type & ompt_task_target) {
     Data = new TaskData(ToTaskData(parent_task_data));
     new_task_data->ptr = Data;
 
@@ -869,16 +905,22 @@ static void ompt_tsan_mutex_released(
   }
 }
 
-#define SET_CALLBACK_T(event, type) \
+#define SET_CALLBACK_T(event, type)                           \
+do{                                                           \
   ompt_callback_##type##_t tsan_##event = &ompt_tsan_##event; \
-  ompt_set_callback(ompt_callback_##event, (ompt_callback_t) tsan_##event)
+  int ret = ompt_set_callback(ompt_callback_##event,          \
+      (ompt_callback_t) tsan_##event);                        \
+  if (ret != ompt_set_always)                                 \
+      printf("Registered callback '" #event                   \
+            "' is not always invoked (%i)\n", ret);           \
+}while(0)
 
 #define SET_CALLBACK(event) SET_CALLBACK_T(event, event)
 
 
 static int ompt_tsan_initialize(
   ompt_function_lookup_t lookup,
-  ompt_fns_t* fns
+  ompt_data_t *tool_data
   ) {
 
   const char *options = getenv("ARCHER_OPTIONS");
@@ -919,7 +961,7 @@ static int ompt_tsan_initialize(
 }
 
 
-static void ompt_tsan_finalize(ompt_fns_t* fns)
+static void ompt_tsan_finalize(ompt_data_t *tool_data)
 {
   if(archer_flags->print_ompt_counters) {
     print_callbacks(all_counter);
@@ -936,11 +978,10 @@ static void ompt_tsan_finalize(ompt_fns_t* fns)
     delete archer_flags;
 }
 
-
-ompt_fns_t* ompt_start_tool(
+ompt_start_tool_result_t* ompt_start_tool(
   unsigned int omp_version,
   const char *runtime_version)
 {
-  static ompt_fns_t ompt_fns = {&ompt_tsan_initialize,&ompt_tsan_finalize};
-  return &ompt_fns;
+  static ompt_start_tool_result_t ompt_start_tool_result = {&ompt_tsan_initialize,&ompt_tsan_finalize, {0}};
+  return &ompt_start_tool_result;
 }
