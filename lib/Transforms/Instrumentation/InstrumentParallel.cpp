@@ -53,28 +53,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/StringExtras.h"
-#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/CaptureTracking.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
-#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
-#include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Type.h"
-// #include "llvm/ProfileData/InstrProf.h"
+#include "llvm/ProfileData/InstrProf.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#include "llvm/Transforms/Instrumentation.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Cloning.h"
+#include "llvm/Transforms/Utils/EscapeEnumerator.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/ModuleUtils.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
@@ -182,8 +183,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     suppression_str->setAlignment(1);
     IRBuilder<> IRB(M->getContext());
     Constant* c = M->getOrInsertFunction("__tsan_default_suppressions",
-                                         IRB.getInt8PtrTy(),
-                                         NULL);
+                                         IRB.getInt8PtrTy());
     Constant *suppression_str_const =
       ConstantDataArray::getString(M->getContext(),
       "called_from_lib:libomp.*\nthread:^__kmp_create_worker$\n", true);
@@ -197,9 +197,8 @@ bool InstrumentParallel::runOnFunction(Function &F) {
 
 #if LLVM_VERSION >= 40
     IRBuilder<> IRB2(M->getContext());
-    Constant* constant = M->getOrInsertFunction("__archer__get_omp_status",
-    		IRB2.getInt32Ty(),
-			NULL);
+    Constant* constant = M->getOrInsertFunction("__archer_get_omp_status",
+    		IRB2.getInt32Ty());
     Function* __archer_get_omp_status = cast<Function>(constant);
     __archer_get_omp_status->setCallingConv(CallingConv::C);
     BasicBlock* block2 = BasicBlock::Create(M->getContext(), "entry", __archer_get_omp_status);
@@ -216,7 +215,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
      functionName.endswith("__archer__") ||
      functionName.endswith("__clang_call_terminate") ||
      functionName.endswith("__tsan_default_suppressions") ||
-	 functionName.endswith("__archer__get_omp_status") ||
+     functionName.endswith("__archer_get_omp_status") ||
      (F.getLinkage() == llvm::GlobalValue::AvailableExternallyLinkage)) {
     return true;
   }
@@ -266,8 +265,8 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     ValueToValueMapTy VMap;
     Function *new_function = CloneFunction(&F, VMap);
     new_function->setName(functionName + "__archer__");
-    Function::ArgumentListType::iterator it = F.getArgumentList().begin();
-    Function::ArgumentListType::iterator end = F.getArgumentList().end();
+    Function::arg_iterator it = F.arg_begin();
+    Function::arg_iterator end = F.arg_end();
     std::vector<Value*> args;
     while (it != end) {
       Argument *Args = &(*it);

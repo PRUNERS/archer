@@ -46,16 +46,9 @@ Archer comes as an LLVM tool, it can be compiled both as a stand-alone
 tool or within the Clang/LLVM infrastructure.
 
 In order to obtain and build Archer, follow the instructions below for
-stand-alone or full Clang/LLVM with Archer support building
-(instructions are based on bash shell, Clang/LLVM 3.9 version, Ninja
-build system, and the LLVM OpenMP Runtime with OMPT support).
-
-Note: Using the LLVM OpenMP Runtime version >= 3.9 may result in some
-false positives during the data race detection process. Notice
-that the full building of Clang/LLVM with Archer support depends on
-the version of LLVM OpenMP runtime. In the configuration section, there
-will be two different commands depending on the type of runtime
-chosen.
+stand-alone or full Clang/LLVM with Archer support (instructions are
+based on bash shell, Clang/LLVM 3.9 version, Ninja build system, and
+the LLVM OpenMP Runtime with OMPT support).
 
 # ** Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
 

@@ -120,7 +120,7 @@ public:
 
 #if (LLVM_VERSION) >= 40
 extern "C" {
-  int __attribute__((weak)) __archer__get_omp_status();
+  int __attribute__((weak)) __archer_get_omp_status();
   void __attribute__((weak)) __tsan_flush_memory() {}
 }
 #endif
@@ -531,8 +531,8 @@ ompt_tsan_parallel_end(
   delete Data;
 
 #if (LLVM_VERSION >= 40)
-  if(&__archer__get_omp_status) {
-    if(__archer__get_omp_status() == 0 && archer_flags->flush_shadow)
+  if(&__archer_get_omp_status) {
+    if(__archer_get_omp_status() == 0 && archer_flags->flush_shadow)
       __tsan_flush_memory();
   }
 #endif
@@ -982,6 +982,6 @@ ompt_start_tool_result_t* ompt_start_tool(
   unsigned int omp_version,
   const char *runtime_version)
 {
-  static ompt_start_tool_result_t ompt_start_tool_result = {&ompt_tsan_initialize,&ompt_tsan_finalize, 0};
+  static ompt_start_tool_result_t ompt_start_tool_result = {&ompt_tsan_initialize,&ompt_tsan_finalize, {0}};
   return &ompt_start_tool_result;
 }
