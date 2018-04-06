@@ -186,7 +186,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
                                          IRB.getInt8PtrTy());
     Constant *suppression_str_const =
       ConstantDataArray::getString(M->getContext(),
-      "called_from_lib:libomp.so\nthread:^__kmp_create_worker$\n", true);
+      "called_from_lib:libomp.*\nthread:^__kmp_create_worker$\n", true);
     suppression_str->setInitializer(suppression_str_const);
     Function* __tsan_default_suppressions = cast<Function>(c);
     __tsan_default_suppressions->setCallingConv(CallingConv::C);
@@ -215,7 +215,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
      functionName.endswith("__archer__") ||
      functionName.endswith("__clang_call_terminate") ||
      functionName.endswith("__tsan_default_suppressions") ||
-	 functionName.endswith("__archer_get_omp_status") ||
+     functionName.endswith("__archer_get_omp_status") ||
      (F.getLinkage() == llvm::GlobalValue::AvailableExternallyLinkage)) {
     return true;
   }

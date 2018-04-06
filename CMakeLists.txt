@@ -86,6 +86,13 @@ add_definitions(-DLLVM_VERSION=${LLVM_VERSION})
 # These include files are in the cmake/ subdirectory
 include(LibarcherUtils)
 
+# Check is OSX or Linux (for lib extension)
+if(${APPLE})
+  set(EXT .dylib)
+elseif(${UNIX})
+  set(EXT .so)
+endif()
+
 if(${LIBARCHER_STANDALONE_BUILD})
   # LLVM detection part
   set(LLVM_ROOT "" CACHE PATH "Root of LLVM install.")
@@ -159,13 +166,17 @@ set(LIBARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 if(NOT ${LIBOMP_TSAN_SUPPORT})
     set(LIBARCHER_RUNTIME_PATH ${CMAKE_BINARY_DIR}/rtl)
     set(LIBARCHER_ARCHER_RUNTIME_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/rtl/suppressions.txt)
-    set(LIBARCHER_RTL libarcher.so)
+    set(LIBARCHER_RTL libarcher${EXT})
+  endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
 
 set(LIBARCHER_LIB_PATH "")
 if(${LIBARCHER_STATIC_ANALYSIS_SUPPORT})
     set(LIBARCHER_LIB_PATH ${CMAKE_BINARY_DIR}/lib)
-    set(LIBARCHER_LIB LLVMArcher.so)
+    set(LIBARCHER_LIB LLVMArcher${EXT})
     set(LIBARCHER_TOOLS_DIR ${LIBARCHER_BASE_DIR}/tools)
     add_subdirectory(lib)
 endif()
