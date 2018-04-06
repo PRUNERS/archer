@@ -138,7 +138,11 @@ endif()
 
 include(config-ix)
 
-has_ompt_support("${OMP_LIB_PATH}" "libomp.so" "ompt_start_tool" LIBARCHER_OMPT_SUPPORT)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  has_ompt_support("${OMP_LIB_PATH}" "libomp.so" "ompt_start_tool" LIBARCHER_OMPT_SUPPORT)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  has_ompt_support("${OMP_LIB_PATH}" "libomp.dylib" "_ompt_callbacks" LIBARCHER_OMPT_SUPPORT)
+endif()
 
 # Set up testing infrastructure.
 include(ArcherTesting)
