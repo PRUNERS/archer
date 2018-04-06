@@ -47,7 +47,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// RUN: %libarcher-compile-and-run
+// RUN: %libarcher-compile-and-run| FileCheck %s
 #include <omp.h>
 #include <stdio.h>
 
@@ -62,6 +62,9 @@ int main(int argc, char* argv[])
     var = 1;
   }
 
+  fprintf(stderr, "DONE\n");
   int error = (var != 5);
   return error;
 }
+
+// CHECK: DONE

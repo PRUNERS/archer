@@ -47,7 +47,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// RUN: %raceomp-compile-and-run | FileCheck %s
+// RUN: %libarcher-compile-and-run-race | FileCheck %s
 #include <omp.h>
 #include <stdio.h>
 
@@ -71,9 +71,7 @@ int main(int argc, char* argv[])
 
   omp_destroy_nest_lock(&lock);
 
-  int error = (var != 2);
   fprintf(stderr, "DONE\n");
-  return error;
 }
 
 // CHECK: WARNING: ThreadSanitizer: data race

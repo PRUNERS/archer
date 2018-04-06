@@ -47,9 +47,9 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(archer MODULE ompt-tsan.cpp counter.cpp)
+add_library(archer SHARED ompt-tsan.cpp counter.cpp)
 add_library(archer_static STATIC ompt-tsan.cpp counter.cpp)
-add_library(farcher MODULE ftsan.c)
+add_library(farcher SHARED ftsan.c)
 add_library(farcher_static STATIC ftsan.c)
 
 

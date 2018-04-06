@@ -5,9 +5,6 @@
 
 #+EXPORT_SELECT_TAGS: export
 #+EXPORT_EXCLUDE_TAGS: noexport
-#+LINK_UP:
-#+LINK_HOME:
-#+XSLT:
 
 * License
 Please see LICENSE for usage terms.
@@ -29,7 +26,7 @@ To compile Archer you need a host Clang/LLVM version >= 3.9, a
 CMake version >= 3.4.3.
 
 Ninja build system is preferred. For more information how to obtain
-Ninja visit https://github.com/ninja-build/ninja.
+Ninja visit https://github.com/ninja-build/ninja. (Note that this is different than PRUNERS NINJA tool.)
 
 Archer has been tested with the LLVM OpenMP Runtime version >= 3.9,
 and with the LLVM OpenMP Runtime with OMPT support currently under
@@ -45,139 +42,132 @@ For an automatic building script (recommended) please visit the GitHub
 page https://github.com/PRUNERS/llvm_archer.
 
 ** Manual Building
-Archer comes as an LLVM tool, it can be compiled both as stand-alone
+Archer comes as an LLVM tool, it can be compiled both as a stand-alone
 tool or within the Clang/LLVM infrastructure.
 
-In order to obtain and build Archer follow the instructions below for
-stand-alone or full Clang/LLVM with Archer support building
-(instructions are based on bash shell, Clang/LLVM 3.9 version, Ninja
-build system, and the LLVM OpenMP Runtime with OMPT support).
+In order to obtain and build Archer, follow the instructions below for
+stand-alone or full Clang/LLVM with Archer support (instructions are
+based on bash shell, Clang/LLVM 3.9 version, Ninja build system, and
+the LLVM OpenMP Runtime with OMPT support).
 
-Note: Using the LLVM OpenMP Runtime version >= 3.9 may results in some
-false positives during the data race detection process. Please, notice
-that the full building of Clang/LLVM with Archer support depends on
-the version of LLVM OpenMP runtime. In the configuration section, there
-will be two different commands depending on the type of runtime
-chosen.
+# ** Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
 
-** Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer support
+# Create a folder to download and build Archer:
 
-Create a folder to download and build Archer:
+# #+BEGIN_SRC bash :exports code
+#   export ARCHER_BUILD=$PWD/ArcherBuild
+#   mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
+# #+END_SRC
 
-#+BEGIN_SRC bash :exports code
-  export ARCHER_BUILD=$PWD/ArcherBuild
-  mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
-#+END_SRC
+# Obtain the LLVM OpenMP Runtime:
 
-Obtain the LLVM OpenMP Runtime:
+# #+BEGIN_SRC bash :exports code
+#   git clone https://github.com/llvm-mirror/openmp.git openmp
+# #+END_SRC
 
-#+BEGIN_SRC bash :exports code
-  git clone https://github.com/llvm-mirror/openmp.git openmp
-#+END_SRC
+# and build it with the following command:
 
-and build it with the following command:
+# #+BEGIN_SRC bash :exports code
+#   export OPENMP_INSTALL=$HOME/usr           # or any other install path
+#   cd openmp/runtime
+#   mkdir build && cd build
+#   cmake -G Ninja \
+#    -D CMAKE_C_COMPILER=clang \
+#    -D CMAKE_CXX_COMPILER=clang++ \
+#    -D CMAKE_BUILD_TYPE=Release \
+#    -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL \
+#    -D LIBOMP_TSAN_SUPPORT=TRUE \
+#    ..
+#   ninja -j8 -l8                             # or any number of available cores
+#   ninja install
+# #+END_SRC
 
-#+BEGIN_SRC bash :exports code
-  export OPENMP_INSTALL=$HOME/usr           # or any other install path
-  cd openmp/runtime
-  mkdir build && cd build
-  cmake -G Ninja \
-   -D CMAKE_C_COMPILER=clang \
-   -D CMAKE_CXX_COMPILER=clang++ \
-   -D CMAKE_BUILD_TYPE=Release \
-   -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL \
-   -D LIBOMP_TSAN_SUPPORT=TRUE \
-   ..
-  ninja -j8 -l8                             # or any number of available cores
-  ninja install
-#+END_SRC
+# Obtain Archer:
 
-Obtain Archer:
+# #+BEGIN_SRC bash :exports code
+#   cd $ARCHER_BUILD
+#   git clone https://github.com/PRUNERS/archer.git archer
+# #+END_SRC
 
-#+BEGIN_SRC bash :exports code
-  cd $ARCHER_BUILD
-  git clone https://github.com/PRUNERS/archer.git archer
-#+END_SRC
+# and build it with the following commands:
 
-and build it with the following commands:
+# #+BEGIN_SRC bash :exports code
+#   export ARCHER_INSTALL=$HOME/usr           # or any other install path
+#   cd archer
+#   mkdir build && cd build
+#   cmake -G Ninja \
+#    -D CMAKE_C_COMPILER=clang \
+#    -D CMAKE_CXX_COMPILER=clang++ \
+#    -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
+#    -D OMP_PREFIX:PATH=$OPENMP_INSTALL \
+#    -D LIBOMP_TSAN_SUPPORT=TRUE \
+#    ..
+#   ninja -j8 -l8                             # or any number of available cores
+#   ninja install
+#   cd ../..
+# #+END_SRC
 
-#+BEGIN_SRC bash :exports code
-  export ARCHER_INSTALL=$HOME/usr           # or any other install path
-  cd archer
-  mkdir build && cd build
-  cmake -G Ninja \
-   -D CMAKE_C_COMPILER=clang \
-   -D CMAKE_CXX_COMPILER=clang++ \
-   -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
-   -D OMP_PREFIX:PATH=$OPENMP_INSTALL \
-   -D LIBOMP_TSAN_SUPPORT=TRUE \
-   ..
-  ninja -j8 -l8                             # or any number of available cores
-  ninja install
-  cd ../..
-#+END_SRC
+*** Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer OMPT support
 
-** Stand-alone building with LLVM OpenMP Runtime and ThreadSanitizer OMPT Support
+ Create a folder in which to download and build Archer:
 
-Create a folder to download and build Archer:
+ #+BEGIN_SRC bash :exports code
+   export ARCHER_BUILD=$PWD/ArcherBuild
+   mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
+ #+END_SRC
 
-#+BEGIN_SRC bash :exports code
-  export ARCHER_BUILD=$PWD/ArcherBuild
-  mkdir $ARCHER_BUILD && cd $ARCHER_BUILD
-#+END_SRC
+ Obtain the LLVM OpenMP Runtime with OMPT support:
 
-Obtain the LLVM OpenMP Runtime with OMPT support:
+ #+BEGIN_SRC bash :exports code
+   git clone https://github.com/llvm-mirror/openmp.git openmp
+ #+END_SRC
 
-#+BEGIN_SRC bash :exports code
-  git clone -b tr4-stable https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
-#+END_SRC
+ and build it with the following command:
 
-and build it with the following command:
+ #+BEGIN_SRC bash :exports code
+   export OPENMP_INSTALL=$HOME/usr           # or any other install path
+   cd openmp/runtime
+   mkdir build && cd build
+   cmake -G Ninja \
+    -D CMAKE_C_COMPILER=clang \
+    -D CMAKE_CXX_COMPILER=clang++ \
+    -D CMAKE_BUILD_TYPE=Release \
+    -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL \
+    -D LIBOMP_OMPT_SUPPORT=on \
+    -D LIBOMP_OMPT_BLAME=on \
+    -D LIBOMP_OMPT_TRACE=on \
+    ..
+   ninja -j8 -l8                             # or any number of available cores
+   ninja install
+ #+END_SRC
 
-#+BEGIN_SRC bash :exports code
-  export OPENMP_INSTALL=$HOME/usr           # or any other install path
-  cd openmp/runtime
-  mkdir build && cd build
-  cmake -G Ninja \
-   -D CMAKE_C_COMPILER=clang \
-   -D CMAKE_CXX_COMPILER=clang++ \
-   -D CMAKE_BUILD_TYPE=Release \
-   -D CMAKE_INSTALL_PREFIX:PATH=$OPENMP_INSTALL \
-   -D LIBOMP_OMPT_SUPPORT=on \
-   -D LIBOMP_OMPT_BLAME=on \
-   -D LIBOMP_OMPT_TRACE=on \
-   ..
-  ninja -j8 -l8                             # or any number of available cores
-  ninja install
-#+END_SRC
+ Obtain Archer:
 
-Obtain Archer:
+ #+BEGIN_SRC bash :exports code
+   cd $ARCHER_BUILD
+   git clone https://github.com/PRUNERS/archer.git archer
+ #+END_SRC
 
-#+BEGIN_SRC bash :exports code
-  cd $ARCHER_BUILD
-  git clone https://github.com/PRUNERS/archer.git archer
-#+END_SRC
+ and build it with the following commands:
 
-and build it with the following commands:
-
-#+BEGIN_SRC bash :exports code
-  export ARCHER_INSTALL=$HOME/usr           # or any other install path
-  cd archer
-  mkdir build && cd build
-  cmake -G Ninja \
-   -D CMAKE_C_COMPILER=clang \
-   -D CMAKE_CXX_COMPILER=clang++ \
-   -D OMP_PREFIX:PATH=$OPENMP_INSTALL \
-   -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
-   ..
-  ninja -j8 -l8                             # or any number of available cores
-  ninja install
-  cd ../..
-#+END_SRC
+ #+BEGIN_SRC bash :exports code
+   export ARCHER_INSTALL=$HOME/usr           # or any other install path
+   cd archer
+   mkdir build && cd build
+   cmake -G Ninja \
+    -D CMAKE_C_COMPILER=clang \
+    -D CMAKE_CXX_COMPILER=clang++ \
+    -D OMP_PREFIX:PATH=$OPENMP_INSTALL \
+    -D CMAKE_INSTALL_PREFIX:PATH=${ARCHER_INSTALL} \
+    ..
+   ninja -j8 -l8                             # or any number of available cores
+   ninja install
+   cd ../..
+ #+END_SRC
 
 ** Build Archer within Clang/LLVM
 
-Create a folder to download and build Clang/LLVM and Archer:
+Create a folder in which to download and build Clang/LLVM and Archer:
 
 #+BEGIN_SRC bash :exports code
   export ARCHER_BUILD=$PWD/ArcherBuild
@@ -255,20 +245,17 @@ Obtain official LLVM OpenMP Runtime:
 #+BEGIN_SRC bash :exports code
   cd projects
   git clone https://github.com/llvm-mirror/openmp.git openmp
-  cd openmp
-  git checkout release_39
-  cd ../..
 #+END_SRC
 
-or obtain LLVM OpenMP Runtime with OMPT support:
+# or obtain LLVM OpenMP Runtime with OMPT support:
 
-#+BEGIN_SRC bash :exports code
-  cd projects
-  git clone https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
-  cd openmp
-  git checkout tr4-stable
-  cd ../..
-#+END_SRC
+# #+BEGIN_SRC bash :exports code
+#   cd projects
+#   git clone https://github.com/OpenMPToolsInterface/LLVM-openmp.git openmp
+#   cd openmp
+#   git checkout tr4-stable
+#   cd ../..
+# #+END_SRC
 
 Now that we obtained the source code, the following command
 will build LLVM/Clang infrastructure with Archer support.
@@ -340,7 +327,7 @@ Otherwise, in case of LLVM OpenMP Runtime with OMPT support run:
   ninja install
 #+END_SRC
 
-Once the installation completes, you need to setup your environement
+Once the installation completes, you need to setup your environment
 to allow Archer to work correctly.
 
 Please set the following path variables:
@@ -350,7 +337,7 @@ export PATH=${LLVM_INSTALL}/bin:${PATH}"
 export LD_LIBRARY_PATH=${LLVM_INSTALL}/lib:${LD_LIBRARY_PATH}"
 #+END_SRC
 
-To make the environment permanent add the previous lines or
+To make the environment permanent, add the previous lines or
 equivalents to your shell start-up script such as "~/.bashrc".
 
 * Usage
@@ -405,7 +392,7 @@ options available for clang are also available for /clang-archer/.
 ** Runtime Flags
 
 Runtime flags are passed via *ARCHER&#95;OPTIONS* environment variable,
-separate flags are separated by spaces, e.g.:
+different flags are separated by spaces, e.g.:
 
 #+BEGIN_SRC bash :exports code
 ARCHER_OPTIONS="flush_shadow=1" ./myprogram
@@ -502,4 +489,4 @@ ThreadSanitizer: reported 1 warnings
 
 * Members
 
-#+HTML: <img src="resources/images/uofu_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="UofU Logo" title="University of Utah" style="float:left" /> <img src="resources/images/llnl_logo.png" hspace="70" vspace="5" height="30%" width="30%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" style="float:center" /> <img src="resources/images/rwthaachen_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" style="float:left" />
+#+HTML: <img src="resources/images/uofu_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="UofU Logo" title="University of Utah" style="float:left"/> <img src="resources/images/llnl_logo.png" hspace="70" vspace="5" height="30%" width="30%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" style="float:center" /> <img src="resources/images/rwthaachen_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" style="float:left" />

@@ -47,19 +47,19 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(${ARCHER_STANDALONE_BUILD})
-  set(ARCHER_HEADER_FILES ${PROJECT_SOURCE_DIR}/include)
+if(${LIBARCHER_STANDALONE_BUILD})
+  set(LIBARCHER_HEADER_FILES ${PROJECT_SOURCE_DIR}/include)
 else()
-  set(ARCHER_HEADER_FILES ${PROJECT_SOURCE_DIR}/tools/archer/include)
+  set(LIBARCHER_HEADER_FILES ${PROJECT_SOURCE_DIR}/tools/archer/include)
 endif()
 
 if(${LIBOMP_TSAN_SUPPORT})
   add_definitions(-D TSAN_SUPPORT=1)
 endif()
 
-include_directories(${ARCHER_HEADER_FILES})
+include_directories(${LIBARCHER_HEADER_FILES})
 
-set(ARCHER_SOURCE_FILES
+set(LIBARCHER_SOURCE_FILES
   Archer.cpp
   Support/RegisterPasses.cpp
   Support/Util.cpp
@@ -67,6 +67,12 @@ set(ARCHER_SOURCE_FILES
   )
 
 add_llvm_loadable_module(LLVMArcher
-  ${ARCHER_SOURCE_FILES}
-  ${ARCHER_HEADER_FILES}
+  ${LIBARCHER_SOURCE_FILES}
+  ${LIBARCHER_HEADER_FILES}
   )
+
+# This declares the dependency to the generated Attributes.gen file,
+# which is included by serveral indirections (target is provided by
+# LLVM-SRC/include/llvm/IR/CMakeLists.txt):
+
+add_dependencies(LLVMArcher intrinsics_gen)
