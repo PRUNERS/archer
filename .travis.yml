@@ -30,7 +30,7 @@ install:
   - mkdir $HOME/usr
   - tar xf $LLVM_ARCHIVE_PATH -C $HOME/usr --strip-components 1
   # Obtain and install cmake
-  - wget https://cmake.org/files/CMAKE_VERSION_MAJOR/cmake-$CMAKE_VERSION-Linux-x86_64.sh
+  - wget https://cmake.org/files/$CMAKE_VERSION_MAJOR/cmake-$CMAKE_VERSION-Linux-x86_64.sh
   - chmod +x cmake-$CMAKE_VERSION-Linux-x86_64.sh
   - ./cmake-$CMAKE_VERSION-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir
   # Obtain and install ninja
