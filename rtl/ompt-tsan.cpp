@@ -80,6 +80,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 callback_counter_t *all_counter;
 __thread callback_counter_t* this_event_counter;
+static Bool runOnTsan=true;
 
 class ArcherFlags {
 public:
@@ -165,12 +166,21 @@ extern "C" {
     fptr = (void (*)(const char *, int, const volatile void *,size_t))dlsym(RTLD_DEFAULT, "AnnotateNewMemory");
     (*fptr)(file,line,cv,size);
   }
+  static int RunningOnValgrind(){
+    int (*fptr)();
+
+    fptr = (int (*)())dlsym(RTLD_DEFAULT, "RunningOnValgrind");
+    if (fptr && fptr != RunningOnValgrind)
+      runOnTsan = false;
+//    (*fptr)();
+  }
 #else
   void __attribute__((weak)) AnnotateHappensAfter(const char *file, int line, const volatile void *cv){}
   void __attribute__((weak)) AnnotateHappensBefore(const char *file, int line, const volatile void *cv){}
   void __attribute__((weak)) AnnotateIgnoreWritesBegin(const char *file, int line){}
   void __attribute__((weak)) AnnotateIgnoreWritesEnd(const char *file, int line){}
   void __attribute__((weak)) AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){}
+  int __attribute__((weak)) RunningOnValgrind(){runOnTsan = false;}
 #endif
 }
 
@@ -922,6 +932,9 @@ static int ompt_tsan_initialize(
   ompt_function_lookup_t lookup,
   ompt_data_t *tool_data
   ) {
+  RunningOnValgrind();
+  if (!runOnTsan)
+    return 0;
 
   const char *options = getenv("ARCHER_OPTIONS");
   archer_flags = new ArcherFlags(options);
