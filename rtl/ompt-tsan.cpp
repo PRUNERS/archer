@@ -80,7 +80,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 callback_counter_t *all_counter;
 __thread callback_counter_t* this_event_counter;
-static Bool runOnTsan=true;
+static int runOnTsan = 1;
 
 class ArcherFlags {
 public:
@@ -171,8 +171,8 @@ extern "C" {
 
     fptr = (int (*)())dlsym(RTLD_DEFAULT, "RunningOnValgrind");
     if (fptr && fptr != RunningOnValgrind)
-      runOnTsan = false;
-//    (*fptr)();
+      runOnTsan = 0;
+    return 0;
   }
 #else
   void __attribute__((weak)) AnnotateHappensAfter(const char *file, int line, const volatile void *cv){}
@@ -180,7 +180,7 @@ extern "C" {
   void __attribute__((weak)) AnnotateIgnoreWritesBegin(const char *file, int line){}
   void __attribute__((weak)) AnnotateIgnoreWritesEnd(const char *file, int line){}
   void __attribute__((weak)) AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){}
-  int __attribute__((weak)) RunningOnValgrind(){runOnTsan = false;}
+  int __attribute__((weak)) RunningOnValgrind() { runOnTsan = 0; return 0; }
 #endif
 }
 
