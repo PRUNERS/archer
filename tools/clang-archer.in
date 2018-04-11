@@ -59,7 +59,7 @@ for arg in "$@" ; do
         --help)
             echo "Archer Options"
             echo
-            echo "  -nosa     Disable Archer static analysis to avoid sequential code blacklisting."
+            echo "  -nosa     Disable static analysis."
             echo
             shift
             @LLVM_ROOT@/bin/clang --help
