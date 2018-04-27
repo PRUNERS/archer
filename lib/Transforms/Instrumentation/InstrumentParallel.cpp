@@ -266,8 +266,8 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     ValueToValueMapTy VMap;
     Function *new_function = CloneFunction(&F, VMap);
     new_function->setName(functionName + "__swordomp__");
-    Function::ArgumentListType::iterator it = F.getArgumentList().begin();
-    Function::ArgumentListType::iterator end = F.getArgumentList().end();
+    Function::arg_iterator it = F.arg_begin();
+    Function::arg_iterator end = F.arg_end();
     std::vector<Value*> args;
     while (it != end) {
       Argument *Args = &(*it);
