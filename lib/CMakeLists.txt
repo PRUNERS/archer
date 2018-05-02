@@ -75,4 +75,6 @@ add_llvm_loadable_module(LLVMArcher
 # which is included by serveral indirections (target is provided by
 # LLVM-SRC/include/llvm/IR/CMakeLists.txt):
 
-add_dependencies(LLVMArcher intrinsics_gen)
+if( TARGET intrinsics_gen )
+  add_dependencies(LLVMArcher intrinsics_gen)
+fi
