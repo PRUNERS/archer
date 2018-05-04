@@ -77,4 +77,4 @@ add_llvm_loadable_module(LLVMArcher
 
 if( TARGET intrinsics_gen )
   add_dependencies(LLVMArcher intrinsics_gen)
-fi
+endif()
