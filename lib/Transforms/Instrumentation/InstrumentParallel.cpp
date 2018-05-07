@@ -183,7 +183,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     IRBuilder<> IRB(M->getContext());
     Constant* c = M->getOrInsertFunction("__tsan_default_suppressions",
                                          IRB.getInt8PtrTy(),
-                                         NULL);
+                                         nullptr);
     Constant *suppression_str_const =
       ConstantDataArray::getString(M->getContext(),
       "called_from_lib:libomp.so\nthread:^__kmp_create_worker$\n", true);
@@ -199,7 +199,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     IRBuilder<> IRB2(M->getContext());
     Constant* constant = M->getOrInsertFunction("__swordomp__get_omp_status",
     		IRB2.getInt32Ty(),
-			NULL);
+			nullptr);
     Function* __swordomp_get_omp_status = cast<Function>(constant);
     __swordomp_get_omp_status->setCallingConv(CallingConv::C);
     BasicBlock* block2 = BasicBlock::Create(M->getContext(), "entry", __swordomp_get_omp_status);
