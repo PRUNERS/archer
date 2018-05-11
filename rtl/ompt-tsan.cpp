@@ -104,16 +104,16 @@ public:
       while(std::getline(iss, token, ' '))
         tokens.push_back(token);
 
-      int ret;
       for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it) {
 #if (LLVM_VERSION) >= 40
-        ret = sscanf(it->c_str(), "flush_shadow=%d", &flush_shadow);
+        if (sscanf(it->c_str(), "flush_shadow=%d", &flush_shadow))
+          continue;
 #endif
-        ret = sscanf(it->c_str(), "print_ompt_counters=%d", &print_ompt_counters);
-        ret = sscanf(it->c_str(), "print_max_rss=%d", &print_max_rss);
-        if(ret) {
-          std::cerr << "Illegal values for ARCHER_OPTIONS variable: " << token << std::endl;
-        }
+        if (sscanf(it->c_str(), "print_ompt_counters=%d", &print_ompt_counters))
+          continue;
+        if (sscanf(it->c_str(), "print_max_rss=%d", &print_max_rss))
+          continue;
+        std::cerr << "Illegal values for ARCHER_OPTIONS variable: " << token << std::endl;
       }
     }
   }
