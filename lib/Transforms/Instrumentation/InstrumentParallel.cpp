@@ -172,7 +172,6 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     // const char *__tsan_default_suppressions() {
     //   return "called_from_lib:libomp.so\nthread:^__kmp_create_worker$\n";
     // }
-    // ArrayType* ArrayTy_0 = ArrayType::get(IntegerType::get(M->getContext(), 8), 57);
     Constant *suppression_str_const =
       ConstantDataArray::getString(M->getContext(),
 				   "called_from_lib:libomp.*\nthread:^__kmp_create_worker$\n", true);
