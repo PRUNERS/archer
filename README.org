@@ -389,6 +389,14 @@ CC = mpicc -cc=clang-archer
 The command /clang-archer/ works as a compiler wrapper, all the
 options available for clang are also available for /clang-archer/.
 
+** Command-Line Flags
+
+|-----------+---------------+--------------------+----------------------------------------------------------------------|
+| Flag Name | Default value | Clang/LLVM Version | Description                                                          |
+|-----------+---------------+--------------------+----------------------------------------------------------------------|
+| --nosa    | disabled      | >= 6.0.1           | Disable static analysis (runtime and memory overhead may be longer). |
+|-----------+---------------+--------------------+----------------------------------------------------------------------|
+
 ** Runtime Flags
 
 Runtime flags are passed via *ARCHER&#95;OPTIONS* environment variable,
