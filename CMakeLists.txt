@@ -104,7 +104,7 @@ if(${LIBARCHER_STANDALONE_BUILD})
   endif()
 
   # Incorporate the CMake features provided by LLVM:
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_ROOT}/lib/cmake/llvm")
+  list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKEDIR}")
 
   include(LLVMConfig)
   include(HandleLLVMOptions)
