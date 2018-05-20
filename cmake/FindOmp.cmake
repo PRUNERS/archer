@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2015-2018, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -49,6 +49,12 @@
 
 include(FindPackageHandleStandardArgs)
 
+if(APPLE)
+  set(OMP_LIB_NAME libomp.dylib)
+elseif(UNIX)
+  set(OMP_LIB_NAME libomp.so)
+endif()
+
 # use an explicitly given omp path first
 FIND_PATH(OMP_INCLUDE_PATH omp.h
             PATHS ${OMP_PREFIX}/include ${LLVM_ROOT}/include ${CMAKE_BINARY_DIR}/projects/openmp/runtime/src ${CMAKE_BINARY_DIR}/include /usr /usr/local}
@@ -59,10 +65,10 @@ FIND_PATH(OMP_INCLUDE_PATH omp.h)
 find_package_handle_standard_args(OpenMP DEFAULT_MSG OMP_INCLUDE_PATH )
 
 # use an explicitly given omp path first
-FIND_PATH(OMP_LIB_PATH libomp.so
+FIND_PATH(OMP_LIB_PATH ${OMP_LIB_NAME}
             PATHS ${OMP_PREFIX}/lib ${LLVM_ROOT}/lib ${CMAKE_INSTALL_PREFIX}/lib /usr /usr/local}
             PATH_SUFFIXES lib NO_DEFAULT_PATH)
 # if not-found, try again at cmake locations
-FIND_PATH(OMP_LIB_PATH libomp.so)
+FIND_PATH(OMP_LIB_PATH ${OMP_LIB_NAME})
 
 find_package_handle_standard_args(OpenMP DEFAULT_MSG OMP_LIB_PATH )

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2015-2018, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -50,19 +50,19 @@
 # void libarcher_say(string message_to_user);
 # - prints out message_to_user
 macro(libarcher_say message_to_user)
-  message(STATUS "ARCHER: ${message_to_user}")
+  message(STATUS "LIBARCHER: ${message_to_user}")
 endmacro()
 
 # void libarcher_warning_say(string message_to_user);
 # - prints out message_to_user with a warning
 macro(libarcher_warning_say message_to_user)
-  message(WARNING "ARCHER: ${message_to_user}")
+  message(WARNING "LIBARCHER: ${message_to_user}")
 endmacro()
 
 # void libarcher_error_say(string message_to_user);
 # - prints out message_to_user with an error and exits cmake
 macro(libarcher_error_say message_to_user)
-  message(FATAL_ERROR "ARCHER: ${message_to_user}")
+  message(FATAL_ERROR "LIBARCHER: ${message_to_user}")
 endmacro()
 
 # libarcher_append(<flag> <flags_list> [(IF_TRUE | IF_FALSE | IF_TRUE_1_0 ) BOOLEAN])

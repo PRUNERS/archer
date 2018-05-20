@@ -8,10 +8,10 @@
 # until it fails (i.e. produces a race report).
 
 for i in $(seq 1 10); do
-	OUT=`$@ 2>&1`
-	if [[ $? != 0 ]]; then
-		echo "$OUT"
-		exit 0
-	fi
+    OUT=`$@ 2>&1`
+    if [[ $? != 0 ]]; then
+	echo "$OUT"
+	exit 0
+    fi
 done
 exit 1

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2015-2018, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -48,14 +48,27 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-
+static_analysis=true
 linking=yes
 for arg in "$@" ; do
-  case "$arg" in
-  -c|-S|-E|-M|-MM|MMD)
-    linking=no
-  ;;
-  esac
+    case "$arg" in
+        --nosa)
+            static_analysis=false
+            shift
+            ;;
+        --help)
+            echo "Archer Options"
+            echo
+            echo "  -nosa     Disable static analysis."
+            echo
+            shift
+            @LLVM_ROOT@/bin/clang++ --help
+            exit
+            ;;
+        -c|-S|-E|-M|-MM|MMD)
+            linking=no
+            ;;
+    esac
 done
 
 if [ $linking == yes ] ; then
@@ -68,4 +81,8 @@ else
   link_flags=""
 fi
 
-@LLVM_ROOT@/bin/clang++ -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"
+if [ "$static_analysis" == "true" ]; then
+    @LLVM_ROOT@/bin/clang++ -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"
+else
+    @LLVM_ROOT@/bin/clang++ -I@OMP_PREFIX@/include -fopenmp -fsanitize=thread $link_flags -g "$@"
+fi

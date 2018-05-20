@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
+Copyright (c) 2015-2018, Lawrence Livermore National Security, LLC.
 
 Produced at the Lawrence Livermore National Laboratory
 
@@ -47,7 +47,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// RUN: %libarcher-compile-and-run
+// RUN: %libarcher-compile-and-run | FileCheck %s
 #include <omp.h>
 #include <stdio.h>
 
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
   int var = 0, i;
   int sum1 = 0;
   int sum2 = 0;
-  
+
   // Number of threads is empirical: We need enough threads so that
   // the reduction is really performed hierarchically in the barrier!
   #pragma omp parallel num_threads(5) reduction(+: var)
@@ -71,6 +71,9 @@ int main(int argc, char* argv[])
     var = sum1 + sum2;
   }
 
+  fprintf(stderr, "DONE\n");
   int error = (var != 100);
   return error;
 }
+
+// CHECK: DONE

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2015-2018, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
@@ -60,14 +60,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 set(LIBOMP_TSAN_SUPPORT FALSE CACHE BOOL "TSAN-support?")
 
 # Disable Archer static analysis support
-set(ARCHER_STATIC_ANALYSIS_SUPPORT TRUE CACHE BOOL "StaticAnalysisSupport?")
+set(LIBARCHER_STATIC_ANALYSIS_SUPPORT TRUE CACHE BOOL "StaticAnalysisSupport?")
 
 # Standalone build or part of LLVM?
-set(ARCHER_STANDALONE_BUILD FALSE)
+set(LIBARCHER_STANDALONE_BUILD FALSE)
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
   project(archer C CXX)
 
-  set(ARCHER_STANDALONE_BUILD TRUE)
+  set(LIBARCHER_STANDALONE_BUILD TRUE)
 endif()
 
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
@@ -86,7 +86,14 @@ add_definitions(-DLLVM_VERSION=${LLVM_VERSION})
 # These include files are in the cmake/ subdirectory
 include(LibarcherUtils)
 
-if(${ARCHER_STANDALONE_BUILD})
+# Check is OSX or Linux (for lib extension)
+if(${APPLE})
+  set(EXT .dylib)
+elseif(${UNIX})
+  set(EXT .so)
+endif()
+
+if(${LIBARCHER_STANDALONE_BUILD})
   # LLVM detection part
   set(LLVM_ROOT "" CACHE PATH "Root of LLVM install.")
   find_package(LLVM MODULE REQUIRED)
@@ -103,12 +110,21 @@ if(${ARCHER_STANDALONE_BUILD})
   include(HandleLLVMOptions)
   include(AddLLVM)
 
+    # Group test settings.
+  set(LIBARCHER_TEST_C_COMPILER ${CMAKE_C_COMPILER} CACHE STRING
+    "C compiler to use for testing Archer runtime libraries.")
+  set(LIBARCHER_TEST_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE STRING
+    "C++ compiler to use for testing Archer runtime libraries.")
+  set(LIBARCHER_LLVM_TOOLS_DIR "" CACHE PATH "Path to LLVM tools for testing.")
+
   add_definitions(${LLVM_DEFINITIONS})
   include_directories(${LLVM_INCLUDE_DIRS})
+else()
+  set(LLVM_ROOT ${CMAKE_INSTALL_PREFIX} CACHE PATH "Root of LLVM install.")
 endif()
 
 # Look for OpenMP runtime
-if(${ARCHER_STANDALONE_BUILD})
+if(${LIBARCHER_STANDALONE_BUILD})
   set(OMP_PREFIX /usr/local CACHE PATH "Root of OpenMP runtime install")
   if(NOT EXISTS ${OMP_PREFIX}/include/omp.h)
     message(FATAL_ERROR "OMP_PREFIX (${OMP_PREFIX}) is not a valid OpenMP runtime install")
@@ -127,20 +143,41 @@ if(NOT ${LLVM_NATIVE_ARCH} STREQUAL "PowerPC")
   endif()
 endif()
 
-# Setting directory names
-set(ARCHER_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(ARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-if(NOT ${LIBOMP_TSAN_SUPPORT})
-    set(ARCHER_RUNTIME_PATH ${CMAKE_BINARY_DIR}/rtl)
-    set(ARCHER_ARCHER_RUNTIME_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/rtl/suppressions.txt)
-    set(ARCHER_RTL libarcher.so)
+include(config-ix)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  has_ompt_support("${OMP_LIB_PATH}" "libomp.so" "ompt_start_tool" LIBARCHER_OMPT_SUPPORT)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  has_ompt_support("${OMP_LIB_PATH}" "libomp.dylib" "_ompt_callbacks" LIBARCHER_OMPT_SUPPORT)
 endif()
 
-set(ARCHER_LIB_PATH "")
-if(${ARCHER_STATIC_ANALYSIS_SUPPORT})
-    set(ARCHER_LIB_PATH ${CMAKE_BINARY_DIR}/lib)
-    set(ARCHER_LIB LLVMArcher.so)
-    set(ARCHER_TOOLS_DIR ${ARCHER_BASE_DIR}/tools)
+# Set up testing infrastructure.
+include(ArcherTesting)
+
+set(LIBARCHER_TEST_FLAGS "" CACHE STRING
+  "Extra compiler flags to send to the test compiler.")
+set(LIBARCHER_TEST_ARCHER_FLAGS ${LIBARCHER_TEST_COMPILER_ARCHER_FLAGS} CACHE STRING
+  "Archer compiler flag to use for testing Archer runtime libraries.")
+
+# Setting directory names
+
+set(LIBARCHER_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(LIBARCHER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+if(NOT ${LIBOMP_TSAN_SUPPORT})
+    set(LIBARCHER_RUNTIME_PATH ${CMAKE_BINARY_DIR}/rtl)
+    set(LIBARCHER_ARCHER_RUNTIME_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/rtl/suppressions.txt)
+    set(LIBARCHER_RTL libarcher${EXT})
+  endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
+endif()
+
+set(LIBARCHER_LIB_PATH "")
+if(${LIBARCHER_STATIC_ANALYSIS_SUPPORT})
+    set(LIBARCHER_LIB_PATH ${CMAKE_BINARY_DIR}/lib)
+    set(LIBARCHER_LIB LLVMArcher${EXT})
+    set(LIBARCHER_TOOLS_DIR ${LIBARCHER_BASE_DIR}/tools)
     add_subdirectory(lib)
 endif()
 

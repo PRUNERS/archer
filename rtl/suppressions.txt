@@ -1,6 +1,5 @@
 # Assume that the runtime itself is race free.
-called_from_lib:libomp.so
+called_from_lib:libomp.*
 
 # TSan reports "thread leak" because the threads are joined on shutdown.
 thread:^__kmp_create_worker$
-
