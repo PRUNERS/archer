@@ -33,31 +33,7 @@ static const char* ompt_cancel_flag_t_values[] = {
   "ompt_cancel_discarded_task"
 };
 
-static void format_task_type(int type, char *buffer) {
-  char *progress = buffer;
-  if (type & ompt_task_initial)
-    progress += sprintf(progress, "ompt_task_initial");
-  if (type & ompt_task_implicit)
-    progress += sprintf(progress, "ompt_task_implicit");
-  if (type & ompt_task_explicit)
-    progress += sprintf(progress, "ompt_task_explicit");
-  if (type & ompt_task_target)
-    progress += sprintf(progress, "ompt_task_target");
-  if (type & ompt_task_undeferred)
-    progress += sprintf(progress, "|ompt_task_undeferred");
-  if (type & ompt_task_untied)
-    progress += sprintf(progress, "|ompt_task_untied");
-  if (type & ompt_task_final)
-    progress += sprintf(progress, "|ompt_task_final");
-  if (type & ompt_task_mergeable)
-    progress += sprintf(progress, "|ompt_task_mergeable");
-  if (type & ompt_task_merged)
-    progress += sprintf(progress, "|ompt_task_merged");
-}
-
 static ompt_set_callback_t ompt_set_callback;
-static ompt_get_callback_t ompt_get_callback;
-static ompt_get_state_t ompt_get_state;
 static ompt_get_task_info_t ompt_get_task_info;
 static ompt_get_thread_data_t ompt_get_thread_data;
 static ompt_get_parallel_info_t ompt_get_parallel_info;
@@ -73,29 +49,22 @@ static ompt_enumerate_mutex_impls_t ompt_enumerate_mutex_impls;
 
 static void print_ids(int level)
 {
-  int task_type, thread_num;
-  omp_frame_t *frame;
-  ompt_data_t *task_parallel_data;
-  ompt_data_t *task_data;
-  int exists_task = ompt_get_task_info(level, &task_type, &task_data, &frame,
-                                       &task_parallel_data, &thread_num);
-  char buffer[2048];
-  format_task_type(task_type, buffer);
+  ompt_frame_t* frame ;
+  ompt_data_t* parallel_data;
+  ompt_data_t* task_data;
+  int exists_task = ompt_get_task_info(level, NULL, &task_data, &frame, &parallel_data, NULL);
   if (frame)
-    printf("%" PRIu64 ": task level %d: parallel_id=%" PRIu64
-           ", task_id=%" PRIu64 ", exit_frame=%p, reenter_frame=%p, "
-           "task_type=%s=%d, thread_num=%d\n",
-           ompt_get_thread_data()->value, level,
-           exists_task ? task_parallel_data->value : 0,
-           exists_task ? task_data->value : 0, frame->exit_frame,
-           frame->enter_frame, buffer, task_type, thread_num);
+  {
+    printf("%" PRIu64 ": task level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", exit_frame=%p, reenter_frame=%p\n", ompt_get_thread_data()->value, level, exists_task ? parallel_data->value : 0, exists_task ? task_data->value : 0, frame->exit_frame, frame->enter_frame);
+  }
+  else
+    printf("%" PRIu64 ": task level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", frame=%p\n", ompt_get_thread_data()->value, level, exists_task ? parallel_data->value : 0, exists_task ? task_data->value : 0, frame);
 }
 
-#define get_frame_address(level) __builtin_frame_address(level)
-
-#define print_frame(level)                                                     \
-  printf("%" PRIu64 ": __builtin_frame_address(%d)=%p\n",                      \
-         ompt_get_thread_data()->value, level, get_frame_address(level))
+#define print_frame(level)\
+do {\
+  printf("%" PRIu64 ": __builtin_frame_address(%d)=%p\n", ompt_get_thread_data()->value, level, __builtin_frame_address(level));\
+} while(0)
 
 // clang (version 5.0 and above) adds an intermediate function call with debug flag (-g)
 #if defined(TEST_NEED_PRINT_FRAME_FROM_OUTLINED_FN)
@@ -105,10 +74,8 @@ static void print_ids(int level)
     #define print_frame_from_outlined_fn(level) print_frame(level)
   #endif
 
-  #if defined(__clang__) && __clang_major__ >= 5
-    #warning "Clang 5.0 and later add an additional wrapper for outlined functions when compiling with debug information."
-    #warning "Please define -DDEBUG iff you manually pass in -g to make the tests succeed!"
-  #endif
+  #warning "Clang 5.0 and later add an additional wrapper function for tasks when compiling with debug information."
+  #warning "Please define -DDEBUG iff you manually pass in -g!"
 #endif
 
 // This macro helps to define a label at the current position that can be used
@@ -184,12 +151,27 @@ ompt_label_##id:
   ((uint64_t)addr) / FUZZY_ADDRESS_DISCARD_BYTES - 1, \
   ((uint64_t)addr) / FUZZY_ADDRESS_DISCARD_BYTES, addr)
 
+
+static void format_task_type(int type, char* buffer)
+{
+  char* progress = buffer;
+  if(type & ompt_task_initial) progress += sprintf(progress, "ompt_task_initial");
+  if(type & ompt_task_implicit) progress += sprintf(progress, "ompt_task_implicit");
+  if(type & ompt_task_explicit) progress += sprintf(progress, "ompt_task_explicit");
+  if(type & ompt_task_target) progress += sprintf(progress, "ompt_task_target");
+  if(type & ompt_task_undeferred) progress += sprintf(progress, "|ompt_task_undeferred");
+  if(type & ompt_task_untied) progress += sprintf(progress, "|ompt_task_untied");
+  if(type & ompt_task_final) progress += sprintf(progress, "|ompt_task_final");
+  if(type & ompt_task_mergeable) progress += sprintf(progress, "|ompt_task_mergeable");
+  if(type & ompt_task_merged) progress += sprintf(progress, "|ompt_task_merged");
+}
+
 static void
 on_ompt_callback_mutex_acquire(
   ompt_mutex_kind_t kind,
   unsigned int hint,
   unsigned int impl,
-  omp_wait_id_t wait_id,
+  ompt_wait_id_t wait_id,
   const void *codeptr_ra)
 {
   switch(kind)
@@ -217,7 +199,7 @@ on_ompt_callback_mutex_acquire(
 static void
 on_ompt_callback_mutex_acquired(
   ompt_mutex_kind_t kind,
-  omp_wait_id_t wait_id,
+  ompt_wait_id_t wait_id,
   const void *codeptr_ra)
 {
   switch(kind)
@@ -245,7 +227,7 @@ on_ompt_callback_mutex_acquired(
 static void
 on_ompt_callback_mutex_released(
   ompt_mutex_kind_t kind,
-  omp_wait_id_t wait_id,
+  ompt_wait_id_t wait_id,
   const void *codeptr_ra)
 {
   switch(kind)
@@ -273,7 +255,7 @@ on_ompt_callback_mutex_released(
 static void
 on_ompt_callback_nest_lock(
     ompt_scope_endpoint_t endpoint,
-    omp_wait_id_t wait_id,
+    ompt_wait_id_t wait_id,
     const void *codeptr_ra)
 {
   switch(endpoint)
@@ -447,7 +429,7 @@ on_ompt_callback_lock_init(
   ompt_mutex_kind_t kind,
   unsigned int hint,
   unsigned int impl,
-  omp_wait_id_t wait_id,
+  ompt_wait_id_t wait_id,
   const void *codeptr_ra)
 {
   switch(kind)
@@ -466,7 +448,7 @@ on_ompt_callback_lock_init(
 static void
 on_ompt_callback_lock_destroy(
   ompt_mutex_kind_t kind,
-  omp_wait_id_t wait_id,
+  ompt_wait_id_t wait_id,
   const void *codeptr_ra)
 {
   switch(kind)
@@ -571,7 +553,7 @@ on_ompt_callback_master(
 static void
 on_ompt_callback_parallel_begin(
   ompt_data_t *encountering_task_data,
-  const omp_frame_t *encountering_task_frame,
+  const ompt_frame_t *encountering_task_frame,
   ompt_data_t* parallel_data,
   uint32_t requested_team_size,
   ompt_invoker_t invoker,
@@ -596,7 +578,7 @@ on_ompt_callback_parallel_end(
 static void
 on_ompt_callback_task_create(
     ompt_data_t *encountering_task_data,
-    const omp_frame_t *encountering_task_frame,
+    const ompt_frame_t *encountering_task_frame,
     ompt_data_t* new_task_data,
     int type,
     int has_dependences,
@@ -678,7 +660,7 @@ on_ompt_callback_control_tool(
   void *arg,
   const void *codeptr_ra)
 {
-  omp_frame_t* omptTaskFrame;
+  ompt_frame_t* omptTaskFrame;
   ompt_get_task_info(0, NULL, (ompt_data_t**) NULL, &omptTaskFrame, NULL, NULL);
   printf("%" PRIu64 ": ompt_event_control_tool: command=%" PRIu64 ", modifier=%" PRIu64 ", arg=%p, codeptr_ra=%p, current_task_frame.exit=%p, current_task_frame.reenter=%p \n", ompt_get_thread_data()->value, command, modifier, arg, codeptr_ra, omptTaskFrame->exit_frame, omptTaskFrame->enter_frame);
   return 0; //success
@@ -699,8 +681,6 @@ int ompt_initialize(
   ompt_data_t *tool_data)
 {
   ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
-  ompt_get_callback = (ompt_get_callback_t) lookup("ompt_get_callback");
-  ompt_get_state = (ompt_get_state_t) lookup("ompt_get_state");
   ompt_get_task_info = (ompt_get_task_info_t) lookup("ompt_get_task_info");
   ompt_get_thread_data = (ompt_get_thread_data_t) lookup("ompt_get_thread_data");
   ompt_get_parallel_info = (ompt_get_parallel_info_t) lookup("ompt_get_parallel_info");

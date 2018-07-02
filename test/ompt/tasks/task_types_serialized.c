@@ -4,7 +4,6 @@
 #include "callback.h"
 #include <omp.h>
 
-__attribute__ ((noinline)) // workaround for bug in icc
 void print_task_type(int id)
 {
   #pragma omp critical
