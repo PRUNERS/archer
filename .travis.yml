@@ -17,6 +17,7 @@ env:
     - NINJA_VERSION=v1.7.2
     - LLVM_VERSION=6.0.1
     - LLVM_ARCHIVE_PATH=$HOME/clang+llvm.tar.xz
+    - LLVM_BRANCH=6.0.1
     - export PATH=$HOME/usr/bin:$PATH
     - export LD_LIBRARY_PATH=$HOME/usr/lib:$LD_LIBRARY_PATH
 
@@ -47,7 +48,7 @@ install:
 script:
   - cd $HOME/build/PRUNERS
   - rm -rf openmp
-  - git clone https://github.com/llvm-mirror/openmp.git
+  - wget http://releases.llvm.org/$LLVM_VERSION/openmp-$LLVM_VERSION.src.tar.xz
   - export OPENMP_INSTALL=$HOME/usr
   - cd openmp
   - mkdir build && cd build
