@@ -80,7 +80,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 callback_counter_t *all_counter;
 __thread callback_counter_t* this_event_counter;
-static int runOnTsan = 1;
+static int runOnTsan;
 
 class ArcherFlags {
 public:
@@ -170,7 +170,7 @@ extern "C" {
     int (*fptr)();
 
     fptr = (int (*)())dlsym(RTLD_DEFAULT, "RunningOnValgrind");
-    if (fptr && fptr != RunningOnValgrind)
+    if (fptr==NULL || fptr != RunningOnValgrind)
       runOnTsan = 0;
     return 0;
   }
@@ -932,10 +932,6 @@ static int ompt_tsan_initialize(
   ompt_function_lookup_t lookup,
   ompt_data_t *tool_data
   ) {
-  RunningOnValgrind();
-  if (!runOnTsan)
-    return 0;
-
   const char *options = getenv("ARCHER_OPTIONS");
   archer_flags = new ArcherFlags(options);
 
@@ -996,5 +992,10 @@ ompt_start_tool_result_t* ompt_start_tool(
   const char *runtime_version)
 {
   static ompt_start_tool_result_t ompt_start_tool_result = {&ompt_tsan_initialize,&ompt_tsan_finalize, {0}};
+  runOnTsan=1;
+  RunningOnValgrind();
+  if (!runOnTsan) // if we are not running on TSAN, give a different tool the chance to be loaded
+    return NULL;
+
   return &ompt_start_tool_result;
 }
