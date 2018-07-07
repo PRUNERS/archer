@@ -142,36 +142,42 @@ extern "C" {
     fptr = (void (*)(const char *, int, const volatile void *))dlsym(RTLD_DEFAULT, "AnnotateHappensAfter");
     (*fptr)(file,line,cv);
   }
+
   static void AnnotateHappensBefore(const char *file, int line, const volatile void *cv){
     void (*fptr)(const char *, int, const volatile void *);
 
     fptr = (void (*)(const char *, int, const volatile void *))dlsym(RTLD_DEFAULT, "AnnotateHappensBefore");
     (*fptr)(file,line,cv);
   }
+
   static void AnnotateIgnoreWritesBegin(const char *file, int line){
     void (*fptr)(const char *, int);
 
     fptr = (void (*)(const char *, int))dlsym(RTLD_DEFAULT, "AnnotateIgnoreWritesBegin");
     (*fptr)(file,line);
   }
+
   static void AnnotateIgnoreWritesEnd(const char *file, int line){
     void (*fptr)(const char *, int);
 
     fptr = (void (*)(const char *, int))dlsym(RTLD_DEFAULT, "AnnotateIgnoreWritesEnd");
     (*fptr)(file,line);
   }
+
   static void AnnotateNewMemory(const char *file, int line, const volatile void *cv, size_t size){
     void (*fptr)(const char *, int, const volatile void *,size_t);
 
     fptr = (void (*)(const char *, int, const volatile void *,size_t))dlsym(RTLD_DEFAULT, "AnnotateNewMemory");
     (*fptr)(file,line,cv,size);
   }
+
   static int RunningOnValgrind(){
     int (*fptr)();
 
     fptr = (int (*)())dlsym(RTLD_DEFAULT, "RunningOnValgrind");
-    if (fptr==NULL || fptr != RunningOnValgrind)
+    if (fptr == NULL)
       runOnTsan = 0;
+
     return 0;
   }
 #else
@@ -994,8 +1000,9 @@ ompt_start_tool_result_t* ompt_start_tool(
   static ompt_start_tool_result_t ompt_start_tool_result = {&ompt_tsan_initialize,&ompt_tsan_finalize, {0}};
   runOnTsan=1;
   RunningOnValgrind();
-  if (!runOnTsan) // if we are not running on TSAN, give a different tool the chance to be loaded
+  if (!runOnTsan) { // if we are not running on TSAN, give a different tool the chance to be loaded
     return NULL;
+  }
 
   return &ompt_start_tool_result;
 }

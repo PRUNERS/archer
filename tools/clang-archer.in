@@ -73,16 +73,16 @@ done
 
 if [ $linking == yes ] ; then
     if [ @LIBOMP_TSAN_SUPPORT@ == FALSE ] ; then
-  	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib -L@CMAKE_INSTALL_PREFIX@/lib -Wl,-rpath=@CMAKE_INSTALL_PREFIX@/lib -larcher"
+        link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath,@OMP_PREFIX@/lib -L@CMAKE_INSTALL_PREFIX@/lib -Wl,-rpath,@CMAKE_INSTALL_PREFIX@/lib -larcher"
     else
-  	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib"
+        link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath,@OMP_PREFIX@/lib"
     fi
 else
   link_flags=""
 fi
 
 if [ "$static_analysis" == "true" ]; then
-    @LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"
+    @LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher@CMAKE_SHARED_LIBRARY_SUFFIX@ -fopenmp -fsanitize=thread $link_flags -g "$@"
 else
     @LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -fopenmp -fsanitize=thread $link_flags -g "$@"
 fi
