@@ -48,18 +48,18 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-static_analysis=true
+static_analysis=false
 linking=yes
 for arg in "$@" ; do
     case "$arg" in
-        --nosa)
-            static_analysis=false
+        --sa)
+            static_analysis=true
             shift
             ;;
         --help)
             echo "Archer Options"
             echo
-            echo "  -nosa     Disable static analysis."
+            echo "  --sa      Enable static analysis."
             echo
             shift
             @LLVM_ROOT@/bin/clang --help
