@@ -2,50 +2,50 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org9b5aa7d">1. License</a></li>
-<li><a href="#orgfd75797">2. Introduction</a></li>
-<li><a href="#orgd7ea0a6">3. Prerequisites</a></li>
-<li><a href="#org8feda63">4. Installation</a>
+<li><a href="#orgb7da3f4">1. License</a></li>
+<li><a href="#org69e9e53">2. Introduction</a></li>
+<li><a href="#org217b743">3. Prerequisites</a></li>
+<li><a href="#org7b62322">4. Installation</a>
 <ul>
-<li><a href="#org4264faf">4.1. Automatic Building</a></li>
-<li><a href="#orgae26f01">4.2. Manual Building</a>
+<li><a href="#orgb144c8f">4.1. Automatic Building</a></li>
+<li><a href="#orga24197f">4.2. Manual Building</a>
 <ul>
-<li><a href="#org938ec80">4.2.1. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer OMPT support</a></li>
+<li><a href="#org603c87a">4.2.1. Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer OMPT support</a></li>
 </ul>
 </li>
-<li><a href="#org5fac3c0">4.3. Build Archer within Clang/LLVM</a></li>
+<li><a href="#orgca14700">4.3. Build Archer within Clang/LLVM</a></li>
 </ul>
 </li>
-<li><a href="#org06ea4d8">5. Usage</a>
+<li><a href="#org7ea4464">5. Usage</a>
 <ul>
-<li><a href="#orgacc0832">5.1. How to compile</a>
+<li><a href="#orgafdd25c">5.1. How to compile</a>
 <ul>
-<li><a href="#org38b3274">5.1.1. Single source</a></li>
-<li><a href="#orgbbdbd10">5.1.2. Makefile</a></li>
-<li><a href="#orga70d180">5.1.3. Hybrid MPI-OpenMP programs</a></li>
+<li><a href="#orgb8c2451">5.1.1. Single source</a></li>
+<li><a href="#org06407db">5.1.2. Makefile</a></li>
+<li><a href="#org793aee7">5.1.3. Hybrid MPI-OpenMP programs</a></li>
 </ul>
 </li>
-<li><a href="#org05712b2">5.2. Options</a></li>
-<li><a href="#org8a6f6b7">5.3. Command-Line Flags</a></li>
-<li><a href="#org15347b8">5.4. Runtime Flags</a></li>
+<li><a href="#org056c2b1">5.2. Options</a></li>
+<li><a href="#orgb83c4fb">5.3. Command-Line Flags</a></li>
+<li><a href="#org0e47352">5.4. Runtime Flags</a></li>
 </ul>
 </li>
-<li><a href="#org2465c18">6. Example</a></li>
-<li><a href="#org615eb4c">7. Contacts and Support</a></li>
-<li><a href="#org64d91eb">8. Members</a></li>
+<li><a href="#org98a2e4d">6. Example</a></li>
+<li><a href="#org21b6e2e">7. Contacts and Support</a></li>
+<li><a href="#orgea44b97">8. Members</a></li>
 </ul>
 </div>
 </div>
 
 
-<a id="org9b5aa7d"></a>
+<a id="orgb7da3f4"></a>
 
 # License
 
 Please see LICENSE for usage terms.
 
 
-<a id="orgfd75797"></a>
+<a id="org69e9e53"></a>
 
 # Introduction
 
@@ -60,7 +60,7 @@ on open-source tools infrastructure such as LLVM, ThreadSanitizer, and
 OMPT to provide portability.
 
 
-<a id="orgd7ea0a6"></a>
+<a id="org217b743"></a>
 
 # Prerequisites
 
@@ -76,7 +76,7 @@ development at <https://github.com/OpenMPToolsInterface/LLVM-openmp>
 (under the branch "tr4-stable").
 
 
-<a id="org8feda63"></a>
+<a id="org7b62322"></a>
 
 # Installation
 
@@ -84,7 +84,7 @@ Archer has been developed under LLVM 3.9 (for more information visit
 <http://llvm.org>).
 
 
-<a id="org4264faf"></a>
+<a id="orgb144c8f"></a>
 
 ## Automatic Building
 
@@ -92,7 +92,7 @@ For an automatic building script (recommended) please visit the GitHub
 page <https://github.com/PRUNERS/llvm_archer>.
 
 
-<a id="orgae26f01"></a>
+<a id="orga24197f"></a>
 
 ## Manual Building
 
@@ -105,7 +105,7 @@ based on bash shell, Clang/LLVM 3.9 version, Ninja build system, and
 the LLVM OpenMP Runtime with OMPT support).
 
 
-<a id="org938ec80"></a>
+<a id="org603c87a"></a>
 
 ### Stand-alone building with official LLVM OpenMP Runtime and ThreadSanitizer OMPT support
 
@@ -156,7 +156,7 @@ and build it with the following commands:
     cd ../..
 
 
-<a id="org5fac3c0"></a>
+<a id="orgca14700"></a>
 
 ## Build Archer within Clang/LLVM
 
@@ -298,12 +298,12 @@ To make the environment permanent, add the previous lines or
 equivalents to your shell start-up script such as "~/.bashrc".
 
 
-<a id="org06ea4d8"></a>
+<a id="org7ea4464"></a>
 
 # Usage
 
 
-<a id="orgacc0832"></a>
+<a id="orgafdd25c"></a>
 
 ## How to compile
 
@@ -324,14 +324,14 @@ library *libarcher.so*. (In the example below the runtime library will
 be shown in square brackets).
 
 
-<a id="org38b3274"></a>
+<a id="orgb8c2451"></a>
 
 ### Single source
 
     clang-archer example.c -o example [ -L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="orgbbdbd10"></a>
+<a id="org06407db"></a>
 
 ### Makefile
 
@@ -341,7 +341,7 @@ In your Makefile, set the following variables:
     [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="orga70d180"></a>
+<a id="org793aee7"></a>
 
 ### Hybrid MPI-OpenMP programs
 
@@ -351,7 +351,7 @@ In your Makefile, set the following variables:
     [ LD_FLAGS=-L/path/to/archer/runtime/library -larcher ]
 
 
-<a id="org05712b2"></a>
+<a id="org056c2b1"></a>
 
 ## Options
 
@@ -359,7 +359,7 @@ The command *clang-archer* works as a compiler wrapper, all the
 options available for clang are also available for *clang-archer*.
 
 
-<a id="org8a6f6b7"></a>
+<a id="orgb83c4fb"></a>
 
 ## Command-Line Flags
 
@@ -386,16 +386,16 @@ options available for clang are also available for *clang-archer*.
 
 <tbody>
 <tr>
-<td class="org-left">&#45;&#45;nosa</td>
+<td class="org-left">&#45;&#45;sa</td>
 <td class="org-left">disabled</td>
 <td class="org-left">>= 6.0.1</td>
-<td class="org-left">Disable static analysis (runtime and memory overhead may be longer).</td>
+<td class="org-left">Enable static analysis (runtime and memory overhead may be longer).</td>
 </tr>
 </tbody>
 </table>
 
 
-<a id="org15347b8"></a>
+<a id="org0e47352"></a>
 
 ## Runtime Flags
 
@@ -454,7 +454,7 @@ different flags are separated by spaces, e.g.:
 </table>
 
 
-<a id="org2465c18"></a>
+<a id="org98a2e4d"></a>
 
 # Example
 
@@ -464,13 +464,13 @@ check the program for data races.
 Suppose our program is called *myprogram.c*:
 
      1  #include <stdio.h>
-     2  
+     2
      3  #define N 1000
-     4  
+     4
      5  int main (int argc, char **argv)
      6  {
      7    int a[N];
-     8  
+     8
      9  #pragma omp parallel for
     10    for (int i = 0; i < N - 1; i++) {
     11      a[i] = a[i + 1];
@@ -501,39 +501,38 @@ the report will look as follow:
         #0 .omp_outlined. myprogram.c:11:12 (myprogram+0x00000049b5a2)
         #1 __kmp_invoke_microtask <null> (libomp.so+0x000000077842)
         #2 __libc_start_main /build/glibc-t3gR2i/glibc-2.23/csu/../csu/libc-start.c:291 (libc.so.6+0x00000002082f)
-    
+
       Previous write of size 4 at 0x7fff79a01170 by thread T1:
         #0 .omp_outlined. myprogram.c:11:10 (myprogram+0x00000049b5d6)
         #1 __kmp_invoke_microtask <null> (libomp.so+0x000000077842)
-    
+
       Location is stack of main thread.
-    
+
       Thread T1 (tid=13643, running) created by main thread at:
         #0 pthread_create tsan_interceptors.cc:902:3 (myprogram+0x00000043db75)
         #1 __kmp_create_worker <null> (libomp.so+0x00000006c364)
         #2 __libc_start_main /build/glibc-t3gR2i/glibc-2.23/csu/../csu/libc-start.c:291 (libc.so.6+0x00000002082f)
-    
+
     SUMMARY: ThreadSanitizer: data race myprogram.c:11:12 in .omp_outlined.
     ==================
     ThreadSanitizer: reported 1 warnings
 
 
-<a id="org615eb4c"></a>
+<a id="org21b6e2e"></a>
 
 # Contacts and Support
 
 -   [Google group](https://groups.google.com/forum/#!forum/archer-pruner)
 -   [Slack Channel](https://pruners.slack.com)
-    
+
     <ul style="list-style-type:circle"> <li> For an invitation please write an email to <a href="mailto:simone@cs.utah.edu?Subject=[archer-slack] Slack Invitation" target="_top">Simone Atzeni</a> with a reason why you want to be part of the PRUNERS Slack Team. </li> </ul>
 -   E-Mail Contacts:
-    
+
     <ul style="list-style-type:circle"> <li> <a href="mailto:simone@cs.utah.edu?Subject=[archer-dev]%20" target="_top">Simone Atzeni</a> </li> <li> <a href="mailto:protze@itc.rwth-aachen.de?Subject=[archer-dev]%20" target="_top">Joachim Protze</a> </li> </ul>
 
 
-<a id="org64d91eb"></a>
+<a id="orgea44b97"></a>
 
 # Members
 
 <img src="resources/images/uofu_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="UofU Logo" title="University of Utah" style="float:left"/> <img src="resources/images/llnl_logo.png" hspace="70" vspace="5" height="30%" width="30%" alt="LLNL Logo" title="Lawrence Livermore National Laboratory" style="float:center" /> <img src="resources/images/rwthaachen_logo.png" hspace="15" vspace="5" height="23%" width="23%" alt="RWTH AACHEN Logo" title="RWTH AACHEN University" style="float:left" />
-
