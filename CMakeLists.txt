@@ -53,6 +53,9 @@ if(POLICY CMP0057)
   cmake_policy(SET CMP0057 NEW)
 endif()
 
+# String substitution for wrapper scripts to avoid illegal character errors
+set(TRUNCATEDARGS "\"\${truncated_args\[\@\]}\"")
+
 # Add cmake directory to search for custom cmake functions
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 

@@ -50,6 +50,7 @@
 
 static_analysis=false
 linking=yes
+truncated_args=()
 for arg in "$@" ; do
     case "$arg" in
         --sa)
@@ -59,7 +60,7 @@ for arg in "$@" ; do
         --help)
             echo "Archer Options"
             echo
-            echo "  --nosa      Enable static analysis."
+            echo "  --sa      Enable static analysis."
             echo
             shift
             @LLVM_ROOT@/bin/clang++ --help
@@ -69,20 +70,21 @@ for arg in "$@" ; do
             linking=no
             ;;
     esac
+    [ "$arg" != '--sa' ] && truncated_args+=("$arg")
 done
 
 if [ $linking == yes ] ; then
     if [ @LIBOMP_TSAN_SUPPORT@ == FALSE ] ; then
-  	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib -L@CMAKE_INSTALL_PREFIX@/lib -Wl,-rpath=@CMAKE_INSTALL_PREFIX@/lib -larcher"
+        link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib -L@CMAKE_INSTALL_PREFIX@/lib -Wl,-rpath=@CMAKE_INSTALL_PREFIX@/lib -larcher"
     else
-  	link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib"
+        link_flags="-L@OMP_PREFIX@/lib -Wl,-rpath=@OMP_PREFIX@/lib"
     fi
 else
-  link_flags=""
+    link_flags=""
 fi
 
-if [ "$static_analysis" == "true" ]; then
-    @LLVM_ROOT@/bin/clang++ -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g "$@"
+if [ "$static_analysis" == "true" -a "$linking" == "yes" ]; then
+    @LLVM_ROOT@/bin/clang++ -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread $link_flags -g @TRUNCATEDARGS@
 else
-    @LLVM_ROOT@/bin/clang++ -I@OMP_PREFIX@/include -fopenmp -fsanitize=thread $link_flags -g "$@"
+    @LLVM_ROOT@/bin/clang++ -I@OMP_PREFIX@/include -fopenmp -fsanitize=thread $link_flags -g @TRUNCATEDARGS@
 fi
