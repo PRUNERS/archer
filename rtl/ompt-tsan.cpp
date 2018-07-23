@@ -74,9 +74,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/resource.h>
 #define _OPENMP
 #include "omp.h"
-#if !defined(__powerpc64__)
+// #if !defined(__powerpc64__)
 #include <ompt.h>
-#endif
+// #endif
 
 callback_counter_t *all_counter;
 __thread callback_counter_t* this_event_counter;
