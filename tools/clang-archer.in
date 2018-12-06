@@ -59,7 +59,7 @@ for arg in "$@" ; do
             shift
             ;;
         --nodup)
-            extra_lflags="-Wl,--whole-archive @CMAKE_INSTALL_PREFIX@/lib/libdedup.a -Wl,--no-whole-archive $link_flags"
+            extra_lflags="-Wl,--whole-archive @CMAKE_INSTALL_PREFIX@/lib/libdedup.a -Wl,--no-whole-archive $link_flags -lstdc++ -lprotobuf"
             shift
             ;;
         --help)
@@ -88,7 +88,7 @@ else
 fi
 
 if [ "$static_analysis" == "true" ]; then
-    @LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp $link_flags -fsanitize=thread -g "$@"
+    @LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -Xclang -load -Xclang @CMAKE_INSTALL_PREFIX@/lib/LLVMArcher.so -fopenmp -fsanitize=thread -g "$@" $link_flags
 else
-    @LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -fopenmp $link_flags -fsanitize=thread -g "$@"
+    @LLVM_ROOT@/bin/clang -I@OMP_PREFIX@/include -fopenmp -fsanitize=thread -g "$@" $link_flags
 fi

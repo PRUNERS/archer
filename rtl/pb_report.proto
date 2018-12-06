@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+
+enum PBModuleArch {
+  PBkModuleArchUnknown = 0;
+  PBkModuleArchI386 = 1;
+  PBkModuleArchX86_64 = 2;
+  PBkModuleArchX86_64H = 3;
+  PBkModuleArchARMV6 = 4;
+  PBkModuleArchARMV7 = 5;
+  PBkModuleArchARMV7S = 6;
+  PBkModuleArchARMV7K = 7;
+  PBkModuleArchARM64 = 8;
+}
+
+message PBAddressInfo {
+  uint64 address = 1;
+
+  string module = 2;
+  uint64 module_offset = 3;
+  PBModuleArch module_arch = 4;
+
+  string function = 5;
+  uint64 function_offset = 6;
+
+  string file = 7;
+  int32 line = 8;
+  int32 column = 9;
+}
+
+message PBSymbolizedStack {
+  PBSymbolizedStack next = 1;
+  PBAddressInfo info = 2;
+}
+
+message PBReportStack {
+  PBSymbolizedStack frames = 1;
+  bool suppressable = 2;
+}
+
+message PBReportMopMutex {
+  uint64 id = 1;
+  bool write = 2;
+}
+
+message PBReportMop {
+  int32 tid = 1;
+  uint64 addr = 2;
+  int32 size = 3;
+  bool write = 4;
+  bool atomic = 5;
+  uint64 external_tag = 6;
+  repeated PBReportMopMutex mset = 7;
+  PBReportStack stack = 8;
+}
+
+message PBDataInfo {
+  string module = 1;
+  uint64 module_offset = 2;
+  PBModuleArch module_arch = 3;
+
+  string file = 4;
+  uint64 line = 5;
+  string name = 6;
+  uint64 start = 7;
+  uint64 size = 8;
+}
+
+enum PBReportLocationType {
+  PBReportLocationGlobal = 0;
+  PBReportLocationHeap = 1;
+  PBReportLocationStack = 2;
+  PBReportLocationTLS = 3;
+  PBReportLocationFD = 4;
+}
+
+message PBReportLocation {
+  PBReportLocationType type = 1;
+  PBDataInfo global = 2;
+  uint64 heap_chunk_start = 3;
+  uint64 heap_chunk_size = 4;
+  uint64 external_tag = 5;
+  int32 tid = 6;
+  int32 fd = 7;
+  bool suppressable = 8;
+  PBReportStack stack = 9;
+}
+
+message PBReportMutex {
+  uint64 id = 1;
+  uint64 addr = 2;
+  bool destroyed = 3;
+  PBReportStack stack = 4;
+}
+
+message PBReportThread {
+  int32 id = 1;
+  uint64 os_id = 2;
+  bool running = 3;
+  bool workerthread = 4;
+  string name = 5;
+  uint32 parent_tid = 6;
+  PBReportStack stack = 7;
+}
+
+enum PBReportType {
+  PBReportTypeRace = 0;
+  PBReportTypeVptrRace = 1;
+  PBReportTypeUseAfterFree = 2;
+  PBReportTypeVptrUseAfterFree = 3;
+  PBReportTypeExternalRace = 4;
+  PBReportTypeThreadLeak = 5;
+  PBReportTypeMutexDestroyLocked = 6;
+  PBReportTypeMutexDoubleLock = 7;
+  PBReportTypeMutexInvalidAccess = 8;
+  PBReportTypeMutexBadUnlock = 9;
+  PBReportTypeMutexBadReadLock = 10;
+  PBReportTypeMutexBadReadUnlock = 11;
+  PBReportTypeSignalUnsafe = 12;
+  PBReportTypeErrnoInSignal = 13;
+  PBReportTypeDeadlock = 14;
+}
+
+message PBReportDesc {
+  PBReportType typ = 1;
+  uint64 tag = 2;
+  repeated PBReportStack stacks = 3;
+  repeated PBReportMop mops = 4;
+  repeated PBReportLocation locs = 5;
+  repeated PBReportMutex mutexes = 6;
+  repeated PBReportThread threads = 7;
+  repeated int32 unique_tids = 8;
+  PBReportStack sleep = 9;
+  int32 count = 10;
+}

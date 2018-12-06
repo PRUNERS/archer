@@ -52,13 +52,15 @@ add_library(archer_static STATIC ompt-tsan.cpp counter.cpp)
 add_library(farcher SHARED ftsan.c)
 add_library(farcher_static STATIC ftsan.c)
 
+execute_process(COMMAND protoc pb_report.proto --cpp_out=.
+  WORKING_DIRECTORY ${LLVM_MAIN_SRC_DIR}/tools/archer/rtl)
 
-find_package(LLVM REQUIRED CONFIG)
-include_directories(${LLVM_CMAKE_DIR}/../../projects/compiler-rt/include/)
-include_directories(${LLVM_CMAKE_DIR}/../../projects/compiler-rt/lib/tsan/rtl/)
-include_directories(${LLVM_CMAKE_DIR}/../../projects/compiler-rt/lib/)
+#find_package(LLVM REQUIRED CONFIG)
+include_directories(${LLVM_MAIN_SRC_DIR}/projects/compiler-rt/include/)
+include_directories(${LLVM_MAIN_SRC_DIR}/projects/compiler-rt/lib/tsan/rtl/)
+include_directories(${LLVM_MAIN_SRC_DIR}/projects/compiler-rt/lib/)
 set_source_files_properties(deduplicate.cpp PROPERTIES COMPILE_FLAGS -std=c99)
-add_library(dedup STATIC deduplicate_report.cpp)
+add_library(dedup STATIC deduplicate_report.cpp tsanToProtobuf.cpp pb_report.pb.cc)
 
 install(TARGETS archer archer_static farcher farcher_static dedup
   LIBRARY DESTINATION lib
