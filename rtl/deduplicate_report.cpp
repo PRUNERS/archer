@@ -342,10 +342,16 @@
 namespace __tsan {
   bool  OnReport(const ReportDesc *report, bool suppressed) {
     PBReportDesc* pb_report = tsToPbReportDesc(*report);
+    size_t size = pb_report->ByteSizeLong();
+    void *bytes = malloc(size); 
+    pb_report->SerializeToArray(bytes, size);
 
-    Printf("\\/ \\/ \\/\n");
-    Printf("%s\n", pb_report->DebugString().c_str());
-    Printf("/\\ /\\ /\\\n\n\n\n");
+    Printf("==================\n");
+    Printf("%s\n", (char*)bytes);
+    Printf("==================\n");
+
+    delete pb_report;
+    free(bytes);
 
     return true;
   }
