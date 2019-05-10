@@ -44,8 +44,11 @@
 
 # License
 
+Archer is distributed under the terms of the Apache License.
+
 Please see LICENSE for usage terms.
 
+LLNL-CODE-773957
 
 <a id="orgc6a2b10"></a>
 
