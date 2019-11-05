@@ -66,10 +66,24 @@ set(LIBARCHER_SOURCE_FILES
   Transforms/Instrumentation/InstrumentParallel.cpp
   )
 
-add_llvm_loadable_module(LLVMArcher
-  ${LIBARCHER_SOURCE_FILES}
-  ${LIBARCHER_HEADER_FILES}
-  )
+if (CMAKE_C_COMPILER_VERSION VERSION_LESS 7.0)
+  add_llvm_loadable_module(LLVMArcher
+    ${LIBARCHER_SOURCE_FILES}
+    ${LIBARCHER_HEADER_FILES}
+    )
+else()
+  if (CMAKE_C_COMPILER_VERSION VERSION_LESS 8.0)
+    llvm_add_library(LLVMArcher MODULE
+      ${LIBARCHER_SOURCE_FILES}
+      ${LIBARCHER_HEADER_FILES}
+      )
+  else()
+    add_llvm_library(LLVMArcher MODULE
+      ${LIBARCHER_SOURCE_FILES}
+      ${LIBARCHER_HEADER_FILES}
+      )
+  endif()
+endif()
 
 # This declares the dependency to the generated Attributes.gen file,
 # which is included by serveral indirections (target is provided by
