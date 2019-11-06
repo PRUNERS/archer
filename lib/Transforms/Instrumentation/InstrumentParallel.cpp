@@ -116,13 +116,13 @@ INITIALIZE_PASS_END(
     false, false)
 
 #if LLVM_VERSION > MIN_VERSION
-	StringRef InstrumentParallel::getPassName() const {
-		return PassName;
-	}
+    StringRef InstrumentParallel::getPassName() const {
+        return PassName;
+    }
 #else
-	const char *InstrumentParallel::getPassName() const {
-		return PassName.c_str();
-	}
+    const char *InstrumentParallel::getPassName() const {
+        return PassName.c_str();
+    }
 #endif
 
 void InstrumentParallel::getAnalysisUsage(AnalysisUsage &AU) const {
@@ -174,7 +174,7 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     // }
     Constant *suppression_str_const =
       ConstantDataArray::getString(M->getContext(),
-				   "called_from_lib:libomp.*\nthread:^__kmp_create_worker$\n", true);
+                                   "called_from_lib:libomp.*\nthread:^__kmp_create_worker$\n", true);
     GlobalVariable* suppression_str =
       new GlobalVariable(*M,
                          suppression_str_const->getType(),
@@ -185,8 +185,15 @@ bool InstrumentParallel::runOnFunction(Function &F) {
     suppression_str->setUnnamedAddr(GlobalValue::UnnamedAddr::Global);
     suppression_str->setAlignment(1);
     IRBuilder<> IRB(M->getContext());
+  #if LLVM_VERSION >= 90
+    Function* __tsan_default_suppressions = Function::Create(FunctionType::get(IRB.getInt8PtrTy(), false),
+                                                             Function::ExternalLinkage,
+                                                             "__tsan_default_suppressions",
+                                                             M);
+  #else
     Function* __tsan_default_suppressions = cast<Function>(M->getOrInsertFunction("__tsan_default_suppressions",
-										  IRB.getInt8PtrTy()));
+                                                                                  IRB.getInt8PtrTy()));
+  #endif
     __tsan_default_suppressions->setCallingConv(CallingConv::C);
     __tsan_default_suppressions->addFnAttr(Attribute::NoInline);
     __tsan_default_suppressions->addFnAttr(Attribute::NoUnwind);
@@ -201,9 +208,15 @@ bool InstrumentParallel::runOnFunction(Function &F) {
 
 #if LLVM_VERSION >= 40
     IRBuilder<> IRB2(M->getContext());
+  #if LLVM_VERSION >= 90
+    FunctionCallee constant = M->getOrInsertFunction("__archer_get_omp_status",
+                                                     IRB2.getInt32Ty());
+    Function* __archer_get_omp_status = dyn_cast<Function>(constant.getCallee());
+  #else
     Constant* constant = M->getOrInsertFunction("__archer_get_omp_status",
-    		IRB2.getInt32Ty());
+                                                IRB2.getInt32Ty());
     Function* __archer_get_omp_status = cast<Function>(constant);
+  #endif
     __archer_get_omp_status->setCallingConv(CallingConv::C);
     BasicBlock* block2 = BasicBlock::Create(M->getContext(), "entry", __archer_get_omp_status);
     IRBuilder<> builder2(block2);
