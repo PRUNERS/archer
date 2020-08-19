@@ -4,6 +4,7 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
+<li><a href="#orgabcdef">0. Deprecated</a></li>
 <li><a href="#org8ca70b5">1. License</a></li>
 <li><a href="#orgc6a2b10">2. Introduction</a></li>
 <li><a href="#org3249413">3. Prerequisites</a></li>
@@ -39,6 +40,16 @@
 </div>
 </div>
 
+
+<a id="orgabcdef"></a>
+
+# Deprecated
+
+Starting with LLVM/10, the Archer runtime is included in LLVM releases.
+Any further development is directly upstreamed into LLVM 
+(https://github.com/llvm/llvm-project/). For productive use of Archer 
+we suggest to use Archer in LLVM. Report bugs at http://bugs.llvm.org/ 
+under OpenMP/runtime.
 
 <a id="org8ca70b5"></a>
 
